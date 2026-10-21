@@ -40,7 +40,7 @@ setTimeout(()=>{if(!window.SneakyDog3D){const v=document.getElementById('veil');
 <script type="module">
 import * as THREE from 'three';
 
-const VERSION='3D-0.1';
+const VERSION='3D-0.2';
 const $=id=>document.getElementById(id);
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),D2R=Math.PI/180;
 
@@ -89,9 +89,9 @@ const CHASE_TUNE=[
 const GAME_TUNE=[
  ['tempo','Темп (все скорости)',.5,1.5,.05,'×',2],
  ['mapScale','Размер лужайки',.6,1.6,.05,'×',2]];
-const CAM_DEF={high:{back:6,up:5,pitch:36,fov:45,lag:.2,turn:.8},low:{back:3,up:2,pitch:20,fov:50,lag:.12,turn:.5},iso:{back:19,up:16,pitch:40,fov:35,lag:.25,turn:1.2}};
-const freshCfg=()=>({mode:'high',tempo:1,mapScale:1,cam:JSON.parse(JSON.stringify(CAM_DEF)),chase:{back:4,up:3,pitch:30}});
-const CFG_KEY='sneaky-dog-3d-cam2';
+const CAM_DEF={high:{back:4,up:3.4,pitch:38,fov:45,lag:.2,turn:.8},low:{back:3,up:2,pitch:20,fov:50,lag:.12,turn:.5},iso:{back:19,up:16,pitch:40,fov:35,lag:.25,turn:1.2}};
+const freshCfg=()=>({mode:'high',tempo:.6,mapScale:1,cam:JSON.parse(JSON.stringify(CAM_DEF)),chase:{back:4,up:3,pitch:30}});
+const CFG_KEY='sneaky-dog-3d-cam3';
 let cfg=freshCfg();
 try{const s=JSON.parse(localStorage.getItem(CFG_KEY));if(s){if(MODES[s.mode])cfg.mode=s.mode;for(const [k,,min,max] of GAME_TUNE)if(Number.isFinite(s[k]))cfg[k]=clamp(s[k],min,max);for(const m in MODES)for(const [k,,min,max] of CAM_TUNE)if(Number.isFinite(s.cam?.[m]?.[k]))cfg.cam[m][k]=clamp(s.cam[m][k],min,max);for(const [k,,min,max] of CHASE_TUNE)if(Number.isFinite(s.chase?.[k]))cfg.chase[k]=clamp(s.chase[k],min,max)}}catch{}
 const CAM=()=>cfg.cam[cfg.mode];
