@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#102f2a"><meta name="description" content="3D-прототип Sneaky Dog: каково бегать по лужайке от садовника.">
+<title>Sneaky Dog 3D · прототип</title>
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Sneaky 3D"><link rel="apple-touch-icon" href="../apple-touch-icon.png"><link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23102f2a'/%3E%3Cg fill='%23f8d36c'%3E%3Cellipse cx='32' cy='42' rx='16' ry='13'/%3E%3Cellipse cx='12' cy='25' rx='6' ry='8'/%3E%3Cellipse cx='26' cy='16' rx='6' ry='8'/%3E%3Cellipse cx='41' cy='16' rx='6' ry='8'/%3E%3Cellipse cx='53' cy='25' rx='6' ry='8'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+:root{color-scheme:dark;--ink:#102f2a;--cream:#fff5d9;--gold:#f8d36c;--green:#a8de8a}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}#app{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0c241f;color:var(--cream);font-family:ui-rounded,'Trebuchet MS',system-ui,sans-serif}button{font:inherit;cursor:pointer;border:0;touch-action:manipulation;color:inherit}button:focus-visible{outline:3px solid white;outline-offset:4px}button:disabled{cursor:default;opacity:.5}#app{position:relative;max-width:1600px;height:100dvh;margin:auto;overflow:hidden}#field{display:block;width:100%;height:100%;touch-action:none}#hud{position:absolute;top:0;left:0;right:0;padding:max(16px,env(safe-area-inset-top)) max(22px,env(safe-area-inset-right)) 16px max(22px,env(safe-area-inset-left));background:linear-gradient(#102f2af2,#102f2a00);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;pointer-events:none}.logo{font-size:20px;font-weight:950;letter-spacing:-1px;color:var(--gold)}.level{font-size:14px;margin-top:5px;color:#e0eedf}.hud-right{display:flex;align-items:center;gap:10px}.pill{background:#102f2ae6;border:1px solid #ffffff1a;border-radius:18px;padding:10px 14px;font-weight:700;font-size:14px}.iconbtn{pointer-events:auto;background:#102f2ae6;border:1px solid #ffffff33;border-radius:50%;width:43px;height:43px;font-size:19px}.objective{position:absolute;top:90px;left:50%;transform:translateX(-50%);max-width:calc(100% - 30px);white-space:nowrap;padding:10px 17px;background:#fff5d9;color:var(--ink);border-radius:30px;font-weight:800;font-size:14px;box-shadow:0 4px 0 #0002;pointer-events:none}.status{position:absolute;left:50%;bottom:46px;transform:translateX(-50%);background:#102f2ae6;padding:9px 16px;border-radius:18px;font-size:14px;pointer-events:none;max-width:calc(100% - 20px);text-align:center}.progress{position:absolute;top:138px;left:50%;transform:translateX(-50%);width:220px;padding:9px;background:#102f2ae6;border-radius:18px;display:none}.progress span{display:block;text-align:center;font-size:13px;margin-bottom:6px}.track{height:8px;background:#ffffff26;border-radius:8px;overflow:hidden}.fill{height:100%;width:0;background:var(--gold);border-radius:8px}.controls{position:absolute;bottom:max(22px,env(safe-area-inset-bottom));left:22px;right:22px;display:flex;align-items:flex-end;justify-content:space-between;pointer-events:none}#stick{width:116px;height:116px;border-radius:50%;background:#102f2a55;border:2px solid #fff5d955;position:relative;pointer-events:auto;touch-action:none;user-select:none}#knob{position:absolute;width:47px;height:47px;border-radius:50%;left:32.5px;top:32.5px;background:#fff5d9bb;border:3px solid #fff5d9;box-shadow:0 4px 10px #0003;pointer-events:none}.actions{display:flex;gap:12px;align-items:flex-end;pointer-events:auto}.action{height:76px;width:76px;border-radius:26px;background:var(--gold);color:var(--ink);border:3px solid #fff5d966;box-shadow:0 5px 0 #0004;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:24px;touch-action:none;user-select:none}.action small{font-size:12px;font-weight:900}.action.secondary{background:#fff5d9}.action.active{transform:translateY(3px);box-shadow:0 2px 0 #0004}.energy{height:5px;background:#fff5d94d;border-radius:10px;margin:9px 7px 0;width:62px}.energy>i{display:block;background:#a8de8a;width:100%;height:100%;border-radius:10px}.control-help{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:13px;color:#fff5d9b3;pointer-events:none}#veil{position:absolute;inset:0;background:#08221bc2;backdrop-filter:blur(9px);display:flex;align-items:center;justify-content:center;padding:22px;overflow:auto}.card{width:920px;max-width:100%;border-radius:30px;background:var(--ink);border:1px solid #ffffff1f;box-shadow:0 24px 100px #0006;overflow:hidden;display:grid;grid-template-columns:42% 58%}.art{position:relative;background:#245342;overflow:hidden;min-height:440px}.art img{width:100%;height:100%;object-fit:cover;position:absolute}.art:after{content:'';position:absolute;inset:0;background:linear-gradient(transparent 55%,#102f2aef)}.art-label{position:absolute;left:25px;bottom:25px;z-index:1;font-size:15px;line-height:1.6;color:#fff5d9d9}.content{padding:32px}.eyebrow{font-size:12px;font-weight:900;letter-spacing:2px;color:#a8de8a;text-transform:uppercase}h1{font-size:clamp(32px,5vw,50px);line-height:1;margin:12px 0 8px;letter-spacing:-2px;color:var(--gold)}.subtitle{margin:0 0 21px;color:#d1e2d3;font-size:15px;line-height:1.5}.dogs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}.dog-card{padding:12px 5px;background:#ffffff09;border:2px solid transparent;border-radius:18px;min-width:0}.dog-card.selected{background:#f8d36c17;border-color:var(--gold)}.dog-card span{font-size:30px;display:block;margin-bottom:7px}.dog-card b{font-size:13px}.dog-info{background:#ffffff08;border-radius:15px;padding:12px;font-size:14px;line-height:1.5;min-height:78px;color:#d6e6d8}.dog-info strong{color:var(--gold)}.levels{display:flex;gap:7px;margin:15px 0}.levelbtn{border-radius:12px;background:#ffffff0d;flex:1;padding:10px 3px;font-size:14px;border:1px solid transparent}.levelbtn.selected{border-color:#a8de8a;color:#a8de8a}.primary{background:var(--gold);color:var(--ink);padding:15px 25px;width:100%;border-radius:16px;font-weight:950;font-size:17px;box-shadow:0 4px 0 #c69639}.fine{color:#b7d0bf;font-size:12px;line-height:1.5;margin:14px 0 0}.result{max-width:430px;display:block;text-align:center;padding:32px}.result h1{font-size:38px;line-height:1.12}.result .subtitle{margin:18px 0}.result-icon{font-size:58px}.result-actions{display:flex;flex-direction:column;gap:14px}.plain{background:#ffffff0b;border:1px solid #ffffff20;padding:13px;border-radius:14px;font-weight:800}.stars{font-size:35px;color:var(--gold);margin:15px 0}.statline{display:flex;justify-content:center;gap:22px;margin:20px 0;color:#d6e6d8;font-size:14px}#toast{position:absolute;left:50%;top:190px;transform:translateX(-50%);background:#102f2af2;padding:12px 18px;border-radius:18px;max-width:calc(100% - 24px);text-align:center;font-size:14px;pointer-events:none;display:none}.hidden,[hidden]{display:none!important}#app:fullscreen{max-width:none;height:100%}
+@media(pointer:coarse){.control-help{display:none}}
+@media(max-width:650px){#hud{padding: max(12px,env(safe-area-inset-top)) 13px 12px}.logo{font-size:18px}.pill{padding:9px 10px;font-size:13px}.objective{top:77px;font-size:13px;white-space:normal;text-align:center;width:max-content;max-width:92%}.progress{top:122px}.card{display:block;max-width:410px}.art{min-height:0;height:145px}.art img{object-position:center 43%}.art-label{display:none}.content{padding:20px}h1{font-size:36px;margin-top:8px}.subtitle{font-size:14px;margin-bottom:13px}.dogs{margin:10px 0}.dog-info{font-size:13px;min-height:66px}.fine{font-size:12px;margin-top:10px}.levels{margin:12px 0}.controls{left:17px;right:17px;bottom:max(24px,env(safe-area-inset-bottom))}.status{bottom:157px;font-size:13px}.action{height:72px;width:72px;border-radius:25px}.control-help{display:none}.result{padding:26px}.hud-right{gap:7px}}
+@media(max-height:550px){#veil{padding:12px}.card{max-width:820px;grid-template-columns:35% 65%;display:grid}.art{height:auto;min-height:0}.content{padding:17px 25px}h1{font-size:32px;margin:6px 0}.subtitle{margin-bottom:8px;font-size:13px}.dogs{margin:7px 0}.dog-card{padding:6px}.dog-card span{font-size:24px;margin-bottom:3px}.dog-info{min-height:0;padding:8px;font-size:12px}.levels{margin:9px 0}.primary{padding:11px}.fine{margin-top:9px}.objective{top:68px}.status{bottom:115px}.controls{bottom:max(17px,env(safe-area-inset-bottom));left:max(22px,env(safe-area-inset-left));right:max(22px,env(safe-area-inset-right))}#hud{padding-left:max(13px,env(safe-area-inset-left));padding-right:max(13px,env(safe-area-inset-right))}#stick{height:92px;width:92px}#knob{left:20.5px;top:20.5px}.action{height:62px;width:62px;border-radius:22px}.progress{top:104px}.result{display:block;padding:20px;max-width:430px}.result-icon{font-size:36px}.result h1{font-size:28px}.result .subtitle,.statline,.stars{margin:10px 0}.control-help{display:none}.objective{top:14px;font-size:12px;padding:7px 13px;max-width:40vw;white-space:normal;text-align:center}.status{bottom:auto;top:74px;left:max(14px,env(safe-area-inset-left));transform:none;font-size:12px;padding:7px 11px;max-width:23vw;text-align:left}#toast{top:74px;left:auto;right:max(14px,env(safe-area-inset-right));transform:none;font-size:12px;padding:7px 11px;max-width:23vw;text-align:left}}
+#tags{position:absolute;inset:0;pointer-events:none;overflow:hidden}.tag{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:3px;will-change:transform}.tag .ic{font-size:19px;line-height:1;min-width:30px;height:30px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:950}.tag .ic.q{background:#f8d36c;color:#102f2a}.tag .ic.x{background:#ed6455;color:#102f2a}.tag .bar{width:44px;height:5px;border-radius:3px;background:#102f2a77;overflow:hidden;visibility:hidden}.tag .bar>s{display:block;height:100%;width:0;background:#f8d36c}
+#arrow{position:absolute;left:0;top:0;width:44px;height:44px;border-radius:50%;background:#fff5d9;color:#102f2a;font-weight:950;font-size:24px;display:none;align-items:center;justify-content:center;pointer-events:none;box-shadow:0 3px 0 #0003}
+#gptr{position:absolute;left:0;top:0;display:none;align-items:center;gap:4px;padding:5px 9px 5px 6px;border-radius:16px;background:#102f2ae6;border:2px solid #fff5d966;font-weight:900;font-size:13px;pointer-events:none;white-space:nowrap}#gptr::before{content:'🧑‍🌾';font-size:16px}#gptr i{font-style:normal;display:inline-block;color:var(--gold)}#gptr.q{border-color:#f8d36c}#gptr.x{border-color:#ed6455;background:#5a1f1ae6}
+#tune{position:absolute;top:calc(max(16px,env(safe-area-inset-top)) + 52px);right:max(12px,env(safe-area-inset-right));width:280px;max-height:calc(100% - 200px);overflow:auto;background:#102f2aeb;border:1px solid #ffffff22;border-radius:18px;padding:12px 14px;font-size:13px;-webkit-overflow-scrolling:touch}#tune .row{margin:0 0 9px}#tune label{display:flex;justify-content:space-between;color:#d6e6d8}#tune label b{color:var(--gold)}#tune input{width:100%;margin:4px 0 0;accent-color:#f8d36c}#tune .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:900;color:var(--gold)}#tune .btns{display:flex;gap:8px;margin-top:4px}#tune .btns button{flex:1;background:#ffffff12;border:1px solid #ffffff22;border-radius:10px;padding:8px 4px;font-weight:800}#tune code{display:block;margin-top:8px;font-size:11px;color:#b7d0bf;word-break:break-all}
+.card.solo{display:block;max-width:440px;padding:28px;text-align:center}.card.solo .primary{margin-top:6px}.card.solo a{color:var(--green);display:inline-block;margin-top:14px;font-size:14px}
+@media(max-width:650px){.iconbtn{width:37px;height:37px;font-size:16px}.logo{font-size:15px}.hud-right{gap:5px}.pill{padding:8px 8px}}
+@media(max-height:550px){#tune{max-height:calc(100% - 150px);top:calc(max(12px,env(safe-area-inset-top)) + 46px)}.card.solo{padding:18px}}
+</style>
+</head>
+<body><div id="app">
+<canvas id="field" aria-label="Лужайка в 3D: управляйте собакой джойстиком или WASD"></canvas>
+<div id="tags"></div><div id="arrow">↑</div><div id="gptr"><i>➤</i><b>0 м</b></div>
+<div id="hud"><div><div class="logo">SNEAKY DOG 3D</div><div class="level" id="levelName">3D-0 · Лужайка</div></div><div class="hud-right"><div class="pill" id="clock">0:00</div><button class="iconbtn" id="camBtn" aria-label="Режим камеры">🎥</button><button class="iconbtn" id="tuneBtn" aria-label="Настройки камеры">⚙</button><button class="iconbtn" id="pause" aria-label="Пауза">Ⅱ</button><button class="iconbtn" id="sound" aria-label="Включить звук">♪</button></div></div>
+<div class="objective" id="objective">Найди клумбу наверху справа</div>
+<div class="progress" id="progress"><span>Тихо… почти готово!</span><div class="track"><div class="fill" id="toiletFill"></div></div></div>
+<div class="status" id="status"></div>
+<div class="controls"><div><div id="stick" aria-label="Джойстик"><div id="knob"></div></div><div class="energy"><i id="energyFill"></i></div></div><div class="actions"><button id="ability" class="action secondary" aria-label="Мяч"><span>🎾</span><small id="abilityText">МЯЧ</small></button><button id="toilet" class="action" aria-label="Удерживать, чтобы сделать дело"><span>💩</span><small>ДЕРЖИ</small></button></div></div>
+<div class="control-help">WASD — идти · C — красться · Shift — бег · E — мяч · пробел — дело · V — камера · ⚙ — настройки</div>
+<div id="tune" hidden></div>
+<div id="toast" role="status"></div><div id="veil"><div class="card solo"><h1>SNEAKY DOG 3D</h1><p class="subtitle">Загружаю 3D…</p></div></div>
+</div>
+<script>
+// If the CDN module never starts (offline, blocked), say so instead of hanging on "Загружаю".
+setTimeout(()=>{if(!window.SneakyDog3D){const v=document.getElementById('veil');v.innerHTML='<div class="card solo"><h1>Не загрузилось</h1><p class="subtitle">Не удалось загрузить Three.js. Проверь интернет и открой страницу снова.</p><a href="../">← 2D-версия</a></div>'}},9000);
+</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+
+const VERSION='3D-0.1';
+const $=id=>document.getElementById(id);
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),D2R=Math.PI/180;
+
+// ---------- Simulation: same plane and units as the 2D game (1000×760), park 1 rules ----------
+const DOG={name:'Лабрадор',color:'#e8b960',speed:153,stamina:100,cooldown:12};
+const LV={vision:190,speed:90,hold:4};
+const NOISE=165;
+const zone={x:850,y:147,r:51},exit={x:118,y:674,r:45},start={x:120,y:625};
+const BED={x:870,y:224},TAP={x:230,y:146};
+const BED_RECT={x:797,y:94,w:108,h:105};
+const bushes=[{x:240,y:550,r:49},{x:598,y:406,r:51},{x:778,y:181,r:48},{x:195,y:296,r:44},{x:431,y:133,r:41}];
+const solids=[{x:315,y:431,w:155,h:30,type:'bench'},{x:325,y:190,w:36,h:101,type:'hedge'},{x:821,y:398,w:105,h:34,type:'bench'},{x:625,y:90,w:36,h:123,type:'hedge'},{x:408,y:607,w:176,h:32,type:'flower'}];
+const trees=[{x:86,y:122,r:34},{x:912,y:284,r:32},{x:91,y:435,r:31},{x:870,y:627,r:35}];
+
+function blocked(x,y,r=12){if(x<45+r||y<62+r||x>955-r||y>696-r)return true;for(const o of solids)if(x+r>o.x&&x-r<o.x+o.w&&y+r>o.y&&y-r<o.y+o.h)return true;for(const o of trees)if(Math.hypot(x-o.x,y-o.y)<r+11)return true;return false}
+function lineClear(a,b,margin=0){let n=Math.ceil(dist(a,b)/10);for(let i=1;i<n;i++){let x=a.x+(b.x-a.x)*i/n,y=a.y+(b.y-a.y)*i/n;if(solids.some(o=>x>o.x-margin&&x<o.x+o.w+margin&&y>o.y-margin&&y<o.y+o.h+margin)||trees.some(o=>Math.hypot(x-o.x,y-o.y)<12+margin))return false}return true}
+function travel(o,dx,dy,r=12){if(!blocked(o.x+dx,o.y,r))o.x+=dx;if(!blocked(o.x,o.y+dy,r))o.y+=dy}
+// A* on a small grid lets the gardener walk around benches rather than through them.
+function findPath(a,b){const cell=25,cols=40,rows=31;const key=(x,y)=>y*cols+x;const ax=clamp(Math.floor(a.x/cell),0,cols-1),ay=clamp(Math.floor(a.y/cell),0,rows-1),bx=clamp(Math.floor(b.x/cell),0,cols-1),by=clamp(Math.floor(b.y/cell),0,rows-1);let open=[{x:ax,y:ay,g:0,f:0}],cost=new Map([[key(ax,ay),0]]),prev=new Map(),end=null;let iterations=0;
+ while(open.length&&iterations++<1300){open.sort((a,b)=>a.f-b.f);const c=open.shift(),k=key(c.x,c.y);if(c.x===bx&&c.y===by){end=c;break}for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){let x=c.x+dx,y=c.y+dy;if(x<0||y<0||x>=cols||y>=rows||blocked(x*cell+12.5,y*cell+12.5,15))continue;if(dx&&dy&&(blocked((c.x+dx)*cell+12.5,c.y*cell+12.5,15)||blocked(c.x*cell+12.5,(c.y+dy)*cell+12.5,15)))continue;let nk=key(x,y),g=c.g+(dx&&dy?1.414:1);if(g>=(cost.get(nk)??Infinity))continue;cost.set(nk,g);prev.set(nk,k);open.push({x,y,g,f:g+Math.hypot(bx-x,by-y)})}}
+ if(!end)return [];let k=key(end.x,end.y),path=[];while(prev.has(k)){path.unshift({x:(k%cols)*cell+12.5,y:Math.floor(k/cols)*cell+12.5});k=prev.get(k)}return path;
+}
+// Gardener's day: water the bed → walk a round → water again → go to the tap (the dog's window) → back.
+function route(){
+ const work=w=>({...BED,wait:w,look:'bed',amp:1.25,sp:1.15,icon:'💧',bed:true});
+ const round=(x,y,w)=>({x,y,wait:w,look:'out',amp:.8,sp:1.6,icon:'👀',bed:true});
+ const tap=w=>({x:230,y:182,wait:w,look:-Math.PI/2,amp:.35,sp:2,icon:'🚰'});
+ return [work(6),round(760,245,1.4),round(925,250,1.4),work(4),tap(4)];
+}
+
+// ---------- Live camera settings (the main thing to tune by feel) ----------
+// Camera modes from GDD §11. Main one: third person from above-behind. Each mode keeps its own settings;
+// in every mode the camera turns behind the running dog, and during a chase drops lower and closer.
+const MODES={high:'Сзади-сверху',low:'Сзади, низко',iso:'Изометрия'};
+const CAM_TUNE=[
+ ['back','Дистанция позади',1,30,.1,' м',1],
+ ['up','Высота над собакой',.5,25,.1,' м',1],
+ ['pitch','Наклон вниз',5,80,1,'°',0],
+ ['fov','Перспектива (FOV)',15,90,1,'°',0],
+ ['lag','Запаздывание',0,1,.01,' с',2],
+ ['turn','Доворот за движением',.1,3,.05,' с',2]];
+const CHASE_TUNE=[
+ ['back','Погоня: позади',1,30,.1,' м',1],
+ ['up','Погоня: высота',.5,25,.1,' м',1],
+ ['pitch','Погоня: наклон',5,80,1,'°',0]];
+const GAME_TUNE=[
+ ['tempo','Темп (все скорости)',.5,1.5,.05,'×',2],
+ ['mapScale','Размер лужайки',.6,1.6,.05,'×',2]];
+const CAM_DEF={high:{back:6,up:5,pitch:36,fov:45,lag:.2,turn:.8},low:{back:3,up:2,pitch:20,fov:50,lag:.12,turn:.5},iso:{back:19,up:16,pitch:40,fov:35,lag:.25,turn:1.2}};
+const freshCfg=()=>({mode:'high',tempo:1,mapScale:1,cam:JSON.parse(JSON.stringify(CAM_DEF)),chase:{back:4,up:3,pitch:30}});
+const CFG_KEY='sneaky-dog-3d-cam2';
+let cfg=freshCfg();
+try{const s=JSON.parse(localStorage.getItem(CFG_KEY));if(s){if(MODES[s.mode])cfg.mode=s.mode;for(const [k,,min,max] of GAME_TUNE)if(Number.isFinite(s[k]))cfg[k]=clamp(s[k],min,max);for(const m in MODES)for(const [k,,min,max] of CAM_TUNE)if(Number.isFinite(s.cam?.[m]?.[k]))cfg.cam[m][k]=clamp(s.cam[m][k],min,max);for(const [k,,min,max] of CHASE_TUNE)if(Number.isFinite(s.chase?.[k]))cfg.chase[k]=clamp(s.chase[k],min,max)}}catch{}
+const CAM=()=>cfg.cam[cfg.mode];
+const saveCfg=()=>{try{localStorage.setItem(CFG_KEY,JSON.stringify(cfg))}catch{}};
+let U=.06*cfg.mapScale; // metres per 2D unit: 1000×760 → 60×45.6 m
+
+// ---------- Renderer ----------
+const canvas=$('field');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
+renderer.setClearColor(0xb9dcc8);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(35,1,.1,500);
+scene.add(new THREE.HemisphereLight(0xfff8e0,0x3a5a35,1.6));
+const sun=new THREE.DirectionalLight(0xfff2d0,1.8);sun.position.set(-30,50,20);scene.add(sun);
+
+const matCache=new Map();
+const mat=c=>{if(!matCache.has(c))matCache.set(c,new THREE.MeshLambertMaterial({color:c}));return matCache.get(c)};
+const unlit=(c,o=1)=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:o,depthWrite:false});
+function mesh(geo,m,x=0,y=0,z=0,parent){const o=new THREE.Mesh(geo,typeof m==='string'?mat(m):m);o.position.set(x,y,z);parent?.add(o);return o}
+const blobTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(10,35,25,.55)');r.addColorStop(1,'rgba(10,35,25,0)');g.fillStyle=r;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();
+const blobMat=new THREE.MeshBasicMaterial({map:blobTex,transparent:true,depthWrite:false});
+const planeGeo=new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2);
+const discGeo=new THREE.CircleGeometry(1,32).rotateX(-Math.PI/2);
+function blob(x,z,rx,rz,parent,y=.025){const o=mesh(planeGeo,blobMat,x,y,z,parent);o.scale.set(rx*2,1,rz*2);return o}
+function label(text,bg,fg){const c=document.createElement('canvas');c.width=256;c.height=72;const g=c.getContext('2d');g.fillStyle=bg;g.beginPath();g.roundRect(4,4,248,64,22);g.fill();g.fillStyle=fg;g.font="900 36px 'Trebuchet MS',sans-serif";g.textAlign='center';g.textBaseline='middle';g.fillText(text,128,38);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthWrite:false}));s.scale.set(2,.56,1);return s}
+
+// ---------- World (rebuilt when the lawn size changes) ----------
+let world=null,bedLabel=null,gateLabel=null,zoneRing=null,exitRing=null,pile=null,fadeables=[];
+function rect(x0,y0,x1,y1,color,y,parent){const o=mesh(planeGeo,color,(x0+x1)/2*U,y,(y0+y1)/2*U,parent);o.scale.set((x1-x0)*U,1,(y1-y0)*U);return o}
+function stroke(pts,w,color,y,parent){for(let i=0;i<pts.length;i++){const [x,z]=pts[i];const d=mesh(discGeo,color,x*U,y,z*U,parent);d.scale.setScalar(w/2*U);if(i){const [px,pz]=pts[i-1],len=Math.hypot(x-px,z-pz);const s=mesh(planeGeo,color,(x+px)/2*U,y,(z+pz)/2*U,parent);s.scale.set(len*U,1,w*U);s.rotation.y=-Math.atan2(z-pz,x-px)}}}
+function buildWorld(){
+ if(world){scene.remove(world);world.traverse(o=>{if(o.geometry&&o.geometry!==planeGeo&&o.geometry!==discGeo)o.geometry.dispose()});for(const f of fadeables)f.m.dispose()}
+ U=.06*cfg.mapScale;world=new THREE.Group();scene.add(world);fadeables=[];
+ rect(-1500,-1500,2500,2300,'#194937',-.02,world);
+ rect(25,35,975,725,'#789f51',0,world);
+ rect(42,53,958,700,'#84af60',.005,world);
+ // Grass tufts give the eye a scale reference for speed.
+ const tuftGeo=new THREE.SphereGeometry(1,6,4),tufts=new THREE.InstancedMesh(tuftGeo,mat('#93ba6a'),420),m4=new THREE.Matrix4(),q=new THREE.Quaternion(),sc=new THREE.Vector3(),p=new THREE.Vector3();
+ for(let i=0;i<420;i++){const x=55+(i*173%890)+(i*37%11),y=65+(i*113%620)+(i*53%13);p.set(x*U,.01,y*U);sc.set(.13,.07,.09);m4.compose(p,q,sc);tufts.setMatrixAt(i,m4);tufts.setColorAt(i,new THREE.Color(i%3?'#93ba6a':'#709d50'))}
+ world.add(tufts);
+ // Paths, same polylines as in 2D.
+ const main=[[117,711],[117,529],[497,529],[763,529],[763,324],[762,145],[867,145]],side=[[496,529],[496,251],[235,251]];
+ stroke(main,69,'#cdbd89',.01,world);stroke(main,58,'#ddcc9b',.013,world);stroke(side,48,'#ddcc9b',.015,world);
+ // Fence with a gap for the gate (bottom left).
+ const posts=[];for(let x=42;x<970;x+=28){if(x<72||x>168)posts.push([x+5,715]);posts.push([x+5,59])}for(let y=70;y<700;y+=28){posts.push([39,y+10]);posts.push([962,y+10])}
+ const postMesh=new THREE.InstancedMesh(new THREE.BoxGeometry(.14,.95,.14),mat('#d2bd86'),posts.length);posts.forEach(([x,y],i)=>{p.set(x*U,.475,y*U);sc.set(1,1,1);m4.compose(p,q,sc);postMesh.setMatrixAt(i,m4)});world.add(postMesh);
+ const rail=(x0,y0,x1,y1)=>{const o=mesh(new THREE.BoxGeometry(Math.max(.08,(x1-x0)*U),.08,Math.max(.08,(y1-y0)*U)),'#ae9464',(x0+x1)/2*U,.62,(y0+y1)/2*U,world)};
+ rail(42,59,960,59);rail(39,59,39,715);rail(962,59,962,715);rail(42,715,72,715);rail(170,715,962,715);
+ for(const gx of [70,168]){mesh(new THREE.BoxGeometry(.22,1.6,.22),'#a77547',gx*U,.8,715*U,world)}
+ gateLabel=label('ВОРОТА','#102f2a','#fff5d9');gateLabel.position.set(119*U,1.9,715*U);world.add(gateLabel);
+ exitRing=mesh(new THREE.RingGeometry(.93,1,48).rotateX(-Math.PI/2),unlit('#fff5d9',.35),exit.x*U,.03,exit.y*U,world);exitRing.scale.setScalar(exit.r*U);
+ // The flowerbed the dog is after.
+ const B=BED_RECT;mesh(new THREE.BoxGeometry(B.w*U,.16,B.h*U),'#65553d',(B.x+B.w/2)*U,.08,(B.y+B.h/2)*U,world);mesh(new THREE.BoxGeometry((B.w-14)*U,.18,(B.h-12)*U),'#795d40',(B.x+B.w/2)*U,.09,(B.y+B.h/2)*U,world);
+ const fl=new THREE.InstancedMesh(new THREE.SphereGeometry(.13,6,4),mat('#ffffff'),42);for(let i=0;i<42;i++){p.set((812+(i%7)*13)*U,.32,(108+Math.floor(i/7)*14)*U);sc.set(1,1,1);m4.compose(p,q,sc);fl.setMatrixAt(i,m4);fl.setColorAt(i,new THREE.Color(['#fcba9f','#fff3bb','#ff6f73'][i%3]))}world.add(fl);
+ bedLabel=label('КЛУМБА','#102f2a','#fff5d9');bedLabel.position.set(850*U,1.6,84*U);world.add(bedLabel);
+ zoneRing=mesh(new THREE.RingGeometry(.94,1,56).rotateX(-Math.PI/2),unlit('#f8d36c',.8),zone.x*U,.2,zone.y*U,world);zoneRing.scale.setScalar((zone.r+7)*U);
+ pile=new THREE.Group();for(const [dx,dy,r] of [[0,.07,.11],[.03,.17,.08],[.05,.25,.05]])mesh(new THREE.SphereGeometry(r,8,6),'#604633',dx,dy,0,pile);pile.position.set((zone.x+23)*U,.17,(zone.y+24)*U);pile.visible=false;world.add(pile);
+ // Watering can by the bed and the tap the gardener walks to.
+ mesh(new THREE.BoxGeometry(.4,.3,.25),'#4f8fb8',(BED.x+22)*U,.15,(BED.y+2)*U,world);
+ const puddle=mesh(discGeo,unlit('#7fc6e8',.55),TAP.x*U,.02,(TAP.y+22)*U,world);puddle.scale.set(18*U,1,7*U);
+ mesh(new THREE.CylinderGeometry(.08,.08,1.1,10),'#6f7f86',TAP.x*U,.55,TAP.y*U,world);mesh(new THREE.BoxGeometry(.45,.1,.1),'#8e9ea5',TAP.x*U,1.05,TAP.y*U,world);mesh(new THREE.CylinderGeometry(.11,.11,.05,12),'#c94f43',TAP.x*U,1.14,TAP.y*U,world);
+ // Obstacles: hedges and benches block sight, the flower box is low.
+ for(const o of solids){const cx=(o.x+o.w/2)*U,cz=(o.y+o.h/2)*U,w=o.w*U,d=o.h*U;
+  if(o.type==='hedge'){mesh(new THREE.BoxGeometry(w,1.25,d),'#347648',cx,.625,cz,world);mesh(new THREE.BoxGeometry(w*.86,.25,d*.92),'#55985a',cx,1.3,cz,world);blob(cx+.3,cz+.3,w*.75,d*.6,world)}
+  else if(o.type==='bench'){mesh(new THREE.BoxGeometry(w-.3,.4,d-.25),'#7a5636',cx,.2,cz,world);mesh(new THREE.BoxGeometry(w,.09,d),'#ce9c64',cx,.48,cz,world);mesh(new THREE.BoxGeometry(w,.42,.08),'#c38c55',cx,.78,(o.y+3)*U,world);for(const lx of [o.x+10,o.x+o.w-10])for(const lz of [o.y+5,o.y+o.h-5])mesh(new THREE.BoxGeometry(.09,.45,.09),'#354e43',lx*U,.22,lz*U,world);blob(cx,cz+.2,w*.6,d*.9,world)}
+  else{mesh(new THREE.BoxGeometry(w,.35,d),'#795f3f',cx,.175,cz,world);for(let j=0;j<15;j++)mesh(new THREE.SphereGeometry(.17,6,4),j%2?'#ffcf72':'#ea8e9a',(o.x+8+j*11)*U,.42,cz,world)}}
+ // Trees: trunk + crown; crowns fade when they hide the dog.
+ for(const t of trees){const x=t.x*U,z=t.y*U,cr=(t.r+11)*U;mesh(new THREE.CylinderGeometry(.28,.36,2.8,10),'#815c38',x,1.4,z,world);blob(x+.5,z+.4,cr*.9,cr*.7,world);
+  const m=new THREE.MeshLambertMaterial({color:'#3d8d55',transparent:true});const g=new THREE.Group();mesh(new THREE.SphereGeometry(cr,14,10),m,0,0,0,g);mesh(new THREE.SphereGeometry(cr*.6,12,8),m,cr*.3,cr*.65,-cr*.2,g);g.position.set(x,3.2+cr*.5,z);world.add(g);fadeables.push({m,x,y:3.2+cr*.5,z,r:cr*1.1,tree:t})}
+ // Bushes: clusters of spheres, taller than the dog; they turn see-through around it.
+ for(const b of bushes){const x=b.x*U,z=b.y*U,r=b.r*U;const m=new THREE.MeshLambertMaterial({color:'#378b51',transparent:true});const g=new THREE.Group();
+  for(const [dx,dz,s,c] of [[-.45,.12,.62,'#276b48'],[.45,.12,.6,'#28724a'],[0,-.2,.72,null],[-.3,-.25,.5,'#4c9c5b'],[.3,-.3,.5,'#53aa62']]){const mm=c?new THREE.MeshLambertMaterial({color:c,transparent:true}):m;const o=mesh(new THREE.SphereGeometry(r*s,12,8),mm,dx*r,r*s*.55,dz*r,g);o.scale.y=.85;if(c)fadeables.push({m:mm,x,y:.6,z,r:r*.95,bush:b,child:true})}
+  g.position.set(x,0,z);world.add(g);blob(x+.2,z+.2,r*1.05,r*.8,world);fadeables.push({m,x,y:.6,z,r:r*.95,bush:b})}
+}
+
+// ---------- Actors (sizes in metres, independent of lawn size) ----------
+function makeDog(){const g=new THREE.Group(),body=new THREE.Group(),c=DOG.color;g.add(body);
+ const torso=mesh(new THREE.CapsuleGeometry(.15,.36,4,10),c,0,.34,0,body);torso.rotation.z=Math.PI/2;
+ mesh(new THREE.SphereGeometry(.14,14,10),c,.37,.47,0,body);mesh(new THREE.BoxGeometry(.15,.09,.12),'#f6d590',.52,.43,0,body);mesh(new THREE.SphereGeometry(.032,8,6),'#27352d',.6,.46,0,body);
+ for(const s of [-1,1]){mesh(new THREE.SphereGeometry(.022,6,4),'#25382c',.47,.52,s*.07,body);const ear=mesh(new THREE.BoxGeometry(.07,.15,.04),'#b78544',.35,.45,s*.14,body);ear.rotation.x=s*.25}
+ mesh(new THREE.BoxGeometry(.06,.2,.3),'#d65148',.25,.43,0,body);
+ const tail=new THREE.Group();tail.position.set(-.33,.4,0);const tm=mesh(new THREE.CylinderGeometry(.025,.035,.26,6),c,0,.12,0,tail);tail.rotation.z=.75;body.add(tail);
+ const legs=[];for(const [lx,lz] of [[.2,.09],[.2,-.09],[-.18,.09],[-.18,-.09]]){const pv=new THREE.Group();pv.position.set(lx,.24,lz);mesh(new THREE.BoxGeometry(.075,.24,.075),c,0,-.12,0,pv);body.add(pv);legs.push(pv)}
+ const shadow=blob(0,0,.42,.26,g,.02);return {g,body,legs,tail,shadow}}
+function makeGardener(){const g=new THREE.Group();
+ const legs=[],arms=[];for(const s of [-1,1]){const pv=new THREE.Group();pv.position.set(0,.86,s*.11);mesh(new THREE.BoxGeometry(.16,.86,.15),'#183b37',0,-.43,0,pv);mesh(new THREE.BoxGeometry(.26,.08,.16),'#2b2a26',.05,-.84,0,pv);g.add(pv);legs.push(pv)}
+ mesh(new THREE.BoxGeometry(.3,.64,.46),'#487b86',0,1.18,0,g);mesh(new THREE.BoxGeometry(.04,.5,.36),'#dcc186',.16,1.1,0,g);
+ for(const s of [-1,1]){const pv=new THREE.Group();pv.position.set(0,1.46,s*.3);mesh(new THREE.BoxGeometry(.11,.58,.11),'#487b86',0,-.29,0,pv);mesh(new THREE.SphereGeometry(.065,8,6),'#edb785',0,-.6,0,pv);g.add(pv);arms.push(pv)}
+ mesh(new THREE.SphereGeometry(.14,14,10),'#edb785',0,1.62,0,g);mesh(new THREE.SphereGeometry(.035,6,4),'#b9774c',.14,1.61,0,g);
+ mesh(new THREE.CylinderGeometry(.32,.32,.03,20),'#dcc186',0,1.74,0,g);mesh(new THREE.CylinderGeometry(.14,.16,.13,16),'#f4d9a0',0,1.81,0,g);
+ const can=mesh(new THREE.BoxGeometry(.22,.18,.14),'#4f8fb8',0,-.66,0,arms[1]);
+ blob(0,0,.5,.4,g,.02);return {g,legs,arms,can}}
+const dogRig=makeDog();scene.add(dogRig.g);
+
+// ---------- Game state ----------
+let state='menu',player=null,guards=[],elapsed=0,done=false,progress=0,spotted=false,discovered=false,abilityCD=0,ball=null,rings=[],stamina=DOG.stamina,noiseTimer=0,move={x:1,y:0},hiddenNow=false;
+let keys=new Set(),joy={x:0,y:0,id:null},toiletHeld=false,toastTimer=0,muted=true,audioCtx=null,inputMode=matchMedia('(pointer:coarse)').matches?'touch':'keys';
+let screenW=0,screenH=0,lastVW=0,lastVH=0,lastTime=0,fps=60,fpsN=0,fpsT=0,needRebuild=false;
+const RAYS=52;
+
+function makeCone(){const pos=new Float32Array((RAYS+1)*3),idx=[];for(let i=0;i<RAYS-1;i++)idx.push(0,i+1,i+2);const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(pos,3));geo.setIndex(idx);const cm=unlit('#fff3b8',.22);cm.side=THREE.DoubleSide;const m=new THREE.Mesh(geo,cm);m.frustumCulled=false;m.renderOrder=1;scene.add(m);return m}
+function clearRound(){for(const g of guards){scene.remove(g.rig.g);scene.remove(g.cone);g.cone.geometry.dispose();g.tag.remove()}guards=[];for(const r of rings)scene.remove(r.m);rings=[];if(ball){scene.remove(ball.m);ball=null}}
+function setupRound(){clearRound();player={...start,angle:-Math.PI/4,moving:false,mode:'stand',speed:0,phase:0};
+ const pts=route();const rig=makeGardener();scene.add(rig.g);const tag=document.createElement('div');tag.className='tag';tag.innerHTML='<i class="ic"></i><i class="bar"><s></s></i>';$('tags').appendChild(tag);
+ guards=[{x:pts[0].x,y:pts[0].y,angle:-Math.PI/2,idx:0,state:'patrol',sus:0,seen:0,target:null,wait:0,path:[],repath:0,pts,watch:0,watchT:0,lookBase:0,step:null,angry:false,alertLook:0,lookAt:null,rig,cone:makeCone(),tag,phase:0,moved:0}];
+ discovered=false;elapsed=0;done=false;progress=0;spotted=false;abilityCD=0;noiseTimer=0;stamina=DOG.stamina;move={x:1,y:-1};camState.init=false;
+ pile.visible=false;setLabel(bedLabel,'КЛУМБА',false);setLabel(gateLabel,'ВОРОТА',false)}
+function setLabel(s,text,on){const n=label(text,on?'#fff5d9':'#102f2a',on?'#102f2a':'#fff5d9');s.material.map.dispose();s.material.map=n.material.map;s.material.needsUpdate=true;n.material.dispose()}
+
+function menu(){state='menu';clearInput();setupRound();$('veil').classList.remove('hidden');
+ $('veil').innerHTML=`<div class="card solo"><div class="eyebrow">Прототип ${VERSION} · примитивы</div><h1>SNEAKY DOG 3D</h1><p class="subtitle">Проверяем ощущение: каково бегать по лужайке от садовника. Сделай дело на клумбе и вернись к воротам.</p><button class="primary" id="play">На лужайку!</button><p class="fine">Режим камеры — кнопка 🎥 (на ПК — V), настройки — ⚙.<br>Телефон: джойстик (слабо — красться, сильно — бег), 🎾 и 💩.<br>ПК: WASD, C — красться, Shift — бег, E — мяч, пробел — дело, V — режим камеры.</p><a href="../">← 2D-версия</a></div>`;
+ $('play').onclick=begin}
+function begin(){setupRound();state='playing';clearInput();$('veil').classList.add('hidden');toast('Садовник стережёт клумбу. Дождись, когда он уйдёт к крану!',4.5);beep(550,.08)}
+function clearInput(){keys.clear();joy={x:0,y:0,id:null};toiletHeld=false;$('knob').style.transform='';$('toilet').classList.remove('active')}
+function pause(){if(state!=='playing')return;state='paused';clearInput();$('veil').classList.remove('hidden');
+ $('veil').innerHTML=`<div class="card result"><div class="result-icon">🍃</div><h1>Передышка</h1><p class="fine">Экран ${screenW}×${screenH} · поле ${canvas.width}×${canvas.height} · ${fps} fps</p><div class="result-actions" style="margin-top:16px"><button class="primary" id="resume">Продолжить</button><button class="plain" id="restart">Сначала</button><button class="plain" id="back">В меню</button></div></div>`;
+ $('resume').onclick=()=>{state='playing';$('veil').classList.add('hidden')};$('restart').onclick=begin;$('back').onclick=menu}
+function finish(win){if(state!=='playing')return;state=win?'won':'lost';clearInput();beep(win?740:160,.2);const stars=win?1+(!spotted?1:0)+(!spotted&&elapsed<85?1:0):0;
+ $('veil').classList.remove('hidden');$('veil').innerHTML=`<div class="card result"><div class="result-icon">${win?'🐾':'🧺'}</div><h1>${win?'Получилось!':'Садовник поймал!'}</h1>${win?`<div class="stars">${'★'.repeat(stars)}${'☆'.repeat(3-stars)}</div>`:'<p class="subtitle">Он уносит собаку за шкирку к воротам. Попробуй ещё раз.</p>'}<div class="statline"><span>⏱ ${formatTime(elapsed)}</span><span>${spotted?'👀 заметили':'🍃 незаметно'}</span></div><div class="result-actions"><button class="primary" id="again">Ещё раз</button><button class="plain" id="back">В меню</button></div></div>`;
+ $('again').onclick=begin;$('back').onclick=menu}
+function toast(text,seconds=2.5){$('toast').textContent=text;$('toast').style.display='block';toastTimer=seconds}
+function beep(freq,duration=.1){if(muted)return;try{audioCtx??=new (window.AudioContext||window.webkitAudioContext)();audioCtx.resume();let o=audioCtx.createOscillator(),g=audioCtx.createGain();o.frequency.value=freq;o.type='sine';g.gain.setValueAtTime(.06,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+duration);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+duration)}catch{}}
+function formatTime(t){return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0')}
+function ability(){if(state!=='playing'||abilityCD>0)return;abilityCD=DOG.cooldown;progress=0;beep(480,.1);
+ let origin={x:player.x,y:player.y},target={...origin};for(let n=10;n<=205;n+=10){let p={x:origin.x+move.x*n,y:origin.y+move.y*n};if(blocked(p.x,p.y,5))break;target=p}
+ if(ball)scene.remove(ball.m);ball={x:target.x,y:target.y,from:origin,age:0,life:5,m:mesh(new THREE.SphereGeometry(.11,12,8),'#cee566')};scene.add(ball.m);
+ for(const g of guards)if(g.state!=='chase'&&dist(g,target)<520){g.state='inspect';g.target={...target};g.wait=0;g.repath=0;g.path=[]}toast('Мяч улетел туда, куда смотрит собака')}
+
+// ---------- Update: the 2D rules, with input turned to match the camera ----------
+function update(dt){if(state!=='playing')return;elapsed+=dt;abilityCD=Math.max(0,abilityCD-dt);if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)$('toast').style.display='none'}
+ let x=joy.x,y=joy.y;const kx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),ky=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);const sneakKey=keys.has('c');if(kx||ky){const kl=Math.hypot(kx,ky),sn=sneakKey?.55:1;x=kx/kl*sn;y=ky/kl*sn}let len=Math.hypot(x,y);if(len>1){x/=len;y/=len;len=1}
+ const sprint=((keys.has('shift')&&!sneakKey)||(joy.id!==null&&len>.88))&&stamina>2&&len>.1;const speed=DOG.speed*cfg.tempo*(sprint?1.35:1);stamina=clamp(stamina+(sprint?-28:18)*dt,0,DOG.stamina);
+ // Stick "up" means "away from the camera", whatever the camera yaw is.
+ const c=Math.cos(camState.yaw),s=Math.sin(camState.yaw),mx=x*c-y*s,my=x*s+y*c;
+ player.moving=len>.1;player.mode=!player.moving?'stand':sprint?'run':len<.6?'sneak':'walk';player.speed=player.moving?len*speed:0;
+ if(player.moving){move={x:mx/len,y:my/len};player.angle=Math.atan2(my,mx);travel(player,mx*speed*dt,my*speed*dt,13);progress=0}
+ const bush=bushes.find(b=>dist(player,b)<b.r-8);const hidden=!!bush&&!sprint&&!player.moving||!!bush&&!sprint&&len<.88;hiddenNow=hidden;const near=dist(player,zone)<zone.r;const doing=(toiletHeld||keys.has(' '))&&near&&!done&&!player.moving;
+ if(doing){progress+=dt;if(progress>=LV.hold){done=true;progress=LV.hold;pile.visible=true;setLabel(bedLabel,'ГОТОВО ✓',true);setLabel(gateLabel,'ВЫХОД',true);beep(800,.18);toast('Готово! Теперь к воротам внизу слева.',4)}}else if(!done)progress=0;
+ noiseTimer-=dt;if(sprint&&noiseTimer<=0){noiseTimer=.7;const m=mesh(new THREE.RingGeometry(.9,1,48).rotateX(-Math.PI/2),unlit('#fff5d9',.55),player.x*U,.05,player.y*U);scene.add(m);rings.push({age:0,m});for(const g of guards)if(g.state!=='chase'&&dist(g,player)<NOISE){if(g.state==='patrol')toast('Садовник услышал топот!',1.5);g.state='inspect';g.target={x:player.x,y:player.y};g.repath=0;g.wait=0}}
+ for(const g of guards){if(g.state!=='patrol')g.watch=0;const distance=dist(g,player);const to=Math.atan2(player.y-g.y,player.x-g.x),diff=Math.atan2(Math.sin(to-g.angle),Math.cos(to-g.angle));const vis=LV.vision*(g.angry?1.15:1);let sees=distance<vis&&Math.abs(diff)<.64&&lineClear(g,player)&&(!hidden||distance<43);
+  if(distance<36&&lineClear(g,player))sees=true;
+  if(sees){g.sus=clamp(g.sus+dt*(g.state==='chase'?3:.8+1.3*clamp(1-distance/vis,0,1)),0,1);if(g.state!=='chase'){g.alertLook=.7;g.lookAt={x:player.x,y:player.y}}g.seen=0;g.target={x:player.x,y:player.y};if(g.sus>=1&&g.state!=='chase'){g.state='chase';spotted=true;g.repath=0;beep(200,.18);toast('Он тебя заметил! Спрячься за препятствием.')}}else{g.sus=Math.max(0,g.sus-dt*.55);g.seen+=dt}
+  if(done&&!discovered&&g.state!=='chase'){const dz=dist(g,zone),az=Math.atan2(zone.y-g.y,zone.x-g.x)-g.angle;if(dz<vis&&Math.abs(Math.atan2(Math.sin(az),Math.cos(az)))<.64&&lineClear(g,zone)){discovered=true;for(const o of guards)o.angry=true;g.state='search';g.target={x:150,y:600};g.wait=0;g.repath=0;g.path=[];beep(220,.25);toast('Садовник нашёл сюрприз и бежит к воротам!',3)}}
+  if(g.state==='chase'&&!sees&&g.seen>2.1){g.state='search';g.wait=3;g.repath=0}
+  let frozen=false;if(g.state!=='chase'&&g.alertLook>0){frozen=true;g.alertLook-=dt;const want=Math.atan2(g.lookAt.y-g.y,g.lookAt.x-g.x),d=Math.atan2(Math.sin(want-g.angle),Math.cos(want-g.angle));g.angle+=clamp(d,-5*dt,5*dt);
+   if(g.alertLook<=0){frozen=false;if(g.sus>.12){g.state='inspect';g.target={...g.lookAt};g.wait=0;g.repath=0;g.path=[];toast('Садовник что-то заметил и идёт проверить',1.8)}}}
+  let target=frozen?null:g.state==='patrol'?g.pts[g.idx]:g.target;const speedG=LV.speed*cfg.tempo*(g.state==='chase'?1.58:1)*(g.angry?1.2:1);g.moved=0;
+  if(!frozen&&g.state==='patrol'&&g.watch>0){g.watch-=dt;g.watchT+=dt;g.angle=g.lookBase+Math.sin(g.watchT*g.step.sp)*g.step.amp;target=null;if(g.watch<=0){g.idx=(g.idx+1)%g.pts.length;g.repath=0}}
+  else if(!frozen&&g.state==='patrol'&&dist(g,target)<19){const st=target;if(st.wait){g.watch=st.wait;g.watchT=0;g.step=st;g.lookBase=st.look==='bed'?Math.atan2(zone.y-g.y,zone.x-g.x):st.look==='out'?Math.atan2(g.y-zone.y,g.x-zone.x):st.look;target=null}else{g.idx=(g.idx+1)%g.pts.length;target=g.pts[g.idx];g.repath=0}}
+  if(target&&dist(g,target)<21&&g.state!=='patrol'&&g.state!=='chase'){g.wait+=dt;g.angle+=dt*.85;if((g.state==='inspect'&&g.wait>2.6)||(g.state==='search'&&g.wait>5.5)){g.state='patrol';g.target=null;g.path=[];g.repath=0;g.wait=0;g.idx=Math.max(0,g.pts.findIndex(p=>p.bed))}}
+  else if(target){g.repath-=dt;if(lineClear(g,target,16)){g.path=[]}else if(g.repath<=0){g.path=findPath(g,target);g.repath=.65}let next=g.path[0]||target;if(g.path.length&&dist(g,next)<16){g.path.shift();next=g.path[0]||target}let dx=next.x-g.x,dy=next.y-g.y,l=Math.hypot(dx,dy);if(l>2){g.angle=Math.atan2(dy,dx);const ox=g.x,oy=g.y;travel(g,dx/l*speedG*dt,dy/l*speedG*dt,14);g.moved=Math.hypot(g.x-ox,g.y-oy)/dt}}
+  if(g.state==='chase'&&distance<26&&lineClear(g,player)){finish(false);break}
+ }
+ if(state==='playing'&&done&&dist(player,exit)<exit.r)finish(true);
+ for(const r of rings)r.age+=dt;rings=rings.filter(r=>{if(r.age<.7)return true;scene.remove(r.m);r.m.geometry.dispose();return false});
+ if(ball){ball.age+=dt;ball.life-=dt;if(ball.life<=0){scene.remove(ball.m);ball=null}}
+ $('clock').textContent=formatTime(elapsed);$('objective').textContent=done?'Вернись к воротам внизу слева':'Найди клумбу наверху справа';$('progress').style.display=doing&&!done?'block':'none';$('toiletFill').style.width=progress/LV.hold*100+'%';$('abilityText').textContent=abilityCD>0?Math.ceil(abilityCD)+'с':'МЯЧ';$('ability').disabled=abilityCD>0;$('energyFill').style.width=stamina/DOG.stamina*100+'%';
+ const sneakHint=inputMode==='keys'?'держи C, чтобы красться':'отклони джойстик меньше';$('status').textContent=hidden?'🍃 Ты в укрытии':guards.some(g=>g.state==='chase')?'❗ Погоня — разорви линию зрения':bush?'👀 Слишком быстро — '+sneakHint:near&&!done?(inputMode==='keys'?'💩 Остановись и держи пробел':'💩 Остановись и удерживай кнопку'):done?'🐾 Дело сделано. Беги к воротам!':'Кусты прячут тебя, если '+(inputMode==='keys'?'красться (C)':'идти медленно');
+}
+
+// ---------- Camera: isometric-ish follow with lag; pulls back during a chase ----------
+const camState={x:0,z:0,chase:0,yaw:Math.PI/4,init:false};
+// Camera sits `back` metres behind and `up` metres above the dog and looks down at `pitch`;
+// it swings behind the running dog with its own lag and blends into the lower, closer chase framing.
+function updateCamera(dt){const M=CAM(),C=cfg.chase,chasing=state==='playing'&&guards.some(g=>g.state==='chase');
+ const k=M.lag>0?1-Math.exp(-dt/M.lag):1,kc=1-Math.exp(-dt/.5),want=player.angle+Math.PI/2;
+ if(!camState.init){camState.x=player.x*U;camState.z=player.y*U;camState.yaw=want;camState.chase=0;camState.init=true}
+ if(player.moving){const d=Math.atan2(Math.sin(want-camState.yaw),Math.cos(want-camState.yaw));camState.yaw+=d*(1-Math.exp(-dt/M.turn))}
+ camState.x+=(player.x*U-camState.x)*k;camState.z+=(player.y*U-camState.z)*k;camState.chase+=((chasing?1:0)-camState.chase)*kc;
+ const t=camState.chase,back=M.back+(C.back-M.back)*t,up=M.up+(C.up-M.up)*t,pitch=(M.pitch+(C.pitch-M.pitch)*t)*D2R,yaw=camState.yaw,fx=Math.sin(yaw),fz=-Math.cos(yaw);
+ camera.position.set(camState.x-fx*back,.3+up,camState.z-fz*back);
+ camera.lookAt(camera.position.x+fx*Math.cos(pitch),camera.position.y-Math.sin(pitch),camera.position.z+fz*Math.cos(pitch))}
+function applyFov(){const a=screenW/Math.max(1,screenH),f=CAM().fov;camera.aspect=a;
+ // In portrait keep a similar framing across the narrow side (geometric middle between width- and height-fit).
+ camera.fov=a<1?2*Math.atan(Math.tan(f*D2R/2)/Math.sqrt(a))/D2R:f;camera.updateProjectionMatrix()}
+function setMode(m){cfg.mode=m;saveCfg();applyFov();if(!$('tune').hidden)renderTune();toast('Камера: '+MODES[m],1.5)}
+
+// ---------- Draw: move meshes to the simulation state ----------
+const v3=new THREE.Vector3();
+function segSphere(ax,ay,az,bx,by,bz,cx,cy,cz){const dx=bx-ax,dy=by-ay,dz=bz-az,l2=dx*dx+dy*dy+dz*dz;let t=((cx-ax)*dx+(cy-ay)*dy+(cz-az)*dz)/l2;t=clamp(t,0,1);return Math.hypot(ax+dx*t-cx,ay+dy*t-cy,az+dz*t-cz)}
+function syncScene(dt){
+ const onBed=player.x>BED_RECT.x&&player.x<BED_RECT.x+BED_RECT.w&&player.y>BED_RECT.y&&player.y<BED_RECT.y+BED_RECT.h;
+ const d=dogRig;d.g.position.set(player.x*U,onBed?.18:0,player.y*U);d.g.rotation.y=-player.angle;
+ const low=player.mode==='sneak'||hiddenNow&&player.mode==='stand'?.8:1;d.body.scale.y+=(low-d.body.scale.y)*Math.min(1,dt*10);
+ player.phase+=dt*player.speed*U*(player.mode==='run'?2.6:3.4);const sw=player.moving?Math.sin(player.phase):0,amp=player.mode==='run'?.9:.55;
+ d.legs.forEach((l,i)=>l.rotation.z=sw*amp*(i%2?1:-1)*(i<2?1:-1));d.body.position.y=player.mode==='run'?Math.abs(Math.sin(player.phase))*.06:0;d.tail.rotation.x=Math.sin(elapsed*(done?16:9))*.5;
+ const dogHead={x:d.g.position.x,y:.4,z:d.g.position.z};
+ for(const f of fadeables){let o=1;if(f.bush&&dist(player,f.bush)<f.bush.r+14)o=.4;else if(segSphere(dogHead.x,dogHead.y,dogHead.z,camera.position.x,camera.position.y,camera.position.z,f.x,f.y,f.z)<f.r)o=f.tree?.3:.45;f.m.opacity+=(o-f.m.opacity)*Math.min(1,dt*8);f.m.depthWrite=f.m.opacity>.95}
+ for(const g of guards){const r=g.rig;r.g.position.set(g.x*U,0,g.y*U);r.g.rotation.y=-g.angle;const walking=g.moved>5;g.phase+=dt*g.moved*U*3.2;const s=walking?Math.sin(g.phase)*(g.state==='chase'?.75:.45):0;
+  r.legs[0].rotation.z=s;r.legs[1].rotation.z=-s;const watering=g.state==='patrol'&&g.watch>0&&g.step?.icon==='💧';r.arms[0].rotation.z=-s*.8;r.arms[1].rotation.z=watering?1.2+Math.sin(elapsed*3)*.1:s*.8;
+  // Vision cone on the grass, clipped by obstacles exactly like line of sight.
+  const radius=LV.vision*(g.angry?1.15:1),pos=g.cone.geometry.attributes.position.array;pos[0]=g.x*U;pos[1]=.04;pos[2]=g.y*U;
+  for(let i=0;i<RAYS;i++){const a=g.angle-.64+i*1.28/(RAYS-1),ca=Math.cos(a),sa=Math.sin(a);let ex=g.x,ey=g.y;for(let rr=10;rr<=radius;rr+=8){const px=g.x+ca*rr,py=g.y+sa*rr;if(blocked(px,py,0))break;ex=px;ey=py}pos[3+i*3]=ex*U;pos[4+i*3]=.04;pos[5+i*3]=ey*U}
+  g.cone.geometry.attributes.position.needsUpdate=true;const cm=g.cone.material;if(g.state==='chase'){cm.color.set('#f16053');cm.opacity=.4}else if(g.sus>0||g.state==='inspect'||g.state==='search'){cm.color.set('#f8d36c');cm.opacity=.36}else{cm.color.set('#fff3b8');cm.opacity=.22}
+  // Tag over the head: activity icon, "?" / "!" and the suspicion bar.
+  v3.set(g.x*U,2.15,g.y*U).project(camera);const tx=(v3.x*.5+.5)*screenW,ty=(-v3.y*.5+.5)*screenH;const ic=g.tag.firstChild,bar=g.tag.lastChild;
+  g.tag.style.display=v3.z<1&&state!=='menu'?'flex':'none';g.tag.style.transform=`translate(${tx}px,${ty}px) translate(-50%,-100%)`;
+  const alarm=g.state==='chase'?'!':g.sus>0||g.state==='inspect'||g.state==='search'?'?':'';ic.className='ic'+(alarm==='!'?' x':alarm?' q':'');ic.textContent=(alarm||(g.state==='patrol'&&g.watch>0&&g.step?.icon)||'')+(g.angry?'💢':'');
+  bar.style.visibility=g.sus>0&&g.state!=='chase'?'visible':'hidden';bar.firstChild.style.width=g.sus*100+'%'}
+ const t=performance.now()/1000;zoneRing.material.opacity=done?.5:.55+Math.sin(t*4)*.3;zoneRing.material.color.set(done?'#a8de8a':'#f8d36c');exitRing.material.opacity=done?.6+Math.sin(t*4)*.3:.3;
+ for(const r of rings){r.m.scale.setScalar(Math.max(.01,NOISE*U*r.age/.7));r.m.material.opacity=.55*(1-r.age/.7)}
+ if(ball){const k=clamp(ball.age/.4,0,1);ball.m.position.set((ball.from.x+(ball.x-ball.from.x)*k)*U,.11+Math.sin(k*Math.PI)*1.4,(ball.from.y+(ball.y-ball.from.y)*k)*U)}
+ // Arrow to the goal when it is off screen.
+ const goal=done?exit:zone,ar=$('arrow');v3.set(goal.x*U,.3,goal.y*U).project(camera);let gx=v3.x,gy=v3.y;if(v3.z>1){gx=-gx;gy=-gy}
+ if(state==='playing'&&(v3.z>1||Math.abs(gx)>.92||Math.abs(gy)>.86)){const m=Math.max(Math.abs(gx)/.8,Math.abs(gy)/.62,1e-3);const px=(gx/m*.5+.5)*screenW,py=(-gy/m*.5+.5)*screenH;ar.style.display='flex';ar.style.transform=`translate(${px-22}px,${py-22}px) rotate(${Math.atan2(-gy,gx)+Math.PI/2}rad)`}else ar.style.display='none';
+ // Pointer to the gardener when he is out of frame (behind or to the side), with distance: no blind spot behind the camera.
+ const gp=$('gptr'),g=guards[0];if(g&&state==='playing'){v3.set(g.x*U,1.6,g.y*U).project(camera);let qx=v3.x,qy=v3.y;const behind=v3.z>1;if(behind){qx=-qx;qy=-qy;if(Math.abs(qy)<.3)qy=-1}
+  if(behind||Math.abs(qx)>.96||Math.abs(qy)>.94){const m=Math.max(Math.abs(qx)/.84,Math.abs(qy)/.62,1e-3),px=(qx/m*.5+.5)*screenW,py=(-qy/m*.5+.5)*screenH;gp.style.display='flex';gp.className=g.state==='chase'?'x':g.sus>0||g.state==='inspect'||g.state==='search'?'q':'';gp.style.transform=`translate(${px}px,${py}px) translate(-50%,-50%)`;gp.firstChild.style.transform=`rotate(${Math.atan2(-qy,qx)}rad)`;gp.lastChild.textContent=Math.round(dist(g,player)*U)+' м'}else gp.style.display='none'}else gp.style.display='none'}
+
+function resize(){const app=$('app'),vh=Math.round(window.visualViewport?.height||innerHeight);app.style.height=vh+'px';screenW=Math.round(app.getBoundingClientRect().width)||innerWidth;screenH=vh;renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.setSize(screenW,screenH);applyFov();lastVW=innerWidth;lastVH=vh}
+window.visualViewport?.addEventListener('resize',resize);window.addEventListener('resize',resize);window.addEventListener('orientationchange',()=>setTimeout(resize,300));
+function loop(t){requestAnimationFrame(loop);if(innerWidth!==lastVW||Math.round(window.visualViewport?.height||innerHeight)!==lastVH)resize();const dt=Math.min((t-lastTime)/1000,.033);lastTime=t;
+ fpsN++;fpsT+=Math.min((t-(loop.prev??t))/1000,1);loop.prev=t;if(fpsT>=.5){fps=Math.round(fpsN/fpsT);fpsN=0;fpsT=0;const f=$('fpsVal');if(f)f.textContent=fps}
+ if(needRebuild){needRebuild=false;buildWorld();camState.init=false;if(done){pile.visible=true;setLabel(bedLabel,'ГОТОВО ✓',true);setLabel(gateLabel,'ВЫХОД',true)}}
+ update(dt);updateCamera(dt);syncScene(dt);renderer.render(scene,camera)}
+
+// ---------- Tuning panel ----------
+function renderTune(){const rows=[...CAM_TUNE.map(t=>[t,CAM(),'c']),...CHASE_TUNE.map(t=>[t,cfg.chase,'p']),...GAME_TUNE.map(t=>[t,cfg,'g'])],fmt=([k,,,,,unit,dp],o)=>o[k].toFixed(dp)+unit;
+ $('tune').innerHTML=`<div class="head"><span>Камера и темп</span><span><span id="fpsVal">${fps}</span> fps</span></div><div class="btns" style="margin:0 0 10px">${Object.entries(MODES).map(([m,n])=>`<button data-mode="${m}" style="${m===cfg.mode?'background:#f8d36c;color:#102f2a':''}">${n}</button>`).join('')}</div>`+rows.map(([t,o,g])=>{const [k,name,min,max,step]=t;return `<div class="row"><label for="t-${g}${k}"><span>${name}</span><b id="v-${g}${k}">${fmt(t,o)}</b></label><input id="t-${g}${k}" type="range" min="${min}" max="${max}" step="${step}" value="${o[k]}"></div>`}).join('')+`<div class="fine" id="mapSize"></div><div class="btns"><button id="tReset">Сбросить</button><button id="tCopy">Скопировать</button><button id="tClose">Закрыть</button></div><code id="tJson"></code>`;
+ for(const b of $('tune').querySelectorAll('[data-mode]'))b.onclick=()=>setMode(b.dataset.mode);
+ for(const [t,o,g] of rows){const k=t[0];$('t-'+g+k).addEventListener('input',e=>{o[k]=+e.target.value;$('v-'+g+k).textContent=fmt(t,o);if(k==='mapScale')needRebuild=true;if(k==='fov')applyFov();saveCfg();tuneInfo()})}
+ $('tReset').onclick=()=>{const rb=cfg.mapScale!==1,m=cfg.mode;cfg=freshCfg();cfg.mode=m;if(rb)needRebuild=true;saveCfg();applyFov();renderTune()};
+ $('tCopy').onclick=()=>{const s=JSON.stringify(cfg);navigator.clipboard?.writeText(s).then(()=>toast('Настройки скопированы'),()=>toast('Не удалось скопировать — сделай скриншот'))};
+ $('tClose').onclick=()=>{$('tune').hidden=true};tuneInfo()}
+function tuneInfo(){$('mapSize').textContent=`Лужайка ${Math.round(916*.06*cfg.mapScale)}×${Math.round(647*.06*cfg.mapScale)} м · собака ${(DOG.speed*cfg.tempo*.06*cfg.mapScale).toFixed(1)} м/с, бег ${(DOG.speed*1.35*cfg.tempo*.06*cfg.mapScale).toFixed(1)} · садовник ${(LV.speed*cfg.tempo*.06*cfg.mapScale).toFixed(1)}, погоня ${(LV.speed*1.58*cfg.tempo*.06*cfg.mapScale).toFixed(1)} м/с`;$('tJson').textContent=JSON.stringify(cfg)}
+function nextMode(){const m=Object.keys(MODES);setMode(m[(m.indexOf(cfg.mode)+1)%m.length])}
+$('camBtn').onclick=nextMode;
+$('tuneBtn').onclick=()=>{const p=$('tune');p.hidden=!p.hidden;if(!p.hidden)renderTune()};
+
+// ---------- Input (same scheme as 2D) ----------
+function setJoy(e){const r=$('stick').getBoundingClientRect(),max=r.width*.31;let dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),l=Math.hypot(dx,dy);if(l>max){dx*=max/l;dy*=max/l}joy.x=dx/max;joy.y=dy/max;$('knob').style.transform=`translate(${dx}px,${dy}px)`}
+$('stick').addEventListener('pointerdown',e=>{inputMode='touch';if(state!=='playing'||joy.id!==null)return;e.preventDefault();joy.id=e.pointerId;$('stick').setPointerCapture(e.pointerId);setJoy(e)});$('stick').addEventListener('pointermove',e=>{if(e.pointerId===joy.id)setJoy(e)});
+function resetJoy(e){if(e.pointerId===joy.id){joy={x:0,y:0,id:null};$('knob').style.transform=''}}for(const t of ['pointerup','pointercancel','lostpointercapture'])$('stick').addEventListener(t,resetJoy);
+$('toilet').addEventListener('pointerdown',e=>{if(state!=='playing')return;e.preventDefault();$('toilet').setPointerCapture(e.pointerId);toiletHeld=true;$('toilet').classList.add('active');if(!done&&dist(player,zone)>=zone.r)toast('Сначала подойди к клумбе наверху справа')});
+for(const t of ['pointerup','pointercancel','lostpointercapture'])$('toilet').addEventListener(t,()=>{toiletHeld=false;$('toilet').classList.remove('active')});
+$('ability').addEventListener('pointerdown',e=>{e.preventDefault();ability()});$('ability').onclick=e=>{if(e.detail===0)ability()};
+$('pause').onclick=pause;$('sound').onclick=()=>{muted=!muted;$('sound').textContent=muted?'♪':'♫';$('sound').setAttribute('aria-label',muted?'Включить звук':'Выключить звук');beep(660,.1)};
+const CODES={KeyW:'w',KeyA:'a',KeyS:'s',KeyD:'d',KeyE:'e',KeyC:'c',Space:' ',ShiftLeft:'shift',ShiftRight:'shift',ArrowUp:'arrowup',ArrowDown:'arrowdown',ArrowLeft:'arrowleft',ArrowRight:'arrowright',Escape:'escape'};const keyOf=e=>CODES[e.code]||(e.key||'').toLowerCase();
+window.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const k=keyOf(e);if(CODES[e.code])inputMode='keys';if([' ','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(k))e.preventDefault();if(k==='escape'){if(state==='playing')pause();else if(state==='paused')$('resume').click();return}if(e.code==='KeyV'&&!e.repeat){nextMode();return}if(state!=='playing')return;keys.add(k);if(k==='e'&&!e.repeat)ability()});
+window.addEventListener('keyup',e=>keys.delete(keyOf(e)));window.addEventListener('blur',()=>{if(state==='playing')pause();clearInput()});document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='playing')pause()});canvas.addEventListener('contextmenu',e=>e.preventDefault());
+
+// Read-only hook for build verification and debugging; it never changes game state.
+window.SneakyDog3D={version:VERSION,snapshot:()=>({version:VERSION,state,player:player?{x:+player.x.toFixed(1),y:+player.y.toFixed(1),mode:player.mode,hidden:hiddenNow}:null,guards:guards.map(g=>({x:+g.x.toFixed(1),y:+g.y.toFixed(1),state:g.state,idx:g.idx,watch:+g.watch.toFixed(2),icon:g.step?.icon||null,angry:g.angry,sus:+g.sus.toFixed(2)})),done,discovered,progress:+progress.toFixed(2),elapsed:+elapsed.toFixed(2),stamina:Math.round(stamina),cfg:{...cfg},camera:{x:+camera.position.x.toFixed(2),y:+camera.position.y.toFixed(2),z:+camera.position.z.toFixed(2),fov:+camera.fov.toFixed(1)},screen:{w:screenW,h:screenH,canvas:[canvas.width,canvas.height]},fps})};
+
+buildWorld();resize();menu();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
