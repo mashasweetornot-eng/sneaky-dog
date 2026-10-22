@@ -2,164 +2,568 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#102f2a"><meta name="description" content="Прокрадись через парк, отвлеки садовника и успей сделать своё дело. Играбельный прототип Sneaky Dog.">
-<title>Sneaky Dog · Park Escape</title>
+<meta name="theme-color" content="#102f2a"><meta name="description" content="3D-прототип Sneaky Dog: каково бегать по лужайке от садовника.">
+<title>Sneaky Dog 3D · прототип</title>
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Sneaky Dog"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23102f2a'/%3E%3Cg fill='%23f8d36c'%3E%3Cellipse cx='32' cy='42' rx='16' ry='13'/%3E%3Cellipse cx='12' cy='25' rx='6' ry='8'/%3E%3Cellipse cx='26' cy='16' rx='6' ry='8'/%3E%3Cellipse cx='41' cy='16' rx='6' ry='8'/%3E%3Cellipse cx='53' cy='25' rx='6' ry='8'/%3E%3C/g%3E%3C/svg%3E">
 <style>
-:root{color-scheme:dark;--ink:#102f2a;--cream:#fff5d9;--gold:#f8d36c;--green:#a8de8a}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}#app{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0c241f;color:var(--cream);font-family:ui-rounded,'Trebuchet MS',system-ui,sans-serif}button{font:inherit;cursor:pointer;border:0;touch-action:manipulation;color:inherit}button:focus-visible{outline:3px solid white;outline-offset:4px}button:disabled{cursor:default;opacity:.5}#app{position:relative;max-width:1600px;height:100dvh;margin:auto;overflow:hidden}#field{display:block;width:100%;height:100%;touch-action:none}#hud{position:absolute;top:0;left:0;right:0;padding:max(16px,env(safe-area-inset-top)) max(22px,env(safe-area-inset-right)) 16px max(22px,env(safe-area-inset-left));background:linear-gradient(#102f2af2,#102f2a00);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;pointer-events:none}.logo{font-size:20px;font-weight:950;letter-spacing:-1px;color:var(--gold)}.level{font-size:14px;margin-top:5px;color:#e0eedf}.hud-right{display:flex;align-items:center;gap:10px}.pill{background:#102f2ae6;border:1px solid #ffffff1a;border-radius:18px;padding:10px 14px;font-weight:700;font-size:14px}.iconbtn{pointer-events:auto;background:#102f2ae6;border:1px solid #ffffff33;border-radius:50%;width:43px;height:43px;font-size:19px}.objective{position:absolute;top:90px;left:50%;transform:translateX(-50%);max-width:calc(100% - 30px);white-space:nowrap;padding:10px 17px;background:#fff5d9;color:var(--ink);border-radius:30px;font-weight:800;font-size:14px;box-shadow:0 4px 0 #0002;pointer-events:none}.status{position:absolute;left:50%;bottom:46px;transform:translateX(-50%);background:#102f2ae6;padding:9px 16px;border-radius:18px;font-size:14px;pointer-events:none;max-width:calc(100% - 20px);text-align:center}.progress{position:absolute;top:138px;left:50%;transform:translateX(-50%);width:220px;padding:9px;background:#102f2ae6;border-radius:18px;display:none}.progress span{display:block;text-align:center;font-size:13px;margin-bottom:6px}.track{height:8px;background:#ffffff26;border-radius:8px;overflow:hidden}.fill{height:100%;width:0;background:var(--gold);border-radius:8px}.controls{position:absolute;bottom:max(22px,env(safe-area-inset-bottom));left:22px;right:22px;display:flex;align-items:flex-end;justify-content:space-between;pointer-events:none}#stick{width:116px;height:116px;border-radius:50%;background:#102f2a55;border:2px solid #fff5d955;position:relative;pointer-events:auto;touch-action:none;user-select:none}#knob{position:absolute;width:47px;height:47px;border-radius:50%;left:32.5px;top:32.5px;background:#fff5d9bb;border:3px solid #fff5d9;box-shadow:0 4px 10px #0003;pointer-events:none}.actions{display:flex;gap:12px;align-items:flex-end;pointer-events:auto}.action{height:76px;width:76px;border-radius:26px;background:var(--gold);color:var(--ink);border:3px solid #fff5d966;box-shadow:0 5px 0 #0004;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:24px;touch-action:none;user-select:none}.action small{font-size:12px;font-weight:900}.action.secondary{background:#fff5d9}.action.active{transform:translateY(3px);box-shadow:0 2px 0 #0004}.energy{height:5px;background:#fff5d94d;border-radius:10px;margin:9px 7px 0;width:62px}.energy>i{display:block;background:#a8de8a;width:100%;height:100%;border-radius:10px}.control-help{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:13px;color:#fff5d9b3;pointer-events:none}#veil{position:absolute;inset:0;background:#08221bc2;backdrop-filter:blur(9px);display:flex;align-items:center;justify-content:center;padding:22px;overflow:auto}.card{width:920px;max-width:100%;border-radius:30px;background:var(--ink);border:1px solid #ffffff1f;box-shadow:0 24px 100px #0006;overflow:hidden;display:grid;grid-template-columns:42% 58%}.art{position:relative;background:#245342;overflow:hidden;min-height:440px}.art img{width:100%;height:100%;object-fit:cover;position:absolute}.art:after{content:'';position:absolute;inset:0;background:linear-gradient(transparent 55%,#102f2aef)}.art-label{position:absolute;left:25px;bottom:25px;z-index:1;font-size:15px;line-height:1.6;color:#fff5d9d9}.content{padding:32px}.eyebrow{font-size:12px;font-weight:900;letter-spacing:2px;color:#a8de8a;text-transform:uppercase}h1{font-size:clamp(32px,5vw,50px);line-height:1;margin:12px 0 8px;letter-spacing:-2px;color:var(--gold)}.subtitle{margin:0 0 21px;color:#d1e2d3;font-size:15px;line-height:1.5}.dogs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}.dog-card{padding:12px 5px;background:#ffffff09;border:2px solid transparent;border-radius:18px;min-width:0}.dog-card.selected{background:#f8d36c17;border-color:var(--gold)}.dog-card span{font-size:30px;display:block;margin-bottom:7px}.dog-card b{font-size:13px}.dog-info{background:#ffffff08;border-radius:15px;padding:12px;font-size:14px;line-height:1.5;min-height:78px;color:#d6e6d8}.dog-info strong{color:var(--gold)}.levels{display:flex;gap:7px;margin:15px 0}.levelbtn{border-radius:12px;background:#ffffff0d;flex:1;padding:10px 3px;font-size:14px;border:1px solid transparent}.levelbtn.selected{border-color:#a8de8a;color:#a8de8a}.primary{background:var(--gold);color:var(--ink);padding:15px 25px;width:100%;border-radius:16px;font-weight:950;font-size:17px;box-shadow:0 4px 0 #c69639}.fine{color:#b7d0bf;font-size:12px;line-height:1.5;margin:14px 0 0}.result{max-width:430px;display:block;text-align:center;padding:32px}.result h1{font-size:38px;line-height:1.12}.result .subtitle{margin:18px 0}.result-icon{font-size:58px}.result-actions{display:flex;flex-direction:column;gap:14px}.plain{background:#ffffff0b;border:1px solid #ffffff20;padding:13px;border-radius:14px;font-weight:800}.stars{font-size:35px;color:var(--gold);margin:15px 0}.statline{display:flex;justify-content:center;gap:22px;margin:20px 0;color:#d6e6d8;font-size:14px}#toast{position:absolute;left:50%;top:190px;transform:translateX(-50%);background:#102f2af2;padding:12px 18px;border-radius:18px;max-width:calc(100% - 24px);text-align:center;font-size:14px;pointer-events:none;display:none}.hidden,[hidden]{display:none!important}#app:fullscreen{max-width:none;height:100%}
+:root{color-scheme:dark;--ink:#102f2a;--cream:#fff5d9;--gold:#f8d36c;--green:#a8de8a}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}#app{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0c241f;color:var(--cream);font-family:ui-rounded,'Trebuchet MS',system-ui,sans-serif}button{font:inherit;cursor:pointer;border:0;touch-action:manipulation;color:inherit}button:focus-visible{outline:3px solid white;outline-offset:4px}button:disabled{cursor:default;opacity:.5}#app{position:relative;max-width:1600px;height:100dvh;margin:auto;overflow:hidden}#field{display:block;width:100%;height:100%;touch-action:none}#hud{position:absolute;top:0;left:0;right:0;padding:max(16px,env(safe-area-inset-top)) max(22px,env(safe-area-inset-right)) 16px max(22px,env(safe-area-inset-left));background:linear-gradient(#102f2af2,#102f2a00);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;pointer-events:none}.logo{font-size:20px;font-weight:950;letter-spacing:-1px;color:var(--gold)}.level{font-size:14px;margin-top:5px;color:#e0eedf}.hud-right{display:flex;align-items:center;gap:10px}.pill{background:#102f2ae6;border:1px solid #ffffff1a;border-radius:18px;padding:10px 14px;font-weight:700;font-size:14px}.iconbtn{pointer-events:auto;background:#102f2ae6;border:1px solid #ffffff33;border-radius:50%;width:43px;height:43px;font-size:19px}.objective{position:absolute;top:90px;left:50%;transform:translateX(-50%);max-width:calc(100% - 30px);white-space:nowrap;padding:10px 17px;background:#fff5d9;color:var(--ink);border-radius:30px;font-weight:800;font-size:14px;box-shadow:0 4px 0 #0002;pointer-events:none}.status{position:absolute;left:50%;bottom:46px;transform:translateX(-50%);background:#102f2ae6;padding:9px 16px;border-radius:18px;font-size:14px;pointer-events:none;max-width:calc(100% - 20px);text-align:center}.progress{position:absolute;top:138px;left:50%;transform:translateX(-50%);width:220px;padding:9px;background:#102f2ae6;border-radius:18px;display:none}.progress span{display:block;text-align:center;font-size:13px;margin-bottom:6px}.track{height:8px;background:#ffffff26;border-radius:8px;overflow:hidden}.fill{height:100%;width:0;background:var(--gold);border-radius:8px}.controls{position:absolute;bottom:max(22px,env(safe-area-inset-bottom));left:22px;right:22px;display:flex;align-items:flex-end;justify-content:space-between;pointer-events:none}#stick{width:116px;height:116px;border-radius:50%;background:#102f2a55;border:2px solid #fff5d955;position:relative;pointer-events:auto;touch-action:none;user-select:none}#knob{position:absolute;width:47px;height:47px;border-radius:50%;left:32.5px;top:32.5px;background:#fff5d9bb;border:3px solid #fff5d9;box-shadow:0 4px 10px #0003;pointer-events:none}.actions{display:flex;gap:12px;align-items:flex-end;pointer-events:auto}.action{height:76px;width:76px;border-radius:26px;background:var(--gold);color:var(--ink);border:3px solid #fff5d966;box-shadow:0 5px 0 #0004;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:24px;touch-action:none;user-select:none}.action small{font-size:12px;font-weight:900}.action.secondary{background:#fff5d9}.action.active{transform:translateY(3px);box-shadow:0 2px 0 #0004}.control-help{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:13px;color:#fff5d9b3;pointer-events:none}#veil{position:absolute;inset:0;background:#08221bc2;backdrop-filter:blur(9px);display:flex;align-items:center;justify-content:center;padding:22px;overflow:auto}.card{width:920px;max-width:100%;border-radius:30px;background:var(--ink);border:1px solid #ffffff1f;box-shadow:0 24px 100px #0006;overflow:hidden;display:grid;grid-template-columns:42% 58%}.art{position:relative;background:#245342;overflow:hidden;min-height:440px}.art img{width:100%;height:100%;object-fit:cover;position:absolute}.art:after{content:'';position:absolute;inset:0;background:linear-gradient(transparent 55%,#102f2aef)}.art-label{position:absolute;left:25px;bottom:25px;z-index:1;font-size:15px;line-height:1.6;color:#fff5d9d9}.content{padding:32px}.eyebrow{font-size:12px;font-weight:900;letter-spacing:2px;color:#a8de8a;text-transform:uppercase}h1{font-size:clamp(32px,5vw,50px);line-height:1;margin:12px 0 8px;letter-spacing:-2px;color:var(--gold)}.subtitle{margin:0 0 21px;color:#d1e2d3;font-size:15px;line-height:1.5}.dogs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}.dog-card{padding:12px 5px;background:#ffffff09;border:2px solid transparent;border-radius:18px;min-width:0}.dog-card.selected{background:#f8d36c17;border-color:var(--gold)}.dog-card span{font-size:30px;display:block;margin-bottom:7px}.dog-card b{font-size:13px}.dog-info{background:#ffffff08;border-radius:15px;padding:12px;font-size:14px;line-height:1.5;min-height:78px;color:#d6e6d8}.dog-info strong{color:var(--gold)}.levels{display:flex;gap:7px;margin:15px 0}.levelbtn{border-radius:12px;background:#ffffff0d;flex:1;padding:10px 3px;font-size:14px;border:1px solid transparent}.levelbtn.selected{border-color:#a8de8a;color:#a8de8a}.primary{background:var(--gold);color:var(--ink);padding:15px 25px;width:100%;border-radius:16px;font-weight:950;font-size:17px;box-shadow:0 4px 0 #c69639}.fine{color:#b7d0bf;font-size:12px;line-height:1.5;margin:14px 0 0}.result{max-width:430px;display:block;text-align:center;padding:32px}.result h1{font-size:38px;line-height:1.12}.result .subtitle{margin:18px 0}.result-icon{font-size:58px}.result-actions{display:flex;flex-direction:column;gap:14px}.plain{background:#ffffff0b;border:1px solid #ffffff20;padding:13px;border-radius:14px;font-weight:800}.stars{font-size:35px;color:var(--gold);margin:15px 0}.statline{display:flex;justify-content:center;gap:22px;margin:20px 0;color:#d6e6d8;font-size:14px}#toast{position:absolute;left:50%;top:190px;transform:translateX(-50%);background:#102f2af2;padding:12px 18px;border-radius:18px;max-width:calc(100% - 24px);text-align:center;font-size:14px;pointer-events:none;display:none}.hidden,[hidden]{display:none!important}#app:fullscreen{max-width:none;height:100%}
 @media(pointer:coarse){.control-help{display:none}}
 @media(max-width:650px){#hud{padding: max(12px,env(safe-area-inset-top)) 13px 12px}.logo{font-size:18px}.pill{padding:9px 10px;font-size:13px}.objective{top:77px;font-size:13px;white-space:normal;text-align:center;width:max-content;max-width:92%}.progress{top:122px}.card{display:block;max-width:410px}.art{min-height:0;height:145px}.art img{object-position:center 43%}.art-label{display:none}.content{padding:20px}h1{font-size:36px;margin-top:8px}.subtitle{font-size:14px;margin-bottom:13px}.dogs{margin:10px 0}.dog-info{font-size:13px;min-height:66px}.fine{font-size:12px;margin-top:10px}.levels{margin:12px 0}.controls{left:17px;right:17px;bottom:max(24px,env(safe-area-inset-bottom))}.status{bottom:157px;font-size:13px}.action{height:72px;width:72px;border-radius:25px}.control-help{display:none}.result{padding:26px}.hud-right{gap:7px}}
 @media(max-height:550px){#veil{padding:12px}.card{max-width:820px;grid-template-columns:35% 65%;display:grid}.art{height:auto;min-height:0}.content{padding:17px 25px}h1{font-size:32px;margin:6px 0}.subtitle{margin-bottom:8px;font-size:13px}.dogs{margin:7px 0}.dog-card{padding:6px}.dog-card span{font-size:24px;margin-bottom:3px}.dog-info{min-height:0;padding:8px;font-size:12px}.levels{margin:9px 0}.primary{padding:11px}.fine{margin-top:9px}.objective{top:68px}.status{bottom:115px}.controls{bottom:max(17px,env(safe-area-inset-bottom));left:max(22px,env(safe-area-inset-left));right:max(22px,env(safe-area-inset-right))}#hud{padding-left:max(13px,env(safe-area-inset-left));padding-right:max(13px,env(safe-area-inset-right))}#stick{height:92px;width:92px}#knob{left:20.5px;top:20.5px}.action{height:62px;width:62px;border-radius:22px}.progress{top:104px}.result{display:block;padding:20px;max-width:430px}.result-icon{font-size:36px}.result h1{font-size:28px}.result .subtitle,.statline,.stars{margin:10px 0}.control-help{display:none}.objective{top:14px;font-size:12px;padding:7px 13px;max-width:40vw;white-space:normal;text-align:center}.status{bottom:auto;top:74px;left:max(14px,env(safe-area-inset-left));transform:none;font-size:12px;padding:7px 11px;max-width:23vw;text-align:left}#toast{top:74px;left:auto;right:max(14px,env(safe-area-inset-right));transform:none;font-size:12px;padding:7px 11px;max-width:23vw;text-align:left}}
-@media(max-height:550px){#veil{padding:8px;align-items:flex-start}#veil>.card{margin:auto}h1{margin:4px 0}.dog-card{padding:6px 4px}.dog-card span{display:inline-block;font-size:20px;margin:0 5px 0 0;vertical-align:middle}.levels{margin:6px 0}.levelbtn{padding:7px 3px}.primary{padding:9px}}
+#tags{position:absolute;inset:0;pointer-events:none;overflow:hidden}.tag{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:3px;will-change:transform}.tag .ic{font-size:19px;line-height:1;min-width:30px;height:30px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:950}.tag .ic.q{background:#f8d36c;color:#102f2a}.tag .ic.x{background:#ed6455;color:#102f2a}.tag .bar{width:44px;height:5px;border-radius:3px;background:#102f2a77;overflow:hidden;visibility:hidden}.tag .bar>s{display:block;height:100%;width:0;background:#f8d36c}
+#arrow{position:absolute;left:0;top:0;width:44px;height:44px;border-radius:50%;background:#fff5d9;color:#102f2a;font-weight:950;font-size:24px;display:none;align-items:center;justify-content:center;pointer-events:none;box-shadow:0 3px 0 #0003}
+#gptr{position:absolute;left:0;top:0;display:none;align-items:center;gap:4px;padding:5px 9px 5px 6px;border-radius:16px;background:#102f2ae6;border:2px solid #fff5d966;font-weight:900;font-size:13px;pointer-events:none;white-space:nowrap}#gptr::before{content:'🧑‍🌾';font-size:16px}#gptr i{font-style:normal;display:inline-block;color:var(--gold)}#gptr.q{border-color:#f8d36c}#gptr.x{border-color:#ed6455;background:#5a1f1ae6}
+:root{--stick:150px;--knob:calc(var(--stick)*.4);--stick-border:2px}
+#stick{width:var(--stick);height:var(--stick);background:#102f2a2e;border:var(--stick-border) solid #fff5d933}#stick::before{content:'';position:absolute;inset:-16px;border-radius:50%}
+#knob{width:var(--knob);height:var(--knob);left:calc((var(--stick) - var(--knob))/2 - var(--stick-border));top:calc((var(--stick) - var(--knob))/2 - var(--stick-border));background:#fff5d980;border:2px solid #fff5d9a6}
+@media(max-height:550px){:root{--stick:132px}.card.solo .subtitle{display:none}.card.solo h1{margin:4px 0 8px}#veil{align-items:flex-start}#veil>.card{margin:auto}.result-actions{gap:8px}.result .plain{padding:9px}.result .primary{padding:10px}}
+@media(max-width:650px){.status{bottom:calc(var(--stick) + 62px)}}
+#tune{position:absolute;top:calc(max(16px,env(safe-area-inset-top)) + 52px);right:max(12px,env(safe-area-inset-right));width:280px;max-height:calc(100% - 200px);overflow:auto;background:#102f2aeb;border:1px solid #ffffff22;border-radius:18px;padding:12px 14px;font-size:13px;-webkit-overflow-scrolling:touch}#tune .row{margin:0 0 9px}#tune label{display:flex;justify-content:space-between;color:#d6e6d8}#tune label b{color:var(--gold)}#tune input{width:100%;margin:4px 0 0;accent-color:#f8d36c}#tune .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:900;color:var(--gold)}#tune .btns{display:flex;gap:8px;margin-top:4px}#tune .btns button{flex:1;background:#ffffff12;border:1px solid #ffffff22;border-radius:10px;padding:8px 4px;font-weight:800}#tune code{display:block;margin-top:8px;font-size:11px;color:#b7d0bf;word-break:break-all}
+.breeds{grid-template-columns:repeat(4,1fr);gap:6px;margin:4px 0 14px}.breeds .dog-card{padding:8px 3px}.breeds .dog-card span{font-size:24px;margin-bottom:4px}.breeds .dog-card b{font-size:12px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dots{display:block;font-style:normal;font-size:10px;line-height:1.35;color:#d6e6d8;white-space:nowrap;margin-top:2px}
+.card.solo{display:block;max-width:440px;padding:28px;text-align:center}.card.solo .primary{margin-top:6px}.card.solo a{color:var(--green);display:inline-block;margin-top:14px;font-size:14px}
+@media(max-width:650px){.iconbtn{width:37px;height:37px;font-size:16px}.logo{font-size:15px}.hud-right{gap:5px}.pill{padding:8px 8px}}
+@media(max-height:550px){#tune{max-height:calc(100% - 150px);top:calc(max(12px,env(safe-area-inset-top)) + 46px)}.card.solo{padding:18px}}
 </style>
 </head>
 <body><div id="app">
-<canvas id="field" aria-label="Парк: управляйте собакой джойстиком или WASD"></canvas>
-<div id="hud"><div><div class="logo">SNEAKY DOG</div><div class="level" id="levelName">Парк №1 · Первый выгул</div></div><div class="hud-right"><div class="pill" id="clock">0:00</div><button class="iconbtn" id="pause" aria-label="Пауза">Ⅱ</button><button class="iconbtn" id="sound" aria-label="Включить звук">♪</button><button class="iconbtn" id="fs" aria-label="Во весь экран" hidden>⛶</button></div></div>
-<div class="objective" id="objective">Найди клумбу и сделай дело</div>
-<div class="progress" id="progress"><span id="progressLabel">Тихо… почти готово!</span><div class="track"><div class="fill" id="toiletFill"></div></div></div>
-<div class="status" id="status">Кусты скрывают тебя, когда идёшь медленно</div>
-<div class="controls"><div><div id="stick" aria-label="Джойстик"><div id="knob"></div></div><div class="energy"><i id="energyFill"></i></div></div><div class="actions"><button id="ability" class="action secondary" aria-label="Способность"><span id="abilityIcon">🎾</span><small id="abilityText">МЯЧ</small></button><button id="toilet" class="action" aria-label="Удерживать, чтобы сходить в туалет"><span>💩</span><small>ДЕРЖИ</small></button></div></div>
-<div class="control-help">WASD / стрелки — идти · C — красться · Shift — бег · E — способность · Space — сделать дело</div>
-<div id="toast" role="status"></div><div id="veil"></div>
+<canvas id="field" aria-label="Лужайка в 3D: управляйте собакой джойстиком или WASD"></canvas>
+<div id="tags"></div><div id="arrow">↑</div><div id="gptr"><i>➤</i><b>0 м</b></div>
+<div id="hud"><div><div class="logo">SNEAKY DOG 3D</div><div class="level" id="levelName">3D-0 · Лужайка</div></div><div class="hud-right"><div class="pill" id="clock">0:00</div><button class="iconbtn" id="tuneBtn" aria-label="Настройки камеры">⚙</button><button class="iconbtn" id="pause" aria-label="Пауза">Ⅱ</button><button class="iconbtn" id="sound" aria-label="Включить звук">♪</button></div></div>
+<div class="objective" id="objective">Найди клумбу наверху справа</div>
+<div class="progress" id="progress"><span>Тихо… почти готово!</span><div class="track"><div class="fill" id="toiletFill"></div></div></div>
+<div class="status" id="status"></div>
+<div class="controls"><div><div id="stick" aria-label="Джойстик"><div id="knob"></div></div></div><div class="actions"><button id="ability" class="action secondary" aria-label="Мяч"><span>🎾</span><small id="abilityText">МЯЧ</small></button><button id="toilet" class="action" aria-label="Удерживать, чтобы сделать дело"><span>💩</span><small>ДЕРЖИ</small></button></div></div>
+<div class="control-help">WASD — идти · C — красться · Shift — бег · E — мяч · пробел — дело · мышь — повернуть камеру, колесо — зум · ⚙ — настройки</div>
+<div id="tune" hidden></div>
+<div id="toast" role="status"></div><div id="veil"><div class="card solo"><h1>SNEAKY DOG 3D</h1><p class="subtitle">Загружаю 3D…</p></div></div>
 </div>
 <script>
-'use strict';
-(()=>{
-const $=id=>document.getElementById(id), canvas=$('field'), ctx=canvas.getContext('2d');
-const W=1000,H=760;let screenW=0,screenH=0,dpr=1,scale=1,cam={x:0,y:0};
-const dogs=[
-{name:'Лабрадор',icon:'🐕',color:'#e8b960',speed:153,stamina:100,stealth:1,ability:'МЯЧ',emoji:'🎾',cooldown:12,info:'<strong>Мяч отвлекает садовника.</strong><br>Сбалансированная скорость, но легко заметить.'},
-{name:'Джек-рассел',icon:'🐶',color:'#f3efe2',speed:174,stamina:65,stealth:1,ability:'РЫВОК',emoji:'⚡',cooldown:9,info:'<strong>Рывок ускоряет на 1,5 секунды.</strong><br>Быстрее остальных, но запас энергии меньше.'},
-{name:'Корги',icon:'🦊',color:'#d9893d',speed:140,stamina:85,stealth:.68,ability:'ТИШЕ',emoji:'🍃',cooldown:14,info:'<strong>Тихий шаг на 5 секунд.</strong><br>Сложнее заметить, но бежит медленнее.'}];
-const levelData=[{name:'Первый выгул',guards:1,vision:190,speed:90,hold:4},{name:'Не на моей клумбе!',guards:1,vision:228,speed:106,hold:4.5},{name:'Двойной патруль',guards:2,vision:215,speed:99,hold:5}];
-let save={unlocked:1,best:{}};try{const s=JSON.parse(localStorage.getItem('sneaky-dog-v1'));if(s&&Number.isFinite(s.unlocked))save={unlocked:Math.min(3,Math.max(1,s.unlocked)),best:s.best||{}}}catch{}
-let selected=0,level=0,state='menu',player,guards=[],elapsed=0,done=false,progress=0,spotted=false,abilityCD=0,buff=0,ball=null,particles=[],toiletHeld=false,stamina=100,noiseTimer=0,muted=true,audioCtx=null,lastTime=0,move={x:0,y:-1},keys=new Set(),joy={x:0,y:0,id:null},toastTimer=0,lastVW=0,lastVH=0,discovered=false,rings=[],inputMode=matchMedia('(pointer:coarse)').matches?'touch':'keys';
-let bushes=[],solids=[],trees=[],flowers=[];
-const NOISE=165;const zone={x:850,y:147,r:51},exit={x:118,y:674,r:45},start={x:120,y:625};
-const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-// The gardener guards the flowerbed: he works beside it, walks short rounds around it,
-// and leaves only for chores (tap, wheelbarrow). Chores are the dog's window.
-const BED={x:870,y:224},TAP={x:230,y:146},BARROW={x:657,y:598};
-function routeFor(i){
- const work=w=>({...BED,wait:w,look:'bed',amp:1.25,sp:1.15,icon:'💧',bed:true});
- const round=(x,y,w)=>({x,y,wait:w,look:'out',amp:.8,sp:1.6,icon:'👀',bed:true});
- const tap=w=>({x:230,y:182,wait:w,look:-Math.PI/2,amp:.35,sp:2,icon:'🚰'});
- const barrow=w=>({x:622,y:566,wait:w,look:.77,amp:.35,sp:2,icon:'🧺'});
- if(level===0)return [work(6),tap(4)];
- if(level===1)return [work(5),round(760,245,1.4),round(745,105,1.4),work(4),barrow(3.5),work(5),round(925,250,1.4),tap(3.5)];
- return i===0?[work(5),round(760,245,1.2),work(4),tap(3),work(5),round(925,250,1.2),barrow(3)]
-  :[{x:496,y:300},{x:496,y:529},{x:763,y:529},{x:763,y:335,wait:2.2,look:'bed',amp:.5,sp:1.5,icon:'👀',bed:true},barrow(2.5)];
-}
-function makeMap(){
- bushes=[{x:240,y:550,r:49},{x:598,y:406,r:51},{x:778,y:181,r:48},{x:195,y:296,r:44},{x:431,y:133,r:41}];
- solids=[{x:315,y:431,w:155,h:30,type:'bench'},{x:325,y:190,w:36,h:101,type:'hedge'},{x:821,y:398,w:105,h:34,type:'bench'},{x:625,y:90,w:36,h:123,type:'hedge'},{x:408,y:607,w:176,h:32,type:'flower'}];
- if(level>=1)solids.push({x:704,y:581,w:35,h:97,type:'hedge'});
- trees=[{x:86,y:122,r:34},{x:912,y:284,r:32},{x:91,y:435,r:31},{x:870,y:627,r:35}];
- flowers=[];for(let i=0;i<28;i++)flowers.push({x:816+(i%7)*12,y:116+Math.floor(i/7)*14,c:['#fcba9f','#fff3bb','#ff6f73'][i%3]});
-}
+// If the CDN module never starts (offline, blocked), say so instead of hanging on "Загружаю".
+setTimeout(()=>{if(!window.SneakyDog3D){const v=document.getElementById('veil');v.innerHTML='<div class="card solo"><h1>Не загрузилось</h1><p class="subtitle">Не удалось загрузить Three.js. Проверь интернет и открой страницу снова.</p><a href="2d/">Старая 2D-версия (заморожена, 0.1.9)</a></div>'}},9000);
+</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+
+const VERSION='3D-0.12';
+const $=id=>document.getElementById(id);
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),D2R=Math.PI/180;
+
+// ---------- Simulation: same plane and units as the 2D game (1000×760), park 1 rules ----------
+// aim — height of the body centre the camera looks at; set per breed so other model sizes frame right.
+// Breeds (GDD §4). The menu dots are computed from these same numbers, so they cannot drift apart.
+// speed — base walking speed (2D units/s, × cfg.tempo); runMult / sneakMult — top / sneaking multipliers of it;
+// stamina — pool; drain — per second at full run (less for a partial run); regen — per second at walking pace or slower;
+// accel — speed smoothing in s (smaller = nimbler); len — nose to tail tip, m; hgt — height at the withers, m.
+// The placeholder model, the camera distance (in body lengths) and the aim height (hgt × 0.8) are all derived from len / hgt.
+// vip («Твой щенок») — a paid attraction, not a balance unit: best at every field, no weak spots (the counterweight is level
+// design). Locked: not playable yet. Its menu card lists abilities instead of dots, since the dots cap at 5 for everyone.
+const BREEDS={
+ lab:{name:'Лабрадор',icon:'🐕',color:'#e8b960',speed:153,runMult:1.35,sneakMult:.5,stamina:100,drain:28,regen:18,accel:.12,len:1.10,hgt:.58,cooldown:12},
+ jack:{name:'Джек-рассел',icon:'🐶',color:'#f3efe2',patch:'#975326',speed:174,runMult:1.45,sneakMult:.5,stamina:55,drain:32,regen:20,accel:.08,len:.72,hgt:.36,cooldown:12},
+ corgi:{name:'Корги',icon:'🦊',color:'#d9893d',speed:140,runMult:1.3,sneakMult:.55,stamina:85,drain:24,regen:18,accel:.14,len:.75,hgt:.28,cooldown:12},
+ vip:{name:'Твой щенок',icon:'⭐',color:'#c98f5a',speed:175,runMult:1.6,sneakMult:.55,stamina:120,drain:22,regen:24,accel:.08,len:1.00,hgt:.50,cooldown:9,locked:true,abilities:['Рывок','Вой','Копает быстро']}};
+// Guard against balance regressions: VIP must not lose to any other breed on any gameplay field.
+// +1 — bigger is better, −1 — smaller is better. Body size and colours (len, hgt, color) are not compared.
+{const BETTER={speed:1,runMult:1,sneakMult:1,stamina:1,drain:-1,regen:1,accel:-1,cooldown:-1},v=BREEDS.vip;
+ for(const [id,b] of Object.entries(BREEDS))if(id!=='vip')for(const [k,dir] of Object.entries(BETTER))if((v[k]-b[k])*dir<0)console.warn(`VIP хуже породы «${b.name}» по полю ${k}: ${v[k]} против ${b[k]}`);
+ if(v.speed*v.runMult<Math.max(...Object.values(BREEDS).filter(b=>b!==v).map(b=>b.speed*b.runMult)))console.warn('VIP не самый быстрый по максимальной скорости')}
+// Dots 1..5 as in GDD §4: speed from the top speed (speed × runMult), energy from stamina.
+const breedDots=b=>({speed:clamp(Math.round(1+(b.speed*b.runMult-160)/23),1,5),energy:clamp(Math.round((b.stamina-25)/15),1,5)});
+let breedId='lab';try{const s=localStorage.getItem('sneaky-dog-3d-breed');if(BREEDS[s]&&!BREEDS[s].locked)breedId=s}catch{}
+let DOG=BREEDS[breedId];
+const LV={vision:190,speed:90,hold:4};
+const NOISE=165;
+// Noise level by speed: anchor points with linear interpolation between them (sneaking → walking → full run).
+// Below NOISE_MIN nothing is heard and no ring is drawn: sneaking and a calm walk are silent, noise starts at a trot.
+const NOISE_AT={sneak:0,walk:.15,run:1},NOISE_MIN=.2;
+// One shared geometry for every noise ring (outer radius 1 = the hearing edge); each ring gets its own material for its fade.
+const RING_GEO=new THREE.RingGeometry(.9,1,48).rotateX(-Math.PI/2);
+function noiseLevel(B,mult){if(mult<=B.sneakMult)return NOISE_AT.sneak;if(mult<=1)return NOISE_AT.sneak+(NOISE_AT.walk-NOISE_AT.sneak)*(mult-B.sneakMult)/(1-B.sneakMult);return NOISE_AT.walk+(NOISE_AT.run-NOISE_AT.walk)*clamp((mult-1)/(B.runMult-1),0,1)}
+const zone={x:850,y:147,r:51},start={x:120,y:625};
+// Exits: the retreat length is a level parameter, chosen after the deed. near — top fence by the tap, ~45 m from the bed
+// along a walkable route, but on the gardener's way to his chore; far — bottom left, ~61 m, away from his routes.
+const EXITS=[{id:'far',x:118,y:674,r:45,side:'bottom'},{id:'near',x:250,y:88,r:45,side:'top'}];
+const nearestExit=p=>EXITS.reduce((a,e)=>dist(p,e)<dist(p,a)?e:a);
+const BED={x:870,y:224},TAP={x:230,y:146};
+const BED_RECT={x:797,y:94,w:108,h:105};
+const bushes=[{x:240,y:550,r:49},{x:598,y:406,r:51},{x:778,y:181,r:48},{x:195,y:296,r:44},{x:431,y:133,r:41}];
+const solids=[{x:315,y:431,w:155,h:30,type:'bench'},{x:325,y:190,w:36,h:101,type:'hedge'},{x:821,y:398,w:105,h:34,type:'bench'},{x:625,y:90,w:36,h:123,type:'hedge'},{x:408,y:607,w:176,h:32,type:'flower'}];
+const trees=[{x:86,y:122,r:34},{x:912,y:284,r:32},{x:91,y:435,r:31},{x:870,y:627,r:35}];
+
 function blocked(x,y,r=12){if(x<45+r||y<62+r||x>955-r||y>696-r)return true;for(const o of solids)if(x+r>o.x&&x-r<o.x+o.w&&y+r>o.y&&y-r<o.y+o.h)return true;for(const o of trees)if(Math.hypot(x-o.x,y-o.y)<r+11)return true;return false}
 function lineClear(a,b,margin=0){let n=Math.ceil(dist(a,b)/10);for(let i=1;i<n;i++){let x=a.x+(b.x-a.x)*i/n,y=a.y+(b.y-a.y)*i/n;if(solids.some(o=>x>o.x-margin&&x<o.x+o.w+margin&&y>o.y-margin&&y<o.y+o.h+margin)||trees.some(o=>Math.hypot(x-o.x,y-o.y)<12+margin))return false}return true}
 function travel(o,dx,dy,r=12){if(!blocked(o.x+dx,o.y,r))o.x+=dx;if(!blocked(o.x,o.y+dy,r))o.y+=dy}
-// A* on a small grid lets gardeners walk around benches rather than through them.
+// A* on a small grid lets the gardener walk around benches rather than through them.
 function findPath(a,b){const cell=25,cols=40,rows=31;const key=(x,y)=>y*cols+x;const ax=clamp(Math.floor(a.x/cell),0,cols-1),ay=clamp(Math.floor(a.y/cell),0,rows-1),bx=clamp(Math.floor(b.x/cell),0,cols-1),by=clamp(Math.floor(b.y/cell),0,rows-1);let open=[{x:ax,y:ay,g:0,f:0}],cost=new Map([[key(ax,ay),0]]),prev=new Map(),end=null;let iterations=0;
  while(open.length&&iterations++<1300){open.sort((a,b)=>a.f-b.f);const c=open.shift(),k=key(c.x,c.y);if(c.x===bx&&c.y===by){end=c;break}for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){let x=c.x+dx,y=c.y+dy;if(x<0||y<0||x>=cols||y>=rows||blocked(x*cell+12.5,y*cell+12.5,15))continue;if(dx&&dy&&(blocked((c.x+dx)*cell+12.5,c.y*cell+12.5,15)||blocked(c.x*cell+12.5,(c.y+dy)*cell+12.5,15)))continue;let nk=key(x,y),g=c.g+(dx&&dy?1.414:1);if(g>=(cost.get(nk)??Infinity))continue;cost.set(nk,g);prev.set(nk,k);open.push({x,y,g,f:g+Math.hypot(bx-x,by-y)})}}
  if(!end)return [];let k=key(end.x,end.y),path=[];while(prev.has(k)){path.unshift({x:(k%cols)*cell+12.5,y:Math.floor(k/cols)*cell+12.5});k=prev.get(k)}return path;
 }
-function persist(){try{localStorage.setItem('sneaky-dog-v1',JSON.stringify(save))}catch{}}
-function menu(){state='menu';clearInput();makeMap();player={...start,angle:-Math.PI/2,moving:false};guards=[];$('veil').classList.remove('hidden');$('veil').innerHTML=`<div class="card"><div class="art"><img id="menuArt" alt="Лабрадор крадётся по парку, пока садовник ищет его" src="hero.jpg"><div class="art-label">Маленькая собака.<br>Большое тайное дело.</div></div><div class="content"><div class="eyebrow">Park Escape · Прототип 0.1.9 · <a href="./3d/" style="color:#f8d36c;line-height:1">3D-прототип →</a></div><h1>SNEAKY DOG</h1><p class="subtitle">Сделай дело на клумбе и вернись к воротам. Садовнику лучше об этом не знать.</p><div class="dogs">${dogs.map((d,i)=>`<button class="dog-card ${i===selected?'selected':''}" data-dog="${i}"><span>${d.icon}</span><b>${d.name}</b></button>`).join('')}</div><div class="dog-info" id="dogInfo">${dogs[selected].info}</div><div class="levels">${levelData.map((l,i)=>`<button class="levelbtn ${i===level?'selected':''}" data-level="${i}" ${i>=save.unlocked?'disabled':''}>${i>=save.unlocked?'🔒 ':''}Парк ${i+1}${save.best[i]?' · '+save.best[i].stars+'★':''}</button>`).join('')}</div><button class="primary" id="play">В парк!</button><p class="fine">В кустах иди медленно. На клумбе держи 💩. После этого вернись к воротам.<br>Телефон: джойстик · ПК: WASD, C — красться, E и пробел.</p></div></div>`;
- $('veil').querySelectorAll('[data-dog]').forEach(b=>b.onclick=()=>{selected=Number(b.dataset.dog);menu()});$('veil').querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>{level=Number(b.dataset.level);menu()});$('play').onclick=begin;
+// Gardener safety (3D-0.11): he must never stand forever at a point he cannot reach.
+const INSPECT_MAX=6,SEARCH_MAX=10;
+// It also records the state change itself, so a new inspect started in the very next frame (noise, ball) gets a fresh timer.
+function backToPatrol(g){g.state='patrol';g.lastState='patrol';g.stateT=0;g.target=null;g.path=[];g.repath=0;g.wait=0;g.arrived=false;g.partial=false;g.stuckT=0;g.stuckN=0;g.idx=Math.max(0,g.pts.findIndex(p=>p.bed))}
+// A target inside an obstacle → the nearest free point on an expanding ring of grid cells (up to 4 cells away).
+function freeSpot(t){if(!blocked(t.x,t.y,15))return t;let best=null;
+ for(let r=1;r<=4&&!best;r++)for(let i=-r;i<=r;i++)for(let j=-r;j<=r;j++){if(Math.max(Math.abs(i),Math.abs(j))!==r)continue;const p={x:t.x+i*25,y:t.y+j*25};if(!blocked(p.x,p.y,15)&&(!best||dist(p,t)<dist(best,t)))best=p}
+ return best||t}
+// No route to the target: the nearest free point around it that does have a route (or a straight line) from where he stands.
+function partialPath(g,t){const c=[];for(let r=1;r<=6;r++)for(let i=-r;i<=r;i++)for(let j=-r;j<=r;j++)if(Math.max(Math.abs(i),Math.abs(j))===r){const p={x:t.x+i*25,y:t.y+j*25};if(!blocked(p.x,p.y,15))c.push(p)}
+ c.sort((a,b)=>dist(a,t)-dist(b,t));for(const p of c.slice(0,8)){if(lineClear(g,p,16))return [p];const path=findPath(g,p);if(path.length)return [...path,p]}return []}
+// Gardener's day: water the bed → walk a round → water again → go to the tap (the dog's window) → back.
+function route(){
+ const work=w=>({...BED,wait:w,look:'bed',amp:1.25,sp:1.15,icon:'💧',bed:true});
+ const round=(x,y,w)=>({x,y,wait:w,look:'out',amp:.8,sp:1.6,icon:'👀',bed:true});
+ const tap=w=>({x:230,y:182,wait:w,look:-Math.PI/2,amp:.35,sp:2,icon:'🚰'});
+ return [work(6),round(760,245,1.4),round(925,250,1.4),work(4),tap(4)];
 }
-function begin(){makeMap();player={...start,angle:-Math.PI/2,moving:false};guards=Array.from({length:levelData[level].guards},(_,i)=>{const pts=routeFor(i);return {x:pts[0].x,y:pts[0].y,angle:-Math.PI/2,idx:0,state:'patrol',sus:0,seen:0,target:null,wait:0,path:[],repath:0,pts,watch:0,watchT:0,lookBase:0,step:null,angry:false,alertLook:0,lookAt:null}});discovered=false;elapsed=0;done=false;progress=0;spotted=false;abilityCD=0;buff=0;ball=null;particles=[];rings=[];noiseTimer=0;move={x:0,y:-1};stamina=dogs[selected].stamina;state='playing';clearInput();$('veil').classList.add('hidden');$('levelName').textContent=`Парк №${level+1} · ${levelData[level].name}`;toast('Садовник стережёт клумбу. Дождись, когда он уйдёт по делам!',4.5);beep(550,.08)}
-function clearInput(){keys.clear();joy={x:0,y:0,id:null};toiletHeld=false;$('knob').style.transform='';$('toilet').classList.remove('active')}
-function pause(){if(state!=='playing')return;state='paused';clearInput();$('veil').classList.remove('hidden');$('veil').innerHTML=`<div class="card result"><div class="result-icon">🍃</div><h1>Передышка</h1><p class="subtitle">Садовник тоже немного отдохнёт.</p><p class="fine">Экран ${screenW}×${screenH} · поле ${canvas.width}×${canvas.height}</p><div class="result-actions"><button class="primary" id="resume">Продолжить</button><button class="plain" id="restart">Сначала</button><button class="plain" id="back">Выбор собаки</button></div></div>`;$('resume').onclick=()=>{state='playing';$('veil').classList.add('hidden')};$('restart').onclick=begin;$('back').onclick=menu}
-function finish(win){if(state!=='playing')return;state=win?'won':'lost';clearInput();beep(win?740:160,.2);const stars=win?1+(!spotted?1:0)+(!spotted&&elapsed<85?1:0):0;if(win){save.unlocked=Math.max(save.unlocked,Math.min(3,level+2));const prev=save.best[level];save.best[level]={stars:Math.max(stars,prev?.stars||0),time:Math.min(elapsed,prev?.time??Infinity)};persist()}
- $('veil').classList.remove('hidden');$('veil').innerHTML=`<div class="card result"><div class="eyebrow">Парк ${level+1} · ${dogs[selected].name}</div><div class="result-icon">${win?'🐾':'👨‍🌾'}</div><h1>${win?'Дело сделано!':'Попался!'}</h1><p class="subtitle">${win?(level===2?'Все три парка пройдены. Попробуй другую породу!':'Садовник остался с клумбой. Ты — со свободой.'):'Кусты скрывают тебя при медленном шаге. Разорви линию зрения и смени маршрут.'}</p>${win?`<div class="stars">${'★'.repeat(stars)}${'☆'.repeat(3-stars)}</div><div class="statline"><span>⏱ ${formatTime(elapsed)}</span><span>${spotted?'Была погоня':'Не заметили'}</span></div><p class="fine">★ пройти · ★ без обнаружения · ★ незаметно быстрее 1:25</p>`:''}<div class="result-actions" style="margin-top:22px"><button class="primary" id="retry">${win&&level<2?'Следующий парк':'Ещё раз'}</button><button class="plain" id="back">Выбор собаки</button></div></div>`;$('retry').onclick=()=>{if(win&&level<2)level++;begin()};$('back').onclick=menu;
+
+// ---------- Camera and tuning settings ----------
+// One view, chosen (GDD §11): third person from above-behind. The camera sits on the view line through the aim point:
+// position = aim − viewDir·distance, so the zoom keeps the pitch. Its geometry is fixed here; the player sets distance,
+// yaw and pitch with the fingers, and that view is remembered automatically (cfg.view) and restored at start.
+const VIEW={pitch:40,fov:48,bias:.12,lag:.2};   // bias — the dog sits below centre by this share of half the screen
+const CHASE={k:.9,pitch:30};                    // in a chase the distance × k and the pitch blends towards 30°
+const ZOOM={start:5,min:2,max:8,smooth:.2};     // in body lengths of the breed: metres = k × DOG.len
+// ⚙ keeps only what a gesture cannot set.
+const SWIPE_TUNE=[
+ ['sens','Поворот пальцем',60,360,10,'° / ½ экрана',0],
+ ['sensY','Наклон пальцем',20,240,5,'° / ½ экрана',0]];
+const ZOOM_TUNE=[['pinch','Чувствительность щипка',.3,3,.05,'×',2]];
+const RAY_TUNE=[
+ ['spread','Лучи: разнос',0,.6,.01,' м',2],
+ ['pad','Лучи: зазор до помехи',0,.8,.01,' м',2],
+ ['back','Лучи: возврат',.1,3,.05,' с',2]];
+const GAME_TUNE=[
+ ['tempo','Темп (все скорости)',.2,1,.02,'×',2],
+ ['mapScale','Размер лужайки',.6,1.6,.05,'×',2]];
+const CFG_REV=6;
+// view.yaw — absolute camera yaw in degrees, null = behind the dog; view.pitch — the player's pitch (chase blend not included).
+const freshCfg=()=>({rev:CFG_REV,tempo:.38,mapScale:1.05,zoom:{pinch:1},rays:{spread:.25,pad:.25,back:.6},swipe:{sens:180,sensY:90},view:{k:ZOOM.start,yaw:null,pitch:VIEW.pitch}});
+const CFG_KEY='sneaky-dog-3d-cam3';
+let cfg=freshCfg();
+const loadGroup=(src,dst,tune)=>{if(src)for(const [k,,min,max] of tune)if(Number.isFinite(src[k]))dst[k]=clamp(src[k],min,max)};
+try{const s=JSON.parse(localStorage.getItem(CFG_KEY));if(s){loadGroup(s,cfg,GAME_TUNE);loadGroup(s.swipe,cfg.swipe,SWIPE_TUNE);loadGroup(s.zoom,cfg.zoom,ZOOM_TUNE);loadGroup(s.rays,cfg.rays,RAY_TUNE);
+ const v=s.view;if(v){if(Number.isFinite(v.k))cfg.view.k=clamp(v.k,ZOOM.min,ZOOM.max);if(Number.isFinite(v.yaw))cfg.view.yaw=v.yaw;if(Number.isFinite(v.pitch))cfg.view.pitch=clamp(v.pitch,8,75)}
+ // 3D-0.9/0.10 saved only the zoom (in body lengths) — keep it; earlier zooms were in metres and are not used.
+ else if((s.rev||0)>=5&&Number.isFinite(s.zoom?.k))cfg.view.k=clamp(s.zoom.k,ZOOM.min,ZOOM.max);
+ // Settings saved before 3D-0.3 kept tempo 0.6, which proved far too fast: pull it down once.
+ if((s.rev||0)<3&&cfg.tempo>.5)cfg.tempo=.38;
+ // 3D-0.9 chose the lawn size by time (diagonal at a walk 20–25 s): an untouched old 1.0 becomes 1.05.
+ if((s.rev||0)<5&&cfg.mapScale===1)cfg.mapScale=1.05}}catch{}
+const saveCfg=()=>{try{localStorage.setItem(CFG_KEY,JSON.stringify(cfg))}catch{}};
+let U=.06*cfg.mapScale; // metres per 2D unit: 1000×760 → 60×45.6 m
+
+// ---------- Renderer ----------
+const canvas=$('field');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
+renderer.setClearColor(0xb9dcc8);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(35,1,.1,500);
+scene.add(new THREE.HemisphereLight(0xfff8e0,0x3a5a35,1.6));
+const sun=new THREE.DirectionalLight(0xfff2d0,1.8);sun.position.set(-30,50,20);scene.add(sun);
+
+const matCache=new Map();
+const mat=c=>{if(!matCache.has(c))matCache.set(c,new THREE.MeshLambertMaterial({color:c}));return matCache.get(c)};
+const unlit=(c,o=1)=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:o,depthWrite:false});
+function mesh(geo,m,x=0,y=0,z=0,parent){const o=new THREE.Mesh(geo,typeof m==='string'?mat(m):m);o.position.set(x,y,z);parent?.add(o);return o}
+const blobTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(10,35,25,.55)');r.addColorStop(1,'rgba(10,35,25,0)');g.fillStyle=r;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();
+const blobMat=new THREE.MeshBasicMaterial({map:blobTex,transparent:true,depthWrite:false});
+const planeGeo=new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2);
+const discGeo=new THREE.CircleGeometry(1,32).rotateX(-Math.PI/2);
+function blob(x,z,rx,rz,parent,y=.025){const o=mesh(planeGeo,blobMat,x,y,z,parent);o.scale.set(rx*2,1,rz*2);return o}
+function label(text,bg,fg){const c=document.createElement('canvas');c.width=256;c.height=72;const g=c.getContext('2d');g.fillStyle=bg;g.beginPath();g.roundRect(4,4,248,64,22);g.fill();g.fillStyle=fg;g.font="900 36px 'Trebuchet MS',sans-serif";g.textAlign='center';g.textBaseline='middle';g.fillText(text,128,38);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthWrite:false}));s.scale.set(2,.56,1);return s}
+
+// ---------- World (rebuilt when the lawn size changes) ----------
+// colliders — solid meshes the camera must not pass through (fence, gate, tap, hedges, benches, flower box, trunks);
+// foliage (bushes, crowns) is not here: it fades instead. Camera-only: game rules never read this list.
+let world=null,bedLabel=null,gateLabels=[],zoneRing=null,exitRings=[],pile=null,fadeables=[],colliders=[];
+function rect(x0,y0,x1,y1,color,y,parent){const o=mesh(planeGeo,color,(x0+x1)/2*U,y,(y0+y1)/2*U,parent);o.scale.set((x1-x0)*U,1,(y1-y0)*U);return o}
+function stroke(pts,w,color,y,parent){for(let i=0;i<pts.length;i++){const [x,z]=pts[i];const d=mesh(discGeo,color,x*U,y,z*U,parent);d.scale.setScalar(w/2*U);if(i){const [px,pz]=pts[i-1],len=Math.hypot(x-px,z-pz);const s=mesh(planeGeo,color,(x+px)/2*U,y,(z+pz)/2*U,parent);s.scale.set(len*U,1,w*U);s.rotation.y=-Math.atan2(z-pz,x-px)}}}
+function buildWorld(){
+ if(world){scene.remove(world);world.traverse(o=>{if(o.geometry&&o.geometry!==planeGeo&&o.geometry!==discGeo)o.geometry.dispose()});for(const f of fadeables)f.m.dispose()}
+ U=.06*cfg.mapScale;world=new THREE.Group();scene.add(world);fadeables=[];colliders=[];
+ const mark=()=>world.children.length,take=i=>{for(const o of world.children.slice(i))if(o.isMesh&&o.material!==blobMat)colliders.push(o)};
+ rect(-1500,-1500,2500,2300,'#194937',-.02,world);
+ rect(25,35,975,725,'#789f51',0,world);
+ rect(42,53,958,700,'#84af60',.005,world);
+ // Grass tufts give the eye a scale reference for speed.
+ const tuftGeo=new THREE.SphereGeometry(1,6,4),tufts=new THREE.InstancedMesh(tuftGeo,mat('#93ba6a'),420),m4=new THREE.Matrix4(),q=new THREE.Quaternion(),sc=new THREE.Vector3(),p=new THREE.Vector3();
+ for(let i=0;i<420;i++){const x=55+(i*173%890)+(i*37%11),y=65+(i*113%620)+(i*53%13);p.set(x*U,.01,y*U);sc.set(.13,.07,.09);m4.compose(p,q,sc);tufts.setMatrixAt(i,m4);tufts.setColorAt(i,new THREE.Color(i%3?'#93ba6a':'#709d50'))}
+ world.add(tufts);
+ // Paths, same polylines as in 2D.
+ const main=[[117,711],[117,529],[497,529],[763,529],[763,324],[762,145],[867,145]],side=[[496,529],[496,251],[235,251]];
+ stroke(main,69,'#cdbd89',.01,world);stroke(main,58,'#ddcc9b',.013,world);stroke(side,48,'#ddcc9b',.015,world);
+ // Fence with a gap for each exit gate.
+ let m0=mark();
+ const fenceY={top:59,bottom:715},inGap=(side,x)=>EXITS.some(e=>e.side===side&&x>e.x-48&&x<e.x+50);
+ const posts=[];for(let x=42;x<970;x+=28){if(!inGap('bottom',x+5))posts.push([x+5,715]);if(!inGap('top',x+5))posts.push([x+5,59])}for(let y=70;y<700;y+=28){posts.push([39,y+10]);posts.push([962,y+10])}
+ const postMesh=new THREE.InstancedMesh(new THREE.BoxGeometry(.14,.95,.14),mat('#d2bd86'),posts.length);posts.forEach(([x,y],i)=>{p.set(x*U,.475,y*U);sc.set(1,1,1);m4.compose(p,q,sc);postMesh.setMatrixAt(i,m4)});world.add(postMesh);
+ const rail=(x0,y0,x1,y1)=>{const o=mesh(new THREE.BoxGeometry(Math.max(.08,(x1-x0)*U),.08,Math.max(.08,(y1-y0)*U)),'#ae9464',(x0+x1)/2*U,.62,(y0+y1)/2*U,world)};
+ rail(39,59,39,715);rail(962,59,962,715);
+ for(const side of ['top','bottom']){const y=fenceY[side];let x0=42;for(const e of EXITS.filter(e=>e.side===side).sort((a,b)=>a.x-b.x)){rail(x0,y,e.x-48,y);x0=e.x+52}rail(x0,y,962,y)}
+ for(const e of EXITS)for(const gx of [e.x-48,e.x+50])mesh(new THREE.BoxGeometry(.22,1.6,.22),'#a77547',gx*U,.8,fenceY[e.side]*U,world);
+ take(m0);
+ gateLabels=EXITS.map(e=>{const s=label('ВОРОТА','#102f2a','#fff5d9');s.position.set((e.x+1)*U,1.9,fenceY[e.side]*U);world.add(s);return s});
+ exitRings=EXITS.map(e=>{const o=mesh(new THREE.RingGeometry(.93,1,48).rotateX(-Math.PI/2),unlit('#fff5d9',.35),e.x*U,.03,e.y*U,world);o.scale.setScalar(e.r*U);return o});
+ // The flowerbed the dog is after.
+ const B=BED_RECT;mesh(new THREE.BoxGeometry(B.w*U,.16,B.h*U),'#65553d',(B.x+B.w/2)*U,.08,(B.y+B.h/2)*U,world);mesh(new THREE.BoxGeometry((B.w-14)*U,.18,(B.h-12)*U),'#795d40',(B.x+B.w/2)*U,.09,(B.y+B.h/2)*U,world);
+ const fl=new THREE.InstancedMesh(new THREE.SphereGeometry(.13,6,4),mat('#ffffff'),42);for(let i=0;i<42;i++){p.set((812+(i%7)*13)*U,.32,(108+Math.floor(i/7)*14)*U);sc.set(1,1,1);m4.compose(p,q,sc);fl.setMatrixAt(i,m4);fl.setColorAt(i,new THREE.Color(['#fcba9f','#fff3bb','#ff6f73'][i%3]))}world.add(fl);
+ bedLabel=label('КЛУМБА','#102f2a','#fff5d9');bedLabel.position.set(850*U,1.6,84*U);world.add(bedLabel);
+ zoneRing=mesh(new THREE.RingGeometry(.94,1,56).rotateX(-Math.PI/2),unlit('#f8d36c',.8),zone.x*U,.2,zone.y*U,world);zoneRing.scale.setScalar((zone.r+7)*U);
+ pile=new THREE.Group();for(const [dx,dy,r] of [[0,.07,.11],[.03,.17,.08],[.05,.25,.05]])mesh(new THREE.SphereGeometry(r,8,6),'#604633',dx,dy,0,pile);pile.position.set((zone.x+23)*U,.17,(zone.y+24)*U);pile.visible=false;world.add(pile);
+ // Watering can by the bed and the tap the gardener walks to.
+ mesh(new THREE.BoxGeometry(.4,.3,.25),'#4f8fb8',(BED.x+22)*U,.15,(BED.y+2)*U,world);
+ const puddle=mesh(discGeo,unlit('#7fc6e8',.55),TAP.x*U,.02,(TAP.y+22)*U,world);puddle.scale.set(18*U,1,7*U);
+ m0=mark();mesh(new THREE.CylinderGeometry(.08,.08,1.1,10),'#6f7f86',TAP.x*U,.55,TAP.y*U,world);mesh(new THREE.BoxGeometry(.45,.1,.1),'#8e9ea5',TAP.x*U,1.05,TAP.y*U,world);mesh(new THREE.CylinderGeometry(.11,.11,.05,12),'#c94f43',TAP.x*U,1.14,TAP.y*U,world);
+ // Obstacles: hedges and benches block sight, the flower box is low.
+ for(const o of solids){const cx=(o.x+o.w/2)*U,cz=(o.y+o.h/2)*U,w=o.w*U,d=o.h*U;
+  if(o.type==='hedge'){mesh(new THREE.BoxGeometry(w,1.25,d),'#347648',cx,.625,cz,world);mesh(new THREE.BoxGeometry(w*.86,.25,d*.92),'#55985a',cx,1.3,cz,world);blob(cx+.3,cz+.3,w*.75,d*.6,world)}
+  else if(o.type==='bench'){mesh(new THREE.BoxGeometry(w-.3,.4,d-.25),'#7a5636',cx,.2,cz,world);mesh(new THREE.BoxGeometry(w,.09,d),'#ce9c64',cx,.48,cz,world);mesh(new THREE.BoxGeometry(w,.42,.08),'#c38c55',cx,.78,(o.y+3)*U,world);for(const lx of [o.x+10,o.x+o.w-10])for(const lz of [o.y+5,o.y+o.h-5])mesh(new THREE.BoxGeometry(.09,.45,.09),'#354e43',lx*U,.22,lz*U,world);blob(cx,cz+.2,w*.6,d*.9,world)}
+  else{mesh(new THREE.BoxGeometry(w,.35,d),'#795f3f',cx,.175,cz,world);for(let j=0;j<15;j++)mesh(new THREE.SphereGeometry(.17,6,4),j%2?'#ffcf72':'#ea8e9a',(o.x+8+j*11)*U,.42,cz,world)}}
+ take(m0);
+ // Trees: trunk + crown; crowns fade when they hide the dog. Trunks are camera colliders.
+ m0=mark();
+ for(const t of trees){const x=t.x*U,z=t.y*U,cr=(t.r+11)*U;mesh(new THREE.CylinderGeometry(.28,.36,2.8,10),'#815c38',x,1.4,z,world);blob(x+.5,z+.4,cr*.9,cr*.7,world);
+  const m=new THREE.MeshLambertMaterial({color:'#3d8d55',transparent:true});const g=new THREE.Group();mesh(new THREE.SphereGeometry(cr,14,10),m,0,0,0,g);mesh(new THREE.SphereGeometry(cr*.6,12,8),m,cr*.3,cr*.65,-cr*.2,g);g.position.set(x,3.2+cr*.5,z);world.add(g);fadeables.push({m,x,y:3.2+cr*.5,z,r:cr*1.1,tree:t})}
+ take(m0);
+ // Bushes: clusters of spheres, taller than the dog; they turn see-through around it.
+ for(const b of bushes){const x=b.x*U,z=b.y*U,r=b.r*U;const m=new THREE.MeshLambertMaterial({color:'#378b51',transparent:true});const g=new THREE.Group();
+  for(const [dx,dz,s,c] of [[-.45,.12,.62,'#276b48'],[.45,.12,.6,'#28724a'],[0,-.2,.72,null],[-.3,-.25,.5,'#4c9c5b'],[.3,-.3,.5,'#53aa62']]){const mm=c?new THREE.MeshLambertMaterial({color:c,transparent:true}):m;const o=mesh(new THREE.SphereGeometry(r*s,12,8),mm,dx*r,r*s*.55,dz*r,g);o.scale.y=.85;if(c)fadeables.push({m:mm,x,y:.6,z,r:r*.95,bush:b,child:true})}
+  g.position.set(x,0,z);world.add(g);blob(x+.2,z+.2,r*1.05,r*.8,world);fadeables.push({m,x,y:.6,z,r:r*.95,bush:b})}
 }
+
+// ---------- Actors (sizes in metres, independent of lawn size) ----------
+function makeDog(){const g=new THREE.Group(),body=new THREE.Group(),c=DOG.color;g.add(body);
+ const torso=mesh(new THREE.CapsuleGeometry(.15,.36,4,10),c,0,.34,0,body);torso.rotation.z=Math.PI/2;
+ mesh(new THREE.SphereGeometry(.14,14,10),c,.37,.47,0,body);mesh(new THREE.BoxGeometry(.15,.09,.12),'#f6d590',.52,.43,0,body);mesh(new THREE.SphereGeometry(.032,8,6),'#27352d',.6,.46,0,body);
+ for(const s of [-1,1]){mesh(new THREE.SphereGeometry(.022,6,4),'#25382c',.47,.52,s*.07,body);const ear=mesh(new THREE.BoxGeometry(.07,.15,.04),'#b78544',.35,.45,s*.14,body);ear.rotation.x=s*.25}
+ mesh(new THREE.BoxGeometry(.06,.2,.3),'#d65148',.25,.43,0,body);
+ const tail=new THREE.Group();tail.position.set(-.33,.4,0);const tm=mesh(new THREE.CylinderGeometry(.025,.035,.26,6),c,0,.12,0,tail);tail.rotation.z=.75;body.add(tail);
+ const legs=[];for(const [lx,lz] of [[.2,.09],[.2,-.09],[-.18,.09],[-.18,-.09]]){const pv=new THREE.Group();pv.position.set(lx,.24,lz);mesh(new THREE.BoxGeometry(.075,.24,.075),c,0,-.12,0,pv);body.add(pv);legs.push(pv)}
+ if(DOG.patch)mesh(new THREE.SphereGeometry(.11,10,8),DOG.patch,-.1,.43,.04,body);
+ // Fit the placeholder to the breed: nose-to-tail length → x, withers height → y (base torso top is 0.49 m),
+ // width follows their mean, so a corgi comes out long and low and a lab tall.
+ const box=new THREE.Box3().setFromObject(body),sx=DOG.len/(box.max.x-box.min.x),sy=DOG.hgt/.49;g.scale.set(sx,sy,(sx+sy)/2);
+ const shadow=blob(0,0,.42,.26,g,.02);return {g,body,legs,tail,shadow}}
+function makeGardener(){const g=new THREE.Group();
+ const legs=[],arms=[];for(const s of [-1,1]){const pv=new THREE.Group();pv.position.set(0,.86,s*.11);mesh(new THREE.BoxGeometry(.16,.86,.15),'#183b37',0,-.43,0,pv);mesh(new THREE.BoxGeometry(.26,.08,.16),'#2b2a26',.05,-.84,0,pv);g.add(pv);legs.push(pv)}
+ mesh(new THREE.BoxGeometry(.3,.64,.46),'#487b86',0,1.18,0,g);mesh(new THREE.BoxGeometry(.04,.5,.36),'#dcc186',.16,1.1,0,g);
+ for(const s of [-1,1]){const pv=new THREE.Group();pv.position.set(0,1.46,s*.3);mesh(new THREE.BoxGeometry(.11,.58,.11),'#487b86',0,-.29,0,pv);mesh(new THREE.SphereGeometry(.065,8,6),'#edb785',0,-.6,0,pv);g.add(pv);arms.push(pv)}
+ mesh(new THREE.SphereGeometry(.14,14,10),'#edb785',0,1.62,0,g);mesh(new THREE.SphereGeometry(.035,6,4),'#b9774c',.14,1.61,0,g);
+ mesh(new THREE.CylinderGeometry(.32,.32,.03,20),'#dcc186',0,1.74,0,g);mesh(new THREE.CylinderGeometry(.14,.16,.13,16),'#f4d9a0',0,1.81,0,g);
+ const can=mesh(new THREE.BoxGeometry(.22,.18,.14),'#4f8fb8',0,-.66,0,arms[1]);
+ blob(0,0,.5,.4,g,.02);return {g,legs,arms,can}}
+let dogRig=makeDog();scene.add(dogRig.g);
+// Energy ring at the paws (replaces the bar under the stick, which the thumb covered): a flat coloured ring that empties
+// around the circle. Radius from the breed length, constant thickness in metres. Not to be confused with the white,
+// expanding noise rings. Hidden at full energy while nothing is being spent or regained.
+const RING_SEG=64,RING_W=.09;
+// A dark full-circle track under the coloured fill gives contrast on grass and shows how much is already spent.
+function makeEnergyRing(){const r=DOG.len*.62,m=new THREE.Mesh(new THREE.RingGeometry(r-RING_W/2,r+RING_W/2,RING_SEG,1,Math.PI/2,Math.PI*2).rotateX(-Math.PI/2),unlit('#a8de8a',0));m.renderOrder=3;m.visible=false;
+ const track=new THREE.Mesh(new THREE.RingGeometry(r-RING_W/2-.02,r+RING_W/2+.02,RING_SEG,1).rotateX(-Math.PI/2),unlit('#102f2a',0));track.position.y=-.005;track.renderOrder=2;m.add(track);m.userData.track=track;scene.add(m);return m}
+let energyRing=makeEnergyRing();
+function setBreed(id){if(!BREEDS[id]||BREEDS[id].locked)return;breedId=id;DOG=BREEDS[id];scene.remove(dogRig.g);dogRig=makeDog();scene.add(dogRig.g);scene.remove(energyRing);energyRing.geometry.dispose();energyRing.userData.track.geometry.dispose();energyRing=makeEnergyRing();stamina=DOG.stamina;try{localStorage.setItem('sneaky-dog-3d-breed',id)}catch{}}
+
+// ---------- Game state ----------
+let speedMult=0,hideLatch=false,energyCapped=false,energyMoving=false,panicT=0,panicNow=false;
+// One step of the breed's speed model (stamina ceiling, smoothing, drain / regen). The game and the ⚙ time measurements both
+// use it, so they cannot disagree. Returns the multiplier the stamina allows now.
+// panic — chase panic: no stamina ceiling, drain × PANIC_DRAIN, no regen (see update(): only while chased, at most PANIC_MAX s).
+const PANIC_DRAIN=.3,PANIC_MAX=12;
+function speedStep(B,st,want,dt,panic=false){const allowed=panic?want:Math.min(want,1+(B.runMult-1)*clamp(st.stamina/25,0,1));st.mult+=(allowed-st.mult)*(1-Math.exp(-dt/B.accel));
+ const over=clamp((st.mult-1)/(B.runMult-1),0,1),regen=panic?0:B.regen*clamp(1-over/.05,0,1),drain=B.drain*over*(panic?PANIC_DRAIN:1);
+ st.stamina=clamp(st.stamina+(regen-drain)*dt,0,B.stamina);return allowed}
+let state='menu',player=null,guards=[],elapsed=0,done=false,progress=0,spotted=false,discovered=false,abilityCD=0,ball=null,rings=[],stamina=DOG.stamina,noiseTimer=0,move={x:1,y:0},hiddenNow=false;
+let keys=new Set(),joy={x:0,y:0,id:null},toiletHeld=false,toastTimer=0,muted=true,audioCtx=null,inputMode=matchMedia('(pointer:coarse)').matches?'touch':'keys';
+let screenW=0,screenH=0,lastVW=0,lastVH=0,lastTime=0,fps=60,fpsN=0,fpsT=0,needRebuild=false;
+const RAYS=52;
+
+function makeCone(){const pos=new Float32Array((RAYS+1)*3),idx=[];for(let i=0;i<RAYS-1;i++)idx.push(0,i+1,i+2);const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(pos,3));geo.setIndex(idx);const cm=unlit('#fff3b8',.22);cm.side=THREE.DoubleSide;const m=new THREE.Mesh(geo,cm);m.frustumCulled=false;m.renderOrder=1;scene.add(m);return m}
+function clearRound(){for(const g of guards){scene.remove(g.rig.g);scene.remove(g.cone);g.cone.geometry.dispose();g.tag.remove()}guards=[];for(const r of rings){scene.remove(r.m);r.m.material.dispose()}rings=[];if(ball){scene.remove(ball.m);ball=null}}
+function setupRound(){clearRound();player={...start,angle:-Math.PI/4,moving:false,mode:'stand',speed:0,phase:0};
+ const pts=route();const rig=makeGardener();scene.add(rig.g);const tag=document.createElement('div');tag.className='tag';tag.innerHTML='<i class="ic"></i><i class="bar"><s></s></i>';$('tags').appendChild(tag);
+ guards=[{x:pts[0].x,y:pts[0].y,angle:-Math.PI/2,idx:0,state:'patrol',sus:0,seen:0,target:null,wait:0,path:[],repath:0,pts,watch:0,watchT:0,lookBase:0,step:null,angry:false,alertLook:0,lookAt:null,rig,cone:makeCone(),tag,phase:0,moved:0}];
+ discovered=false;elapsed=0;done=false;progress=0;spotted=false;abilityCD=0;noiseTimer=0;stamina=DOG.stamina;speedMult=0;hideLatch=false;panicT=0;panicNow=false;move={x:1,y:-1};camState.init=false;
+ pile.visible=false;setLabel(bedLabel,'КЛУМБА',false);for(const s of gateLabels)setLabel(s,'ВОРОТА',false)}
+function setLabel(s,text,on){const n=label(text,on?'#fff5d9':'#102f2a',on?'#102f2a':'#fff5d9');s.material.map.dispose();s.material.map=n.material.map;s.material.needsUpdate=true;n.material.dispose()}
+
+function menu(){state='menu';clearInput();setupRound();$('veil').classList.remove('hidden');
+ $('veil').innerHTML=`<div class="card solo"><div class="eyebrow">Прототип ${VERSION} · примитивы</div><h1>SNEAKY DOG 3D</h1><p class="subtitle">Проверяем ощущение: каково бегать по лужайке от садовника. Сделай дело на клумбе и вернись к воротам.</p><div class="dogs breeds">${Object.entries(BREEDS).map(([id,b])=>{const d=breedDots(b),dots=n=>'●'.repeat(n)+'○'.repeat(5-n);return `<button class="dog-card ${id===breedId?'selected':''}" data-breed="${id}" ${b.locked?'disabled':''} title="Скорость ${d.speed}/5, энергия ${d.energy}/5"><span>${b.icon}</span><b>${b.name}</b>${b.abilities?b.abilities.map(a=>`<i class="dots">${a}</i>`).join(''):`<i class="dots">Скор. ${dots(d.speed)}</i><i class="dots">Энерг. ${dots(d.energy)}</i>`}${b.locked?'<i class="dots">скоро</i>':''}</button>`}).join('')}</div><button class="primary" id="play">На лужайку!</button><p class="fine">Один палец по экрану — повернуть и наклонить камеру, два пальца — приблизить. Настройки — ⚙.<br>Телефон: джойстик (слабо — красться, сильно — бег), 🎾 и 💩.</p><a href="2d/">Старая 2D-версия (заморожена, 0.1.9)</a></div>`;
+ for(const b of $('veil').querySelectorAll('[data-breed]'))b.onclick=()=>{setBreed(b.dataset.breed);menu()};
+ $('play').onclick=begin}
+function begin(){setupRound();state='playing';clearInput();$('veil').classList.add('hidden');toast('Садовник стережёт клумбу. Дождись, когда он уйдёт к крану!',4.5);beep(550,.08)}
+function clearInput(){keys.clear();drag=null;pinch=null;touches.clear();joy={x:0,y:0,id:null};toiletHeld=false;$('knob').style.transform='';$('toilet').classList.remove('active')}
+function pause(){if(state!=='playing')return;state='paused';clearInput();$('veil').classList.remove('hidden');
+ $('veil').innerHTML=`<div class="card result"><div class="result-icon">🍃</div><h1>Передышка</h1><p class="fine">Экран ${screenW}×${screenH} · поле ${canvas.width}×${canvas.height} · ${fps} fps</p><div class="result-actions" style="margin-top:16px"><button class="primary" id="resume">Продолжить</button><button class="plain" id="camReset">Сбросить камеру</button><button class="plain" id="restart">Сначала</button><button class="plain" id="back">В меню</button></div></div>`;
+ $('resume').onclick=()=>{state='playing';$('veil').classList.add('hidden')};$('camReset').onclick=()=>{resetCamera();$('resume').click();toast('Камера сброшена',1.5)};$('restart').onclick=begin;$('back').onclick=menu}
+function finish(win){if(state!=='playing')return;state=win?'won':'lost';clearInput();beep(win?740:160,.2);const stars=win?1+(!spotted?1:0)+(!spotted&&elapsed<85?1:0):0;
+ $('veil').classList.remove('hidden');$('veil').innerHTML=`<div class="card result"><div class="result-icon">${win?'🐾':'🧺'}</div><h1>${win?'Получилось!':'Садовник поймал!'}</h1>${win?`<div class="stars">${'★'.repeat(stars)}${'☆'.repeat(3-stars)}</div>`:'<p class="subtitle">Он уносит собаку за шкирку к воротам. Попробуй ещё раз.</p>'}<div class="statline"><span>⏱ ${formatTime(elapsed)}</span><span>${spotted?'👀 заметили':'🍃 незаметно'}</span></div><div class="result-actions"><button class="primary" id="again">Ещё раз</button><button class="plain" id="back">В меню</button></div></div>`;
+ $('again').onclick=begin;$('back').onclick=menu}
 function toast(text,seconds=2.5){$('toast').textContent=text;$('toast').style.display='block';toastTimer=seconds}
 function beep(freq,duration=.1){if(muted)return;try{audioCtx??=new (window.AudioContext||window.webkitAudioContext)();audioCtx.resume();let o=audioCtx.createOscillator(),g=audioCtx.createGain();o.frequency.value=freq;o.type='sine';g.gain.setValueAtTime(.06,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+duration);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+duration)}catch{}}
-function ability(){if(state!=='playing'||abilityCD>0)return;const dog=dogs[selected];abilityCD=dog.cooldown;progress=0;beep(480,.1);
- if(selected===0){let dir=move,origin={x:player.x,y:player.y};let target={...origin};for(let n=10;n<=205;n+=10){let p={x:origin.x+dir.x*n,y:origin.y+dir.y*n};if(blocked(p.x,p.y,5))break;target=p}ball={x:target.x,y:target.y,age:0,life:5,from:origin};for(const g of guards)if(g.state!=='chase'&&dist(g,target)<520){g.state='inspect';g.target={...target};g.wait=0;g.repath=0;g.path=[]}toast('Мяч улетел туда, куда смотрит собака');
- }else if(selected===1){buff=1.5;toast('Рывок!')}else{buff=5;toast('Тихий шаг: тебя сложнее заметить')}
-}
 function formatTime(t){return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0')}
-function update(dt){if(state!=='playing')return;elapsed+=dt;abilityCD=Math.max(0,abilityCD-dt);buff=Math.max(0,buff-dt);if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)$('toast').style.display='none'}
- const dog=dogs[selected];let x=joy.x,y=joy.y;const kx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),ky=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);const sneakKey=keys.has('c');if(kx||ky){const kl=Math.hypot(kx,ky),sn=sneakKey?.55:1;x=kx/kl*sn;y=ky/kl*sn}let len=Math.hypot(x,y);if(len>1){x/=len;y/=len;len=1}let sprint=((keys.has('shift')&&!sneakKey)||(joy.id!==null&&len>.88))&&stamina>2&&len>.1;let silent=selected===2&&buff>0;let speed=dog.speed*(sprint?1.35:1)*(selected===1&&buff>0?1.9:1);stamina=clamp(stamina+(sprint?-28:18)*dt,0,dog.stamina);
- player.moving=len>.1;if(player.moving){move={x:x/(len||1),y:y/(len||1)};player.angle=Math.atan2(y,x);travel(player,x*speed*dt,y*speed*dt,selected===2?11:13);progress=0}
- const bush=bushes.find(b=>dist(player,b)<b.r-8);const hidden=!!bush&&!sprint&&!player.moving||!!bush&&!sprint&&len<.88;const near=dist(player,zone)<zone.r;const doing=(toiletHeld||keys.has(' '))&&near&&!done&&!player.moving;
- if(doing){progress+=dt;if(progress>=levelData[level].hold){done=true;progress=levelData[level].hold;for(let i=0;i<18;i++)particles.push({x:player.x,y:player.y,vx:Math.cos(i)*55,vy:Math.sin(i)*55,life:1,color:i%2?'#f8d36c':'#fff5d9'});beep(800,.18);toast('Готово! Теперь к воротам внизу слева.',4)}}else if(!done){progress=0}
- noiseTimer-=dt;if(sprint&&!silent&&noiseTimer<=0){noiseTimer=.7;rings.push({x:player.x,y:player.y,age:0});for(const g of guards)if(g.state!=='chase'&&dist(g,player)<NOISE){if(g.state==='patrol')toast('Садовник услышал топот!',1.5);g.state='inspect';g.target={x:player.x,y:player.y};g.repath=0;g.wait=0}}
- for(const g of guards){if(g.state!=='patrol')g.watch=0;const distance=dist(g,player);let diff=Math.atan2(Math.sin(Math.atan2(player.y-g.y,player.x-g.x)-g.angle),Math.cos(Math.atan2(player.y-g.y,player.x-g.x)-g.angle));const vis=levelData[level].vision*(g.angry?1.15:1);let sees=distance<vis*dog.stealth*(silent?.65:1)&&Math.abs(diff)<.64&&lineClear(g,player)&&(!hidden||distance<43);
- if(distance<36&&lineClear(g,player))sees=true;
- if(sees){g.sus=clamp(g.sus+dt*(g.state==='chase'?3:.8+1.3*clamp(1-distance/vis,0,1)),0,1);if(g.state!=='chase'){g.alertLook=.7;g.lookAt={x:player.x,y:player.y}}g.seen=0;g.target={x:player.x,y:player.y};if(g.sus>=1&&g.state!=='chase'){g.state='chase';spotted=true;g.repath=0;beep(200,.18);toast('Он тебя заметил! Спрячься за препятствием.')}}else{g.sus=Math.max(0,g.sus-dt*.55);g.seen+=dt}
- if(done&&!discovered&&g.state!=='chase'){const dz=dist(g,zone),az=Math.atan2(zone.y-g.y,zone.x-g.x)-g.angle;if(dz<vis&&Math.abs(Math.atan2(Math.sin(az),Math.cos(az)))<.64&&lineClear(g,zone)){discovered=true;for(const o of guards)o.angry=true;g.state='search';g.target={x:150,y:600};g.wait=0;g.repath=0;g.path=[];beep(220,.25);toast('Садовник нашёл сюрприз и бежит к воротам!',3)}}
- if(g.state==='chase'&&!sees&&g.seen>2.1){g.state='search';g.wait=3;g.repath=0}
- let frozen=false;if(g.state!=='chase'&&g.alertLook>0){frozen=true;g.alertLook-=dt;const want=Math.atan2(g.lookAt.y-g.y,g.lookAt.x-g.x),d=Math.atan2(Math.sin(want-g.angle),Math.cos(want-g.angle));g.angle+=clamp(d,-5*dt,5*dt);
-  if(g.alertLook<=0){frozen=false;if(g.sus>.12){g.state='inspect';g.target={...g.lookAt};g.wait=0;g.repath=0;g.path=[];toast('Садовник что-то заметил и идёт проверить',1.8)}}}
- let target=frozen?null:g.state==='patrol'?g.pts[g.idx]:g.target;let speedG=levelData[level].speed*(g.state==='chase'?1.58:1)*(g.angry?1.2:1);
- if(!frozen&&g.state==='patrol'&&g.watch>0){g.watch-=dt;g.watchT+=dt;g.angle=g.lookBase+Math.sin(g.watchT*g.step.sp)*g.step.amp;target=null;if(g.watch<=0){g.idx=(g.idx+1)%g.pts.length;g.repath=0}}
- else if(!frozen&&g.state==='patrol'&&dist(g,target)<19){const st=target;if(st.wait){g.watch=st.wait;g.watchT=0;g.step=st;g.lookBase=st.look==='bed'?Math.atan2(zone.y-g.y,zone.x-g.x):st.look==='out'?Math.atan2(g.y-zone.y,g.x-zone.x):st.look;target=null}else{g.idx=(g.idx+1)%g.pts.length;target=g.pts[g.idx];g.repath=0}}
- if(target&&dist(g,target)<21&&g.state!=='patrol'&&g.state!=='chase'){g.wait+=dt;g.angle+=dt*.85;if((g.state==='inspect'&&g.wait>2.6)||(g.state==='search'&&g.wait>5.5)){g.state='patrol';g.target=null;g.path=[];g.repath=0;g.wait=0;g.idx=Math.max(0,g.pts.findIndex(p=>p.bed))}}
- else if(target){g.repath-=dt;if(lineClear(g,target,16)){g.path=[]}else if(g.repath<=0){g.path=findPath(g,target);g.repath=.65}let next=g.path[0]||target;if(g.path.length&&dist(g,next)<16){g.path.shift();next=g.path[0]||target}let dx=next.x-g.x,dy=next.y-g.y,l=Math.hypot(dx,dy);if(l>2){g.angle=Math.atan2(dy,dx);travel(g,dx/l*speedG*dt,dy/l*speedG*dt,14)}}
- if(g.state==='chase'&&distance<26&&lineClear(g,player)){finish(false);break}
+function ability(){if(state!=='playing'||abilityCD>0)return;abilityCD=DOG.cooldown;progress=0;beep(480,.1);
+ let origin={x:player.x,y:player.y},target={...origin};for(let n=10;n<=205;n+=10){let p={x:origin.x+move.x*n,y:origin.y+move.y*n};if(blocked(p.x,p.y,5))break;target=p}
+ if(ball)scene.remove(ball.m);ball={x:target.x,y:target.y,from:origin,age:0,life:5,m:mesh(new THREE.SphereGeometry(.11,12,8),'#cee566')};scene.add(ball.m);
+ for(const g of guards)if(g.state!=='chase'&&dist(g,target)<520){g.state='inspect';g.target={...target};g.wait=0;g.repath=0;g.path=[]}toast('Мяч улетел туда, куда смотрит собака')}
+
+// ---------- Update: the 2D rules, with input turned to match the camera ----------
+// Game rules (speeds, detection, hiding, abilities) read only the simulation state and cfg.tempo. They never read the
+// camera: cfg.view, cfg.zoom, cfg.rays, camState and colliders are presentation only. The one link is camYaw(), which only
+// turns the stick into a world direction ("up" = away from the camera).
+function update(dt){if(state!=='playing')return;elapsed+=dt;abilityCD=Math.max(0,abilityCD-dt);if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)$('toast').style.display='none'}
+ let x=joy.x,y=joy.y;const kx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),ky=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);const sneakKey=keys.has('c');if(kx||ky){const kl=Math.hypot(kx,ky),sn=sneakKey?.55:1;x=kx/kl*sn;y=ky/kl*sn}let len=Math.hypot(x,y);if(len>1){x/=len;y/=len;len=1}
+ // Speed follows the stick continuously — no run switch, nothing to flicker at a threshold:
+ //   len < .12 — stand; .12–.35 — sneak (sneakMult); .35–.75 — sneakMult → 1 linearly; .75–1 — 1 → runMult linearly.
+ // Stamina never switches the run off, it lowers the ceiling: maxMult = 1 + (runMult − 1)·clamp(stamina / 25, 0, 1).
+ // Drain is proportional to the excess over walking speed; regen works only at walking pace or slower (fading out over
+ // the first 5% of excess), so a dog that ran dry slides smoothly down to a walk and stays there.
+ // The multiplier is smoothed over the breed's accel (~0.12 s). Mode, hiding and noise all read this one number.
+ const B=DOG;player.moving=len>=.12;
+ let wantMult=0;
+ if(kx||ky)wantMult=sneakKey?B.sneakMult:keys.has('shift')?B.runMult:1;   // keyboard: tests only, three fixed levels
+ else if(player.moving)wantMult=len<.35?B.sneakMult:len<.75?B.sneakMult+(1-B.sneakMult)*(len-.35)/.4:1+(B.runMult-1)*(len-.75)/.25;
+ // Chase panic: while any gardener chases, the dog can run the whole chase flat out — drain ×0.3, no regen, no ceiling —
+ // for at most PANIC_MAX s in a row, then the normal economy. Stealth is untouched: until spotted nothing changes.
+ const chased=guards.some(g=>g.state==='chase');panicT=chased?panicT+dt:0;panicNow=chased&&panicT<=PANIC_MAX;
+ const ms={mult:speedMult,stamina},allowed=speedStep(B,ms,wantMult,dt,panicNow);speedMult=ms.mult;
+ const staminaDelta=ms.stamina-stamina;stamina=ms.stamina;
+ // The energy ring turns red while the stamina ceiling is what stops the run (the player asks for more than it allows).
+ energyCapped=wantMult>allowed+.02;energyMoving=Math.abs(staminaDelta)>1e-4;
+ // Speeds are physical: m/s = speed × tempo × 0.06; on a bigger lawn (mapScale) the same metres take more map units,
+ // so crossing the park takes longer. Vision and noise radii stay in map units and scale with the lawn.
+ const speed=B.speed*cfg.tempo*speedMult/cfg.mapScale;
+ // Stick "up" means "away from the camera", whatever the camera yaw is.
+ const c=Math.cos(camYaw()),s=Math.sin(camYaw()),mx=x*c-y*s,my=x*s+y*c;
+ // Animation mode from the same multiplier.
+ player.mode=!player.moving?'stand':speedMult<=B.sneakMult*1.15?'sneak':speedMult<=1.05?'walk':'run';player.speed=player.moving?speed:0;
+ if(player.moving){move={x:mx/len,y:my/len};player.angle=Math.atan2(my,mx);travel(player,move.x*speed*dt,move.y*speed*dt,13);progress=0}
+ // Hiding in a bush works while the multiplier stays at sneaking level (≤ sneakMult·1.15). It is a visible on/off
+ // state, so it has a small hysteresis: once hidden, it holds until the multiplier passes sneakMult·1.3.
+ const bush=bushes.find(b=>dist(player,b)<b.r-8);
+ if(!bush)hideLatch=false;else if(!hideLatch&&speedMult<=B.sneakMult*1.15)hideLatch=true;else if(hideLatch&&speedMult>B.sneakMult*1.3)hideLatch=false;
+ const hidden=!!bush&&hideLatch;hiddenNow=hidden;const near=dist(player,zone)<zone.r;const doing=(toiletHeld||keys.has(' '))&&near&&!done&&!player.moving;
+ if(doing){progress+=dt;if(progress>=LV.hold){done=true;progress=LV.hold;pile.visible=true;setLabel(bedLabel,'ГОТОВО ✓',true);for(const s of gateLabels)setLabel(s,'ВЫХОД',true);beep(800,.18);toast('Готово! Выходов два: ближний — у крана, дальний — внизу слева.',4.5)}}else if(!done)progress=0;
+ // Noise by speed (NOISE_AT anchors). Each loud enough step leaves a ring where the paw hit the ground; it spreads from 0 to
+ // the step's radius over its life. A gardener hears it at the moment the spreading edge reaches him — not earlier and not
+ // if it never does — so what the player sees and what the gardener hears match exactly.
+ const noiseK=player.moving?noiseLevel(B,speedMult):0;
+ noiseTimer-=dt;if(noiseK>=NOISE_MIN&&noiseTimer<=0){noiseTimer=1.6-.9*noiseK;const m=new THREE.Mesh(RING_GEO,unlit('#fff5d9',.6));m.position.set(player.x*U,.05,player.y*U);m.scale.setScalar(.01);m.renderOrder=1;scene.add(m);
+  rings.push({x:player.x,y:player.y,age:0,life:.55+.45*noiseK,rad:NOISE*noiseK,loud:noiseK>.6,heard:new Set(),m})}
+ for(const r of rings){r.age+=dt;const edge=r.rad*Math.min(1,r.age/r.life);
+  for(const g of guards)if(!r.heard.has(g)&&dist(g,r)<=edge){r.heard.add(g);if(g.state!=='chase'){if(g.state==='patrol')toast(r.loud?'Садовник услышал топот!':'Садовник услышал шаги!',1.5);g.state='inspect';g.target={x:r.x,y:r.y};g.repath=0;g.wait=0}}}
+ rings=rings.filter(r=>{if(r.age<r.life)return true;scene.remove(r.m);r.m.material.dispose();return false});
+ for(const g of guards){if(g.state!=='patrol')g.watch=0;const distance=dist(g,player);const to=Math.atan2(player.y-g.y,player.x-g.x),diff=Math.atan2(Math.sin(to-g.angle),Math.cos(to-g.angle));const vis=LV.vision*(g.angry?1.15:1);let sees=distance<vis&&Math.abs(diff)<.64&&lineClear(g,player)&&(!hidden||distance<43);
+  if(distance<36&&lineClear(g,player))sees=true;
+  if(sees){g.sus=clamp(g.sus+dt*(g.state==='chase'?3:.8+1.3*clamp(1-distance/vis,0,1)),0,1);if(g.state!=='chase'){g.alertLook=.7;g.lookAt={x:player.x,y:player.y}}g.seen=0;g.target={x:player.x,y:player.y};if(g.sus>=1&&g.state!=='chase'){g.state='chase';spotted=true;g.repath=0;beep(200,.18);toast('Он тебя заметил! Спрячься за препятствием.')}}else{g.sus=Math.max(0,g.sus-dt*.55);g.seen+=dt}
+  if(done&&!discovered&&g.state!=='chase'){const dz=dist(g,zone),az=Math.atan2(zone.y-g.y,zone.x-g.x)-g.angle;if(dz<vis&&Math.abs(Math.atan2(Math.sin(az),Math.cos(az)))<.64&&lineClear(g,zone)){discovered=true;for(const o of guards)o.angry=true;g.state='search';{const ex=nearestExit(player);g.target={x:ex.x,y:ex.y}}g.wait=0;g.repath=0;g.path=[];beep(220,.25);toast('Садовник нашёл сюрприз и бежит к ближнему к тебе выходу!',3)}}
+  if(g.state==='chase'&&!sees&&g.seen>2.1){g.state='search';g.wait=3;g.repath=0}
+  let frozen=false;if(g.state!=='chase'&&g.alertLook>0){frozen=true;g.alertLook-=dt;const want=Math.atan2(g.lookAt.y-g.y,g.lookAt.x-g.x),d=Math.atan2(Math.sin(want-g.angle),Math.cos(want-g.angle));g.angle+=clamp(d,-5*dt,5*dt);
+   if(g.alertLook<=0){frozen=false;if(g.sus>.12){g.state='inspect';g.target={...g.lookAt};g.wait=0;g.repath=0;g.path=[];toast('Садовник что-то заметил и идёт проверить',1.8)}}}
+  // State timeout (fix 1): inspect ≤ INSPECT_MAX s, search ≤ SEARCH_MAX s from entering it, whether he got anywhere or not.
+  if(g.state!==g.lastState){g.lastState=g.state;g.stateT=0;g.stuckT=0;g.stuckN=0;g.arrived=false;g.partial=false}else g.stateT+=dt;
+  if((g.state==='inspect'&&g.stateT>INSPECT_MAX)||(g.state==='search'&&g.stateT>SEARCH_MAX))backToPatrol(g);
+  let target=frozen?null:g.state==='patrol'?g.pts[g.idx]:g.target;
+  // Unreachable target (fix 3): a point inside an obstacle is moved to the nearest free cell.
+  if(target&&g.state!=='patrol')target=freeSpot(target);
+  if(target&&!(g.lastTarget&&dist(target,g.lastTarget)<1)){g.lastTarget=target;g.arrived=false;g.partial=false;g.stuckT=0;g.stuckN=0}
+  const speedG=LV.speed*cfg.tempo/cfg.mapScale*(g.state==='chase'?1.58:1)*(g.angry?1.2:1);g.moved=0;
+  if(!frozen&&g.state==='patrol'&&g.watch>0){g.watch-=dt;g.watchT+=dt;g.angle=g.lookBase+Math.sin(g.watchT*g.step.sp)*g.step.amp;target=null;if(g.watch<=0){g.idx=(g.idx+1)%g.pts.length;g.repath=0}}
+  else if(!frozen&&g.state==='patrol'&&(dist(g,target)<19||g.arrived)){const st=target;g.arrived=false;if(st.wait){g.watch=st.wait;g.watchT=0;g.step=st;g.lookBase=st.look==='bed'?Math.atan2(zone.y-g.y,zone.x-g.x):st.look==='out'?Math.atan2(g.y-zone.y,g.x-zone.x):st.look;target=null}else{g.idx=(g.idx+1)%g.pts.length;target=g.pts[g.idx];g.repath=0}}
+  if(target&&(dist(g,target)<21||g.arrived)&&g.state!=='patrol'&&g.state!=='chase'){g.wait+=dt;g.angle+=dt*.85;if((g.state==='inspect'&&g.wait>2.6)||(g.state==='search'&&g.wait>5.5))backToPatrol(g)}
+  else if(target){g.repath-=dt;
+   if(lineClear(g,target,16)){g.path=[];g.partial=false}
+   else if(g.repath<=0&&!(g.partial&&g.path.length)){g.path=findPath(g,target);g.partial=false;g.repath=.65;
+    // No route and no line of sight: walk to the nearest reachable point towards the target instead of standing still.
+    if(!g.path.length){g.path=partialPath(g,target);g.partial=g.path.length>0}}
+   let next=g.path[0]||target;if(g.path.length&&dist(g,next)<16){g.path.shift();next=g.path[0]||target;if(!g.path.length&&g.partial)g.arrived=true}
+   const dx=next.x-g.x,dy=next.y-g.y,l=Math.hypot(dx,dy);
+   if(l>2){g.angle=Math.atan2(dy,dx);const ox=g.x,oy=g.y,step=speedG*dt;travel(g,dx/l*step,dy/l*step,14);const got=Math.hypot(g.x-ox,g.y-oy);g.moved=got/dt;
+    // Stuck detector (fix 2): trying to walk but covering < 15% of the expected distance. After 0.6 s rebuild the route once;
+    // still stuck — in a chase after 1.5 s he gives up into search, otherwise after 1.5 s more the target counts as reached.
+    if(got<.15*step){g.stuckT+=dt;g.okT=0}else{g.okT=(g.okT||0)+dt;if(g.okT>.5){g.stuckT=0;g.stuckN=0}}
+    if(g.stuckN===0&&g.stuckT>.6){g.path=[];g.repath=0;g.partial=false;g.stuckN=1}
+    if(g.state==='chase'?g.stuckT>1.5:g.stuckT>2.1){g.stuckT=0;if(g.state==='chase'){g.state='search';g.wait=3;g.repath=0}else g.arrived=true}}}
+  if(g.state==='chase'&&distance<26&&lineClear(g,player)){finish(false);break}
  }
- if(state==='playing'&&done&&dist(player,exit)<exit.r)finish(true);
- rings.forEach(r=>r.age+=dt);rings=rings.filter(r=>r.age<.7);if(ball){ball.age+=dt;ball.life-=dt;if(ball.life<=0)ball=null}particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt});particles=particles.filter(p=>p.life>0);
- $('clock').textContent=formatTime(elapsed);$('objective').textContent=done?'Вернись к воротам внизу слева':'Найди клумбу наверху справа';$('progress').style.display=doing&&!done?'block':'none';$('toiletFill').style.width=progress/levelData[level].hold*100+'%';$('abilityText').textContent=abilityCD>0?Math.ceil(abilityCD)+'с':dog.ability;$('abilityIcon').textContent=dog.emoji;$('ability').disabled=abilityCD>0;$('energyFill').style.width=stamina/dog.stamina*100+'%';
- const sneakHint=inputMode==='keys'?'держи C, чтобы красться':'отклони джойстик меньше';$('status').textContent=hidden?'🍃 Ты в укрытии':guards.some(g=>g.state==='chase')?'❗ Погоня — разорви линию зрения':bush?'👀 Слишком быстро — '+sneakHint:near&&!done?(inputMode==='keys'?'💩 Остановись и держи пробел':'💩 Остановись и удерживай кнопку'):done?'🐾 Дело сделано. Беги к воротам!':'Кусты прячут тебя, если '+(inputMode==='keys'?'красться (C)':'идти медленно');
+ if(state==='playing'&&done&&EXITS.some(e=>dist(player,e)<e.r))finish(true);
+
+ if(ball){ball.age+=dt;ball.life-=dt;if(ball.life<=0){scene.remove(ball.m);ball=null}}
+ $('clock').textContent=formatTime(elapsed);$('objective').textContent=done?'К выходу: ближний у крана или дальний внизу слева':'Найди клумбу наверху справа';$('progress').style.display=doing&&!done?'block':'none';$('toiletFill').style.width=progress/LV.hold*100+'%';$('abilityText').textContent=abilityCD>0?Math.ceil(abilityCD)+'с':'МЯЧ';$('ability').disabled=abilityCD>0;
+ const sneakHint=inputMode==='keys'?'держи C, чтобы красться':'отклони джойстик меньше';$('status').textContent=hidden?'🍃 Ты в укрытии':guards.some(g=>g.state==='chase')?'❗ Погоня — разорви линию зрения':bush?'👀 Слишком быстро — '+sneakHint:near&&!done?(inputMode==='keys'?'💩 Остановись и держи пробел':'💩 Остановись и удерживай кнопку'):done?'🐾 Дело сделано. Беги к выходу!':'Кусты прячут тебя, если '+(inputMode==='keys'?'красться (C)':'идти медленно');
 }
-function resize(){const app=$('app'),vh=Math.round(window.visualViewport?.height||innerHeight);app.style.height=vh+'px';screenW=Math.round(app.getBoundingClientRect().width)||innerWidth;screenH=vh;canvas.style.width=screenW+'px';canvas.style.height=screenH+'px';dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(screenW*dpr);canvas.height=Math.round(screenH*dpr);lastVW=innerWidth;lastVH=vh}window.visualViewport?.addEventListener('resize',resize);window.addEventListener('resize',resize);window.addEventListener('orientationchange',()=>setTimeout(resize,300));
-function rr(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.stroke()}}
-function ellipse(x,y,rx,ry,color){ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fillStyle=color;ctx.fill()}
-function text(t,x,y,size=15,color='#fff5d9',align='center'){ctx.fillStyle=color;ctx.font=`800 ${size}px 'Trebuchet MS', sans-serif`;ctx.textAlign=align;ctx.fillText(t,x,y)}
-function drawBush(b){ellipse(b.x+4,b.y+9,b.r+5,b.r*.67,'#173e2f35');for(const [dx,dy,s,c]of[[-23,6,.72,'#276b48'],[23,6,.71,'#28724a'],[0,-10,.83,'#378b51'],[-18,-8,.58,'#4c9c5b'],[17,-15,.59,'#53aa62']])ellipse(b.x+dx,b.y+dy,b.r*s,b.r*s*.8,c);for(let j=0;j<8;j++)ellipse(b.x+Math.sin(j*3.1)*b.r*.65,b.y+Math.cos(j*2)*b.r*.46,3,2,'#8cd17b')}
-function drawTree(o){ellipse(o.x+12,o.y+15,45,22,'#153c2f2b');rr(o.x-9,o.y-31,18,39,6,'#815c38');ellipse(o.x,o.y-45,o.r+11,o.r*.92,'#24694a');ellipse(o.x-14,o.y-58,o.r*.75,o.r*.72,'#3d8d55');ellipse(o.x+16,o.y-67,o.r*.74,o.r*.65,'#52a562');ellipse(o.x-7,o.y-82,o.r*.55,o.r*.45,'#69b765')}
-function drawDog(){const dog=dogs[selected],p=player;ellipse(p.x,p.y+7,21,11,'#143c2c44');ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.angle);let step=p.moving?Math.sin(elapsed*18)*3:0;for(const [x,y]of[[-9,-10],[-9,10],[8,-9],[8,9]]){rr(x-4+(y>0?step:-step),y-4,9,7,3,dog.color)}ellipse(-3,0,selected===2?19:22,11,dog.color);ctx.strokeStyle=dog.color;ctx.lineWidth=6;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-21,0);ctx.quadraticCurveTo(-29,-10,-29,-16+Math.sin(elapsed*9)*4);ctx.stroke();if(selected===1)ellipse(-5,-2,7,8,'#b0743c');rr(8,-11,6,22,3,'#d65148');ellipse(20,0,12,11,dog.color);ellipse(27,0,6,7,selected===1?'#fffaf0':'#f6d590');ellipse(31,0,3,3,'#27352d');ellipse(19,-6,2,2,'#25382c');ellipse(19,6,2,2,'#25382c');if(selected===2){ctx.fillStyle=dog.color;for(const side of[-1,1]){ctx.beginPath();ctx.moveTo(10,side*6);ctx.lineTo(13,side*18);ctx.lineTo(20,side*8);ctx.fill()}}else{ellipse(11,-11,7,5,selected===1?'#975326':'#b78544');ellipse(11,11,7,5,selected===1?'#975326':'#b78544')}ctx.restore();if(buff>0){ctx.strokeStyle='#f8d36c';ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y,31,0,Math.PI*2);ctx.stroke()}}
-function drawGuard(g){ellipse(g.x,g.y+9,18,10,'#143c2c44');ctx.save();ctx.translate(g.x,g.y);ctx.rotate(g.angle);rr(-17,-12,16,9,4,'#183b37');rr(-17,3,16,9,4,'#183b37');ellipse(0,0,15,16,'#487b86');rr(-4,-16,10,32,4,'#ebba78');ellipse(8,0,11,11,'#edb785');ellipse(4,0,14,19,'#dcc186');ellipse(4,0,11,12,'#f4d9a0');rr(14,-3,9,6,3,'#b9774c');ctx.restore();if(g.state==='chase'||g.sus>0||g.state==='inspect'||g.state==='search'){const c=g.state==='chase'?'#ed6455':'#f8d36c';ellipse(g.x,g.y-43,14,14,c);text(g.state==='chase'?'!':'?',g.x,g.y-37,19,'#102f2a')}if(g.sus>0&&g.state!=='chase'){rr(g.x-21,g.y-65,42,5,3,'#102f2a77');rr(g.x-21,g.y-65,42*g.sus,5,3,'#f8d36c')}if(g.state==='patrol'&&g.sus<=0&&g.watch>0&&g.step?.icon)text(g.step.icon,g.x,g.y-34,18);if(g.angry)text('💢',g.x+19,g.y-20,14)}
-function draw(){if(!player)return;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,screenW,screenH);ctx.fillStyle='#194937';ctx.fillRect(0,0,screenW,screenH);
- const portrait=screenW<650&&screenH>screenW,land=!portrait&&screenH<560&&screenW>screenH;scale=portrait?screenW/520:land?screenH/470:Math.min(screenW/1040,(screenH-35)/790);let viewW=screenW/scale,viewH=screenH/scale;if(land){const sideL=150/scale,sideR=180/scale;cam.x=clamp(player.x-viewW*.5,-sideL,W-viewW+sideR);cam.y=clamp(player.y-viewH*.52,-110,H-viewH+30)}else{cam.x=portrait?clamp(player.x-viewW*.5,-22,W-viewW+22):(W-viewW)/2;cam.y=portrait?clamp(player.y-viewH*.51,-45,H-viewH+100):(H-viewH)/2}ctx.save();ctx.scale(scale,scale);ctx.translate(-cam.x,-cam.y);
- rr(25,35,950,690,30,'#789f51');rr(42,53,916,647,24,'#84af60');for(let i=0;i<170;i++){let x=55+(i*173%890),y=65+(i*113%620);ellipse(x,y,2.2,1.4,i%3?'#93ba6a':'#709d50')}
- ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#cdbd89';ctx.lineWidth=69;ctx.beginPath();ctx.moveTo(117,711);ctx.lineTo(117,529);ctx.lineTo(497,529);ctx.lineTo(763,529);ctx.lineTo(763,324);ctx.lineTo(762,145);ctx.lineTo(867,145);ctx.stroke();ctx.lineWidth=58;ctx.strokeStyle='#ddcc9b';ctx.stroke();ctx.lineWidth=48;ctx.beginPath();ctx.moveTo(496,529);ctx.lineTo(496,251);ctx.lineTo(235,251);ctx.stroke();
- // Garden fence and exit gate.
- for(let x=42;x<970;x+=28){if(x<72||x>168){rr(x,701,10,28,3,'#bcaa79');rr(x,48,9,22,3,'#e2cd96')}}rr(41,709,917,6,2,'#ae9464');rr(41,55,917,6,2,'#ae9464');for(let y=70;y<700;y+=28){rr(35,y,9,20,3,'#d2bd86');rr(958,y,9,20,3,'#d2bd86')}
- ctx.strokeStyle=done?'#fff5d9':'#fff5d955';ctx.lineWidth=3;ctx.setLineDash([7,6]);ctx.beginPath();ctx.arc(exit.x,exit.y,exit.r,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);rr(70,685,96,29,8,done?'#fff5d9':'#102f2a');text(done?'ВЫХОД':'ВОРОТА',118,705,13,done?'#102f2a':'#fff5d9');
- // Target flowers.
- rr(797,94,108,105,17,'#65553d');rr(804,100,94,93,12,'#795d40');for(const f of flowers){ctx.strokeStyle='#4b8a49';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(f.x,f.y+12);ctx.lineTo(f.x,f.y);ctx.stroke();for(let k=0;k<5;k++)ellipse(f.x+Math.cos(k*1.256)*4,f.y+Math.sin(k*1.256)*4,4,4,f.c);ellipse(f.x,f.y,2,2,'#e9bf54')}
- ctx.strokeStyle=done?'#a8de8a':'#fff5d9';ctx.lineWidth=2.5;ctx.setLineDash([6,5]);ctx.beginPath();ctx.arc(zone.x,zone.y,zone.r+7,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);rr(805,74,90,27,9,'#102f2a');text(done?'ГОТОВО ✓':'КЛУМБА',850,93,13);
- // Chore props: the places the gardener leaves the flowerbed for.
- ellipse(TAP.x,TAP.y+22,18,7,'#7fc6e888');rr(TAP.x-5,TAP.y-16,10,34,3,'#6f7f86');rr(TAP.x-11,TAP.y-18,22,8,3,'#8e9ea5');ellipse(TAP.x,TAP.y-20,6,4,'#c94f43');
- if(level>=1){ellipse(BARROW.x+3,BARROW.y+12,24,8,'#153c2c33');ellipse(BARROW.x,BARROW.y,21,13,'#c0563f');ellipse(BARROW.x-2,BARROW.y-3,15,8,'#6b4a2e');rr(BARROW.x+18,BARROW.y-3,14,4,2,'#5b4a3a');ellipse(BARROW.x-20,BARROW.y+4,6,6,'#2d3a33')}
- rr(BED.x+16,BED.y-4,13,12,4,'#4f8fb8');rr(BED.x+27,BED.y-3,8,3,1,'#4f8fb8');
- // Static obstacle footprints and furniture.
- for(const o of solids){if(o.type==='hedge'){rr(o.x+4,o.y+6,o.w,o.h,12,'#285c3c44');rr(o.x,o.y-5,o.w,o.h,12,'#347648');rr(o.x+5,o.y-7,o.w-10,o.h-7,8,'#55985a')}else if(o.type==='bench'){rr(o.x+4,o.y+7,o.w,o.h,7,'#153c2c33');rr(o.x+8,o.y+9,7,30,2,'#354e43');rr(o.x+o.w-16,o.y+9,7,30,2,'#354e43');rr(o.x,o.y-10,o.w,29,5,'#a77547');for(let j=0;j<3;j++)rr(o.x+3,o.y-8+j*9,o.w-6,6,2,'#ce9c64');rr(o.x,o.y-25,o.w,10,3,'#c38c55')}else{rr(o.x,o.y,o.w,o.h,7,'#795f3f');for(let j=0;j<15;j++)ellipse(o.x+8+j*11,o.y+12,5,6,j%2?'#ffcf72':'#ea8e9a')}}
- // FOV is clipped by physical obstacles, matching line-of-sight detection.
- for(const g of guards){let col=g.state==='chase'?'#f1605363':g.sus>0?'#f8d36c59':'#fff3b833';ctx.beginPath();ctx.moveTo(g.x,g.y);const radius=levelData[level].vision*(g.angry?1.15:1)*dogs[selected].stealth*(selected===2&&buff>0?.65:1);for(let a=g.angle-.64;a<=g.angle+.645;a+=.025){let end={x:g.x,y:g.y};for(let r=10;r<=radius;r+=8){let p={x:g.x+Math.cos(a)*r,y:g.y+Math.sin(a)*r};if(blocked(p.x,p.y,0))break;end=p}ctx.lineTo(end.x,end.y)}ctx.closePath();ctx.fillStyle=col;ctx.fill()}
- for(const r of rings){ctx.globalAlpha=.55*(1-r.age/.7);ctx.strokeStyle='#fff5d9';ctx.lineWidth=3;ctx.beginPath();ctx.arc(r.x,r.y,NOISE*r.age/.7,0,Math.PI*2);ctx.stroke()}ctx.globalAlpha=1;
- // Y-sort actors and foliage so hiding reads naturally.
- let items=[...bushes.map(o=>({y:o.y,draw:()=>drawBush(o)})),...trees.map(o=>({y:o.y+10,draw:()=>drawTree(o)})),...guards.map(o=>({y:o.y,draw:()=>drawGuard(o)})),{y:player.y,draw:drawDog}];items.sort((a,b)=>a.y-b.y).forEach(o=>o.draw());
- if(ball){const t=clamp(ball.age/.4,0,1),x=ball.from.x+(ball.x-ball.from.x)*t,y=ball.from.y+(ball.y-ball.from.y)*t-Math.sin(t*Math.PI)*50;ellipse(x,y,7,7,'#cee566');ctx.strokeStyle='#fff5d9';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x+2,y,4,-Math.PI/2,Math.PI/2);ctx.stroke();if(ball.age<2){ctx.strokeStyle='#fff5d999';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(ball.x,ball.y,20+(ball.age*45)%65,0,Math.PI*2);ctx.stroke()}}
- if(done){ellipse(zone.x+23,zone.y+24,9,5,'#473628');ellipse(zone.x+23,zone.y+21,6,5,'#604633');text('✓',zone.x+23,zone.y-10,26,'#fff5d9')}
- for(const p of particles){ctx.globalAlpha=p.life;ellipse(p.x,p.y,4,4,p.color)}ctx.globalAlpha=1;
- // Direction badge keeps the objective visible on a portrait camera.
- if((portrait||land)&&state==='playing'){const m=land?{l:150,r:180,t:30,b:40}:{l:35,r:35,t:135,b:170};let target=done?exit:zone,sx=(target.x-cam.x)*scale,sy=(target.y-cam.y)*scale;if(sx<m.l||sx>screenW-m.r||sy<m.t||sy>screenH-m.b){const px=clamp(target.x,cam.x+(m.l+5)/scale,cam.x+(screenW-m.r-5)/scale),py=clamp(target.y,cam.y+(m.t+10)/scale,cam.y+(screenH-m.b-10)/scale);ellipse(px,py,22,22,'#fff5d9');text(done?'↙':'↗',px,py+7,26,'#102f2a')}}
- ctx.restore();
-}
-function loop(t){if(innerWidth!==lastVW||Math.round(window.visualViewport?.height||innerHeight)!==lastVH)resize();const dt=Math.min((t-lastTime)/1000,.033);lastTime=t;update(dt);draw();requestAnimationFrame(loop)}
-function setJoy(e){const r=$('stick').getBoundingClientRect(),max=r.width*.31;let dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),l=Math.hypot(dx,dy);if(l>max){dx*=max/l;dy*=max/l}joy.x=dx/max;joy.y=dy/max;$('knob').style.transform=`translate(${dx}px,${dy}px)`}
-$('stick').addEventListener('pointerdown',e=>{inputMode='touch';if(state!=='playing'||joy.id!==null)return;e.preventDefault();joy.id=e.pointerId;$('stick').setPointerCapture(e.pointerId);setJoy(e)});$('stick').addEventListener('pointermove',e=>{if(e.pointerId===joy.id)setJoy(e)});function resetJoy(e){if(e.pointerId===joy.id){joy={x:0,y:0,id:null};$('knob').style.transform=''}}$('stick').addEventListener('pointerup',resetJoy);$('stick').addEventListener('pointercancel',resetJoy);$('stick').addEventListener('lostpointercapture',resetJoy);
-$('toilet').addEventListener('pointerdown',e=>{if(state!=='playing')return;e.preventDefault();$('toilet').setPointerCapture(e.pointerId);toiletHeld=true;$('toilet').classList.add('active');if(!done&&dist(player,zone)>=zone.r)toast('Сначала подойди к клумбе наверху справа')});for(const type of ['pointerup','pointercancel','lostpointercapture'])$('toilet').addEventListener(type,()=>{toiletHeld=false;$('toilet').classList.remove('active')});$('ability').addEventListener('pointerdown',e=>{e.preventDefault();ability()});$('ability').onclick=e=>{if(e.detail===0)ability()};$('pause').onclick=pause;{const fsOK=document.fullscreenEnabled||document.webkitFullscreenEnabled,fsEl=()=>document.fullscreenElement||document.webkitFullscreenElement;if(fsOK)$('fs').hidden=false;$('fs').onclick=()=>{try{if(fsEl())(document.exitFullscreen||document.webkitExitFullscreen).call(document);else{const a=$('app'),r=(a.requestFullscreen||a.webkitRequestFullscreen).call(a);r?.catch?.(()=>toast('Браузер не разрешил полный экран'))}}catch{toast('Браузер не разрешил полный экран')}};const fsSync=()=>{$('fs').textContent=fsEl()?'⤡':'⛶';setTimeout(resize,60)};document.addEventListener('fullscreenchange',fsSync);document.addEventListener('webkitfullscreenchange',fsSync)}$('sound').onclick=()=>{muted=!muted;$('sound').textContent=muted?'♪':'♫';$('sound').setAttribute('aria-label',muted?'Включить звук':'Выключить звук');beep(660,.1)};
-const CODES={KeyW:'w',KeyA:'a',KeyS:'s',KeyD:'d',KeyE:'e',KeyC:'c',Space:' ',ShiftLeft:'shift',ShiftRight:'shift',ArrowUp:'arrowup',ArrowDown:'arrowdown',ArrowLeft:'arrowleft',ArrowRight:'arrowright',Escape:'escape'};const keyOf=e=>CODES[e.code]||(e.key||'').toLowerCase();
-window.addEventListener('keydown',e=>{const k=keyOf(e);if(CODES[e.code])inputMode='keys';if([' ','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(k))e.preventDefault();if(k==='escape'){if(state==='playing')pause();else if(state==='paused')$('resume').click();return}if(state!=='playing')return;keys.add(k);if(k==='e'&&!e.repeat)ability()});window.addEventListener('keyup',e=>keys.delete(keyOf(e)));window.addEventListener('blur',()=>{if(state==='playing')pause();clearInput()});document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='playing')pause()});canvas.addEventListener('contextmenu',e=>e.preventDefault());
-// Read-only hook for build verification and future debugging; it never changes game state.
-window.SneakyDog={snapshot:()=>({state,level,dog:dogs[selected].name,player:player?{x:player.x,y:player.y}:null,guards:guards.map(g=>({x:g.x,y:g.y,state:g.state,idx:g.idx,watch:g.watch,angry:g.angry,sus:+g.sus.toFixed(2)})),discovered,done,progress,elapsed,stamina}),version:'0.1.9'};
-const modelContext=document.modelContext;
-if(modelContext?.registerTool){const lifecycle=new AbortController();const tools=[
-{name:'read_game_state',description:'Read the current park, dog, player position and gardener states.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true},execute(input){if(!input||typeof input!=='object'||Object.keys(input).length)throw new Error('Expected an empty object');return window.SneakyDog.snapshot()}},
-{name:'start_park',description:'Start a new attempt in an unlocked park with the selected dog; resets the current attempt.',inputSchema:{type:'object',properties:{dog:{type:'integer',minimum:0,maximum:2},park:{type:'integer',minimum:1,maximum:3}},required:['dog','park'],additionalProperties:false},annotations:{readOnlyHint:false},execute(input){if(!input||!Number.isInteger(input.dog)||input.dog<0||input.dog>2||!Number.isInteger(input.park)||input.park<1||input.park>save.unlocked||Object.keys(input).some(k=>!['dog','park'].includes(k)))throw new Error('Select an available dog and an unlocked park');selected=input.dog;level=input.park-1;begin();return window.SneakyDog.snapshot()}},
-{name:'pause_park',description:'Pause the current game and open the pause menu.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:false},execute(input){if(!input||typeof input!=='object'||Object.keys(input).length||state!=='playing')throw new Error('An active game and empty input are required');pause();return {state}}}
-];for(const tool of tools){try{Promise.resolve(modelContext.registerTool(tool,{signal:lifecycle.signal})).catch(()=>{})}catch{}}window.addEventListener('pagehide',()=>lifecycle.abort(),{once:true})}
-resize();menu();requestAnimationFrame(loop);
-})();
+
+// ---------- Camera. Presentation only: nothing here (zoom, yaw, pitch, rays) is read by the game rules in update(). ----------
+// yaw — where the view started (the remembered view, or behind the dog); off / poff — the player's yaw / pitch on top of it
+// (one finger, mouse; Q,R for yaw in tests). The camera never turns by itself; the view is remembered (cfg.view) on its own.
+const PITCH_MIN=8*D2R,PITCH_MAX=75*D2R;
+const camState={x:0,z:0,aimY:0,chase:0,yaw:Math.PI/4,off:0,poff:0,pitch:0,lift:0,dist:0,pull:0,eff:0,saveT:0,init:false};
+let drag=null,pinch=null;const touches=new Map();
+const wrapAngle=a=>Math.atan2(Math.sin(a),Math.cos(a)),camYaw=()=>camState.yaw+camState.off;
+const ray=new THREE.Raycaster(),rayO=new THREE.Vector3(),rayD=new THREE.Vector3(),aimV=new THREE.Vector3();
+// Distance from the aim point to the first solid obstacle towards the camera: a centre ray plus four rays offset
+// by `spread` across the view (a cheap stand-in for a sphere cast).
+function obstacleDistance(ax,ay,az,dx,dy,dz,fx,fz,pitch,far){const s=cfg.rays.spread,rx=-fz,rz=fx,ux=fx*Math.sin(pitch),uy=Math.cos(pitch),uz=fz*Math.sin(pitch);let best=far;
+ rayD.set(dx,dy,dz);ray.far=far;
+ for(const [a,b] of [[0,0],[1,0],[-1,0],[0,1],[0,-1]]){rayO.set(ax+(rx*a+ux*b)*s,ay+uy*b*s,az+(rz*a+uz*b)*s);ray.set(rayO,rayD);const h=ray.intersectObjects(colliders,false)[0];if(h&&h.distance<best)best=h.distance}
+ return best}
+function updateCamera(dt){const V=cfg.view,S=cfg.swipe,R=cfg.rays,chasing=state==='playing'&&guards.some(g=>g.state==='chase');
+ const k=VIEW.lag>0?1-Math.exp(-dt/VIEW.lag):1,kc=1-Math.exp(-dt/.5);
+ // Aim at the body centre; raised on the flowerbed. Steps and body bob are not followed (player.x/y and aim height only).
+ const onBed=player.x>BED_RECT.x&&player.x<BED_RECT.x+BED_RECT.w&&player.y>BED_RECT.y&&player.y<BED_RECT.y+BED_RECT.h,aimH=DOG.hgt*.8+(onBed?.18:0);
+ // Distance in body lengths: every breed fills the same share of the frame.
+ const zoomDist=clamp(V.k,ZOOM.min,ZOOM.max)*DOG.len;
+ // Start from the remembered view (yaw null = behind the dog).
+ if(!camState.init){camState.x=player.x*U;camState.z=player.y*U;camState.aimY=aimH;camState.yaw=V.yaw===null?player.angle+Math.PI/2:V.yaw*D2R;camState.chase=0;camState.off=0;camState.poff=(V.pitch-VIEW.pitch)*D2R;camState.dist=zoomDist;camState.pull=0;camState.lift=0;camState.saveT=0;camState.init=true}
+ const keyTurn=(keys.has('r')?1:0)-(keys.has('q')?1:0);if(keyTurn)camState.off+=keyTurn*S.sens*D2R*.8*dt;
+ camState.x+=(player.x*U-camState.x)*k;camState.z+=(player.y*U-camState.z)*k;camState.aimY+=(aimH-camState.aimY)*k;camState.chase+=((chasing?1:0)-camState.chase)*kc;
+ // Pitch: the view pitch blended to the chase pitch, plus the finger's offset, kept in 8°..75°.
+ const t=camState.chase,basePitch=(VIEW.pitch+(CHASE.pitch-VIEW.pitch)*t)*D2R;
+ camState.poff=clamp(camState.poff,PITCH_MIN-basePitch,PITCH_MAX-basePitch);
+ const yaw=camYaw(),fx=Math.sin(yaw),fz=-Math.cos(yaw);camState.pitch=basePitch+camState.poff;
+ // Distance: the chosen zoom (smoothed), a bit closer in a chase; the chase never changes the saved zoom.
+ camState.dist+=(zoomDist*(1+(CHASE.k-1)*t)-camState.dist)*(1-Math.exp(-dt/ZOOM.smooth));
+ // Obstacles. Something solid right behind the dog would pull the camera into the dog, so first the camera lifts
+ // (up to +35°) to look over it; whatever is still in the way pulls it closer, but not nearer than CAM_NEAR.
+ // Both react fast and ease back after the obstacle is gone. Camera-only: nothing here changes what the gardener sees.
+ const ax=camState.x,ay=camState.aimY,az=camState.z,SAFE=1.3*DOG.len,CAM_NEAR=1.1*DOG.len,wantFree=Math.min(camState.dist,SAFE);
+ const freeAt=p=>obstacleDistance(ax,ay,az,-fx*Math.cos(p),Math.sin(p),-fz*Math.cos(p),fx,fz,p,camState.dist+R.pad)-R.pad;
+ let lift=0;if(freeAt(camState.pitch)<wantFree){lift=Math.min(35*D2R,PITCH_MAX-camState.pitch);for(let a=5*D2R;a<=lift+1e-6;a+=5*D2R)if(freeAt(camState.pitch+a)>=wantFree){lift=a;break}}
+ const ease=(cur,target)=>(target-cur)*(target>cur?1-Math.exp(-dt/.08):1-Math.exp(-dt/R.back));
+ camState.lift+=ease(camState.lift,lift);
+ const pitch=camState.pitch+camState.lift,bx=-fx*Math.cos(pitch),by=Math.sin(pitch),bz=-fz*Math.cos(pitch);
+ const need=Math.max(0,camState.dist-Math.max(CAM_NEAR,freeAt(pitch)));
+ camState.pull+=(need-camState.pull)*(need>camState.pull?1-Math.exp(-dt/.05):1-Math.exp(-dt/R.back));
+ const d=camState.eff=Math.max(CAM_NEAR,camState.dist-camState.pull);
+ camera.position.set(ax+bx*d,ay+by*d,az+bz*d);camera.lookAt(aimV.set(ax,ay,az));
+ // Frame bias: shift the frustum so the aim point sits below centre (more room ahead of the dog than behind).
+ camera.setViewOffset(screenW||1,screenH||1,0,-VIEW.bias*(screenH||1)/2,screenW||1,screenH||1);
+ // Remember the view the fingers set: checked once a second, written only when it changed (not every frame).
+ camState.saveT+=dt;if(camState.saveT>1&&state==='playing'){camState.saveT=0;const yaw=Math.round(wrapAngle(camYaw())/D2R*10)/10,pv=Math.round((VIEW.pitch+camState.poff/D2R)*10)/10;if(V.yaw!==yaw||V.pitch!==pv){V.yaw=yaw;V.pitch=pv;saveCfg()}}}
+function applyFov(){const a=screenW/Math.max(1,screenH),f=VIEW.fov;camera.aspect=a;
+ // In portrait keep a similar framing across the narrow side (geometric middle between width- and height-fit).
+ camera.fov=a<1?2*Math.atan(Math.tan(f*D2R/2)/Math.sqrt(a))/D2R:f;camera.updateProjectionMatrix()}
+// Pause → «Сбросить камеру»: start distance, behind the dog, start pitch.
+function resetCamera(){const V=cfg.view;V.k=ZOOM.start;V.yaw=null;V.pitch=VIEW.pitch;camState.off=0;camState.poff=0;if(player)camState.yaw=player.angle+Math.PI/2;saveCfg()}
+
+// ---------- Draw: move meshes to the simulation state ----------
+const v3=new THREE.Vector3();
+function segSphere(ax,ay,az,bx,by,bz,cx,cy,cz){const dx=bx-ax,dy=by-ay,dz=bz-az,l2=dx*dx+dy*dy+dz*dz;let t=((cx-ax)*dx+(cy-ay)*dy+(cz-az)*dz)/l2;t=clamp(t,0,1);return Math.hypot(ax+dx*t-cx,ay+dy*t-cy,az+dz*t-cz)}
+function syncScene(dt){
+ const onBed=player.x>BED_RECT.x&&player.x<BED_RECT.x+BED_RECT.w&&player.y>BED_RECT.y&&player.y<BED_RECT.y+BED_RECT.h;
+ const d=dogRig;d.g.position.set(player.x*U,onBed?.18:0,player.y*U);d.g.rotation.y=-player.angle;
+ // Energy ring: green, yellow below a third, red while the stamina ceiling is what stops the run.
+ {const er=energyRing,frac=stamina/DOG.stamina,show=state==='playing'&&(frac<.995||energyMoving||panicNow),em=er.material;
+  em.opacity+=((show?.95:0)-em.opacity)*Math.min(1,dt*10);er.visible=em.opacity>.02;er.userData.track.material.opacity=em.opacity*.5;
+  if(er.visible){er.position.set(player.x*U,(onBed?.18:0)+.03,player.y*U);er.geometry.setDrawRange(0,Math.ceil(clamp(frac,0,1)*RING_SEG)*6);em.color.set(energyCapped?'#ed6455':frac<1/3?'#f8d36c':'#a8de8a');
+   // Chase panic: the same colour pulses in brightness.
+   if(panicNow)em.color.multiplyScalar(.55+.45*(.5+.5*Math.sin(performance.now()/1000*9)))}}
+ const low=player.mode==='sneak'||hiddenNow&&player.mode==='stand'?.8:1;d.body.scale.y+=(low-d.body.scale.y)*Math.min(1,dt*10);
+ player.phase+=dt*player.speed*U*(player.mode==='run'?2.6:3.4);const sw=player.moving?Math.sin(player.phase):0,amp=player.mode==='run'?.9:.55;
+ d.legs.forEach((l,i)=>l.rotation.z=sw*amp*(i%2?1:-1)*(i<2?1:-1));d.body.position.y=player.mode==='run'?Math.abs(Math.sin(player.phase))*.06:0;d.tail.rotation.x=Math.sin(elapsed*(done?16:9))*.5;
+ const dogHead={x:d.g.position.x,y:.4,z:d.g.position.z};
+ for(const f of fadeables){let o=1;if(f.bush&&dist(player,f.bush)<f.bush.r+14)o=.4;else if(segSphere(dogHead.x,dogHead.y,dogHead.z,camera.position.x,camera.position.y,camera.position.z,f.x,f.y,f.z)<f.r)o=f.tree?.3:.45;f.m.opacity+=(o-f.m.opacity)*Math.min(1,dt*8);f.m.depthWrite=f.m.opacity>.95}
+ for(const g of guards){const r=g.rig;r.g.position.set(g.x*U,0,g.y*U);r.g.rotation.y=-g.angle;const walking=g.moved>5;g.phase+=dt*g.moved*U*3.2;const s=walking?Math.sin(g.phase)*(g.state==='chase'?.75:.45):0;
+  r.legs[0].rotation.z=s;r.legs[1].rotation.z=-s;const watering=g.state==='patrol'&&g.watch>0&&g.step?.icon==='💧';r.arms[0].rotation.z=-s*.8;r.arms[1].rotation.z=watering?1.2+Math.sin(elapsed*3)*.1:s*.8;
+  // Vision cone on the grass, clipped by obstacles exactly like line of sight.
+  const radius=LV.vision*(g.angry?1.15:1),pos=g.cone.geometry.attributes.position.array;pos[0]=g.x*U;pos[1]=.04;pos[2]=g.y*U;
+  for(let i=0;i<RAYS;i++){const a=g.angle-.64+i*1.28/(RAYS-1),ca=Math.cos(a),sa=Math.sin(a);let ex=g.x,ey=g.y;for(let rr=10;rr<=radius;rr+=8){const px=g.x+ca*rr,py=g.y+sa*rr;if(blocked(px,py,0))break;ex=px;ey=py}pos[3+i*3]=ex*U;pos[4+i*3]=.04;pos[5+i*3]=ey*U}
+  g.cone.geometry.attributes.position.needsUpdate=true;const cm=g.cone.material;if(g.state==='chase'){cm.color.set('#f16053');cm.opacity=.4}else if(g.sus>0||g.state==='inspect'||g.state==='search'){cm.color.set('#f8d36c');cm.opacity=.36}else{cm.color.set('#fff3b8');cm.opacity=.22}
+  // Tag over the head: activity icon, "?" / "!" and the suspicion bar.
+  v3.set(g.x*U,2.15,g.y*U).project(camera);const tx=(v3.x*.5+.5)*screenW,ty=(-v3.y*.5+.5)*screenH;const ic=g.tag.firstChild,bar=g.tag.lastChild;
+  g.tag.style.display=v3.z<1&&state!=='menu'?'flex':'none';g.tag.style.transform=`translate(${tx}px,${ty}px) translate(-50%,-100%)`;
+  const alarm=g.state==='chase'?'!':g.sus>0||g.state==='inspect'||g.state==='search'?'?':'';ic.className='ic'+(alarm==='!'?' x':alarm?' q':'');ic.textContent=(alarm||(g.state==='patrol'&&g.watch>0&&g.step?.icon)||'')+(g.angry?'💢':'');
+  bar.style.visibility=g.sus>0&&g.state!=='chase'?'visible':'hidden';bar.firstChild.style.width=g.sus*100+'%'}
+ const t=performance.now()/1000;zoneRing.material.opacity=done?.5:.55+Math.sin(t*4)*.3;zoneRing.material.color.set(done?'#a8de8a':'#f8d36c');for(const r of exitRings)r.material.opacity=done?.6+Math.sin(t*4)*.3:.3;
+ // Noise rings: the outer edge (radius 1 of RING_GEO) is exactly the hearing edge used in update(); fades out by the end.
+ for(const r of rings){const k=Math.min(1,r.age/r.life);r.m.scale.setScalar(Math.max(.01,r.rad*U*k));r.m.material.opacity=.6*(1-k)}
+ if(ball){const k=clamp(ball.age/.4,0,1);ball.m.position.set((ball.from.x+(ball.x-ball.from.x)*k)*U,.11+Math.sin(k*Math.PI)*1.4,(ball.from.y+(ball.y-ball.from.y)*k)*U)}
+ // Arrow to the goal when it is off screen.
+ const goal=done?nearestExit(player):zone,ar=$('arrow');v3.set(goal.x*U,.3,goal.y*U).project(camera);let gx=v3.x,gy=v3.y;if(v3.z>1){gx=-gx;gy=-gy}
+ if(state==='playing'&&(v3.z>1||Math.abs(gx)>.92||Math.abs(gy)>.86)){const m=Math.max(Math.abs(gx)/.8,Math.abs(gy)/.62,1e-3);const px=(gx/m*.5+.5)*screenW,py=(-gy/m*.5+.5)*screenH;ar.style.display='flex';ar.style.transform=`translate(${px-22}px,${py-22}px) rotate(${Math.atan2(-gy,gx)+Math.PI/2}rad)`}else ar.style.display='none';
+ // Pointer to the gardener when he is out of frame (behind or to the side), with distance: no blind spot behind the camera.
+ const gp=$('gptr'),g=guards[0];if(g&&state==='playing'){v3.set(g.x*U,1.6,g.y*U).project(camera);let qx=v3.x,qy=v3.y;const behind=v3.z>1;if(behind){qx=-qx;qy=-qy;if(Math.abs(qy)<.3)qy=-1}
+  if(behind||Math.abs(qx)>.96||Math.abs(qy)>.94){const m=Math.max(Math.abs(qx)/.84,Math.abs(qy)/.62,1e-3),px=(qx/m*.5+.5)*screenW,py=(-qy/m*.5+.5)*screenH;gp.style.display='flex';gp.className=g.state==='chase'?'x':g.sus>0||g.state==='inspect'||g.state==='search'?'q':'';gp.style.transform=`translate(${px}px,${py}px) translate(-50%,-50%)`;gp.firstChild.style.transform=`rotate(${Math.atan2(-qy,qx)}rad)`;gp.lastChild.textContent=Math.round(dist(g,player)*U)+' м'}else gp.style.display='none'}else gp.style.display='none'}
+
+function resize(){const app=$('app'),vh=Math.round(window.visualViewport?.height||innerHeight);app.style.height=vh+'px';screenW=Math.round(app.getBoundingClientRect().width)||innerWidth;screenH=vh;renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.setSize(screenW,screenH);applyFov();lastVW=innerWidth;lastVH=vh}
+window.visualViewport?.addEventListener('resize',resize);window.addEventListener('resize',resize);window.addEventListener('orientationchange',()=>setTimeout(resize,300));
+function loop(t){requestAnimationFrame(loop);if(innerWidth!==lastVW||Math.round(window.visualViewport?.height||innerHeight)!==lastVH)resize();const dt=Math.min((t-lastTime)/1000,.033);lastTime=t;
+ fpsN++;fpsT+=Math.min((t-(loop.prev??t))/1000,1);loop.prev=t;if(fpsT>=.5){fps=Math.round(fpsN/fpsT);fpsN=0;fpsT=0;const f=$('fpsVal');if(f)f.textContent=fps}
+ if(needRebuild){needRebuild=false;buildWorld();camState.init=false;if(done){pile.visible=true;setLabel(bedLabel,'ГОТОВО ✓',true);for(const s of gateLabels)setLabel(s,'ВЫХОД',true)}}
+ update(dt);updateCamera(dt);syncScene(dt);renderer.render(scene,camera)}
+
+// ---------- Tuning panel ----------
+// Only what a gesture cannot set: tempo, lawn size, swipe / pinch sensitivity, obstacle rays, plus the park measured in time.
+// Distance, yaw and pitch are set with the fingers and remembered on their own (cfg.view).
+const row=(list,k)=>list.find(t=>t[0]===k);
+function panelRows(){return [...GAME_TUNE.map(t=>[t,cfg,'g']),[row(SWIPE_TUNE,'sens'),cfg.swipe,'s'],[row(SWIPE_TUNE,'sensY'),cfg.swipe,'s'],[row(ZOOM_TUNE,'pinch'),cfg.zoom,'z'],...RAY_TUNE.map(t=>[t,cfg.rays,'r'])]}
+function liveCamera(){return {k:+cfg.view.k.toFixed(2),dist:+(cfg.view.k*DOG.len).toFixed(2),yaw:Math.round(wrapAngle(camYaw())/D2R),pitch:Math.round(camState.pitch/D2R)}}
+function renderTune(){const rows=panelRows(),fmt=([k,,,,,unit,dp],o)=>o[k].toFixed(dp)+unit;
+ $('tune').innerHTML=`<div class="head"><span>Темп и настройки</span><span><span id="fpsVal">${fps}</span> fps</span></div>`+rows.map(([t,o,g])=>{const [k,name,min,max,step]=t;return `<div class="row"><label for="t-${g}${k}"><span>${name}</span><b id="v-${g}${k}">${fmt(t,o)}</b></label><input id="t-${g}${k}" type="range" min="${min}" max="${max}" step="${step}" value="${o[k]}"></div>`}).join('')+`<div class="fine" id="mapSize"></div><div class="btns"><button id="tCopy">Скопировать</button><button id="tReset">Сброс</button><button id="tClose">Закрыть</button></div><code id="tJson"></code>`;
+ for(const [t,o,g] of rows){const k=t[0];$('t-'+g+k).addEventListener('input',e=>{o[k]=+e.target.value;$('v-'+g+k).textContent=fmt(t,o);if(k==='mapScale')needRebuild=true;saveCfg();tuneInfo()})}
+ // Factory values: everything, including the remembered camera view.
+ $('tReset').onclick=()=>{const rb=cfg.mapScale!==freshCfg().mapScale;cfg=freshCfg();if(rb)needRebuild=true;camState.init=false;saveCfg();renderTune();toast('Заводские настройки',1.5)};
+ $('tCopy').onclick=()=>{const s=JSON.stringify({version:VERSION,live:liveCamera(),cfg});navigator.clipboard?.writeText(s).then(()=>toast('Настройки скопированы'),()=>toast('Не удалось скопировать — сделай скриншот'))};
+ $('tClose').onclick=()=>{$('tune').hidden=true};tuneInfo()}
+// The park measured in time, from the current cfg and breed (the map scale is chosen by these numbers, not by eye).
+// Paths are real walking routes (the same A* the gardener uses); runs go through speedStep, so stamina is included.
+function pathLen(a,b){let L=0,prev=a;for(const q of [...findPath(a,b),b]){L+=dist(prev,q);prev=q}return L}
+function travelTime(metres,want,panic=false){const st={mult:0,stamina:DOG.stamina},dt=.05;let x=0,t=0;while(x<metres&&t<300){speedStep(DOG,st,want,dt,panic&&t<=PANIC_MAX);x+=DOG.speed*cfg.tempo*.06*st.mult*dt;t+=dt}return t}
+function mapMetrics(){const B=DOG,u=.06*cfg.mapScale,walk=B.speed*cfg.tempo*.06,gv=LV.speed*cfg.tempo*.06;
+ // Retreat: the walkable route (A*) from the bed to each exit; "panic" = run during a chase, "calm" = run with the normal stamina.
+ const exits=EXITS.map(e=>{const m=pathLen(zone,e)*u;return {id:e.id,m,panic:travelTime(m,B.runMult,true),calm:travelTime(m,B.runMult)}}).sort((a,b)=>a.m-b.m);
+ const tap={x:230,y:182},toTap=pathLen(BED,tap)*u,back=pathLen(tap,BED)*u;
+ // Nearest cover: from standing hidden in a bush to standing in the bed zone, edge to edge.
+ const bushGap=Math.min(...bushes.map(b=>Math.max(0,dist(b,zone)-(b.r-8)-zone.r)))*u;
+ // Gardener's window at the tap: walking away he faces away from the bed; on the way back he sees it again from vision range.
+ const window=toTap/gv+4+Math.max(0,back-LV.vision*u)/gv;
+ return {dogLen:B.len,parkW:916*u,parkH:647*u,diagWalk:Math.hypot(916,647)*u/walk,exits,bushToBed:bushGap/walk,window,needWindow:[LV.hold+4,LV.hold+6]}}
+function tuneInfo(){const c=liveCamera(),m=mapMetrics(),f=v=>v.toFixed(1),ok=(v,a,b)=>v>=a&&v<=b?'✓':'✗',name={near:'Ближний выход',far:'Дальний выход'};
+ $('mapSize').innerHTML=`Камера: ${c.k} дл. = ${c.dist} м, наклон ${c.pitch}°, поворот ${c.yaw}° · старт ${ZOOM.start} дл.<br>`+
+ `Собака: ${m.dogLen.toFixed(2)} м · парк ${Math.round(m.parkW)}×${Math.round(m.parkH)} м<br>`+
+ `Масштаб — диагональ шагом: ${f(m.diagWalk)} с ${ok(m.diagWalk,20,25)} (20–25)<br>`+
+ m.exits.map((e,i)=>`${name[e.id]}: ${Math.round(e.m)} м по пути · в погоне ${f(e.panic)} с${i===0?' '+ok(e.panic,8,12)+' (8–12)':''} · без погони ${f(e.calm)} с<br>`).join('')+
+ `Ближайший куст → клумба шагом: ${f(m.bushToBed)} с ${ok(m.bushToBed,3,5)} (3–5)<br>`+
+ `Окно садовника у крана: ${f(m.window)} с ${m.window>=m.needWindow[1]?'✓':m.window>=m.needWindow[0]?'≈':'✗'} (нужно ≥ дело ${LV.hold} с + 4–6 = ${m.needWindow[0]}–${m.needWindow[1]} с)<br>`+
+ `Скорости: шаг ${f(DOG.speed*cfg.tempo*.06)} м/с, бег ${f(DOG.speed*DOG.runMult*cfg.tempo*.06)} · садовник ${f(LV.speed*cfg.tempo*.06)}, погоня ${f(LV.speed*1.58*cfg.tempo*.06)} м/с`;
+ $('tJson').textContent=JSON.stringify({live:c,cfg})}
+$('tuneBtn').onclick=()=>{const p=$('tune');p.hidden=!p.hidden;if(!p.hidden)renderTune()};
+
+// ---------- Input (same scheme as 2D) ----------
+function setJoy(e){const r=$('stick').getBoundingClientRect(),max=clamp(r.width*.26,36,40);let dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),l=Math.hypot(dx,dy);if(l>max){dx*=max/l;dy*=max/l}joy.x=dx/max;joy.y=dy/max;$('knob').style.transform=`translate(${dx}px,${dy}px)`}
+$('stick').addEventListener('pointerdown',e=>{inputMode='touch';if(state!=='playing'||joy.id!==null)return;e.preventDefault();joy.id=e.pointerId;try{$('stick').setPointerCapture(e.pointerId)}catch{}setJoy(e)});$('stick').addEventListener('pointermove',e=>{if(e.pointerId===joy.id)setJoy(e)});
+function resetJoy(e){if(e.pointerId===joy.id){joy={x:0,y:0,id:null};$('knob').style.transform=''}}for(const t of ['pointerup','pointercancel','lostpointercapture'])$('stick').addEventListener(t,resetJoy);
+$('toilet').addEventListener('pointerdown',e=>{if(state!=='playing')return;e.preventDefault();$('toilet').setPointerCapture(e.pointerId);toiletHeld=true;$('toilet').classList.add('active');if(!done&&dist(player,zone)>=zone.r)toast('Сначала подойди к клумбе наверху справа')});
+for(const t of ['pointerup','pointercancel','lostpointercapture'])$('toilet').addEventListener(t,()=>{toiletHeld=false;$('toilet').classList.remove('active')});
+$('ability').addEventListener('pointerdown',e=>{e.preventDefault();ability()});$('ability').onclick=e=>{if(e.detail===0)ability()};
+// Gestures on the empty field (the stick and buttons sit above the canvas, so nothing here can start on them):
+// one finger — orbit (horizontal: yaw, swipe right looks right; vertical: pitch, swipe up looks up), scaled by half the screen width;
+// two fingers — pinch zoom of the distance, continuous. When a second finger lands the orbit stops on the spot;
+// when one is lifted the zoom stops (no inertia) and the remaining finger orbits again from where it is now.
+const zoomTo=k=>{cfg.view.k=clamp(k,ZOOM.min,ZOOM.max)};
+const pinchSpan=()=>{const [a,b]=[...touches.values()];return Math.max(1,Math.hypot(a.x-b.x,a.y-b.y))};
+canvas.addEventListener('pointerdown',e=>{if(state!=='playing')return;e.preventDefault();touches.set(e.pointerId,{x:e.clientX,y:e.clientY});try{canvas.setPointerCapture(e.pointerId)}catch{}
+ if(touches.size===1)drag={id:e.pointerId,x:e.clientX,y:e.clientY};
+ else if(touches.size===2){drag=null;pinch={span:pinchSpan(),k:cfg.view.k}}});
+canvas.addEventListener('pointermove',e=>{const p=touches.get(e.pointerId);if(!p)return;p.x=e.clientX;p.y=e.clientY;
+ if(pinch&&touches.size>=2){zoomTo(pinch.k*Math.pow(pinch.span/pinchSpan(),cfg.zoom.pinch));return}
+ if(!drag||e.pointerId!==drag.id)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y,half=Math.max(200,screenW)/2;drag.x=e.clientX;drag.y=e.clientY;camState.off+=dx/half*cfg.swipe.sens*D2R;camState.poff+=dy/half*cfg.swipe.sensY*D2R});
+for(const t of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(t,e=>{if(!touches.delete(e.pointerId))return;
+ if(drag&&e.pointerId===drag.id)drag=null;
+ if(pinch&&touches.size<2){pinch=null;saveCfg();if(touches.size===1){const [[id,p]]=[...touches];drag={id,x:p.x,y:p.y}}}});
+// Mouse wheel zooms too (handy for tuning) and never scrolls the page.
+let wheelSave=0;canvas.addEventListener('wheel',e=>{e.preventDefault();zoomTo(cfg.view.k*Math.exp(e.deltaY*.0015*cfg.zoom.pinch));clearTimeout(wheelSave);wheelSave=setTimeout(saveCfg,300)},{passive:false});
+$('pause').onclick=pause;$('sound').onclick=()=>{muted=!muted;$('sound').textContent=muted?'♪':'♫';$('sound').setAttribute('aria-label',muted?'Включить звук':'Выключить звук');beep(660,.1)};
+const CODES={KeyW:'w',KeyA:'a',KeyS:'s',KeyD:'d',KeyE:'e',KeyC:'c',KeyQ:'q',KeyR:'r',Space:' ',ShiftLeft:'shift',ShiftRight:'shift',ArrowUp:'arrowup',ArrowDown:'arrowdown',ArrowLeft:'arrowleft',ArrowRight:'arrowright',Escape:'escape'};const keyOf=e=>CODES[e.code]||(e.key||'').toLowerCase();
+window.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const k=keyOf(e);if(CODES[e.code])inputMode='keys';if([' ','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(k))e.preventDefault();if(k==='escape'){if(state==='playing')pause();else if(state==='paused')$('resume').click();return}if(state!=='playing')return;keys.add(k);if(k==='e'&&!e.repeat)ability()});
+window.addEventListener('keyup',e=>keys.delete(keyOf(e)));window.addEventListener('blur',()=>{if(state==='playing')pause();clearInput()});document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='playing')pause()});canvas.addEventListener('contextmenu',e=>e.preventDefault());
+
+// Read-only hook for build verification and debugging; it never changes game state.
+window.SneakyDog3D={version:VERSION,metrics:()=>mapMetrics(),snapshot:()=>({version:VERSION,state,player:player?{x:+player.x.toFixed(1),y:+player.y.toFixed(1),mode:player.mode,hidden:hiddenNow,mult:+speedMult.toFixed(3),panic:panicNow,panicT:+panicT.toFixed(2)}:null,breed:breedId,guards:guards.map(g=>({x:+g.x.toFixed(1),y:+g.y.toFixed(1),state:g.state,idx:g.idx,watch:+g.watch.toFixed(2),icon:g.step?.icon||null,angry:g.angry,sus:+g.sus.toFixed(2)})),done,discovered,progress:+progress.toFixed(2),elapsed:+elapsed.toFixed(2),stamina:Math.round(stamina),cfg:{...cfg},camera:{x:+camera.position.x.toFixed(2),y:+camera.position.y.toFixed(2),z:+camera.position.z.toFixed(2),fov:+camera.fov.toFixed(1),yaw:+(camYaw()/D2R).toFixed(1),off:+(camState.off/D2R).toFixed(1),pitch:+(camState.pitch/D2R).toFixed(1),poff:+(camState.poff/D2R).toFixed(1),dist:+camState.dist.toFixed(2),eff:+camState.eff.toFixed(2),lift:+(camState.lift/D2R).toFixed(1),zoom:cfg.view.k,dragging:!!drag},screen:{w:screenW,h:screenH,canvas:[canvas.width,canvas.height]},fps})};
+
+buildWorld();resize();menu();requestAnimationFrame(loop);
 </script>
-</body></html>
+</body>
+</html>
