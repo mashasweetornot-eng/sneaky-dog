@@ -29,15 +29,16 @@ function frame(w,h){return new Promise((res,rej)=>{const f=document.createElemen
  const poll=()=>{let g;try{g=f.contentWindow.SneakyDog3D}catch{}if(g&&g.test)res({f,G:g,T:g.test,win:f.contentWindow});else if(Date.now()-t0>30000)rej(new Error('игра не загрузилась за 30 с'));else setTimeout(poll,100)};poll()})}
 const d2=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 
-// A gardener must never stand still longer than 8 s outside the stops in his schedule (the 3D-0.11 sticking bug).
-function stillMonitor(T){const track=new Map();let worst=0,where=null;
- return {tick(){for(const g of T.state().guards){let t=track.get(g);if(!t){t={x:g.x,y:g.y,s:0};track.set(g,t)}
+// Gardener standing still: outside the stops in his schedule (worst, < 8 s — the 3D-0.11 sticking bug), and in a chase (chaseWorst — a chase must never stand > 2 s).
+function stillMonitor(T){const track=new Map();let worst=0,where=null,chaseWorst=0;
+ return {tick(){for(const g of T.state().guards){let t=track.get(g);if(!t){t={x:g.x,y:g.y,s:0,cx:g.x,cy:g.y,c:0};track.set(g,t)}
+   if(g.state==='chase'){if(Math.hypot(g.x-t.cx,g.y-t.cy)>6){t.cx=g.x;t.cy=g.y;t.c=0}else{t.c+=1/60;chaseWorst=Math.max(chaseWorst,t.c)}}else{t.cx=g.x;t.cy=g.y;t.c=0}
    // Planned stops: a scheduled wait, the short alert look, and the look-around once he reached (or gave up on) an
    // inspect / search point. The 3D-0.11 bug is a gardener that never reaches his point — that is still counted.
    const atPoint=(g.state==='inspect'||g.state==='search')&&(g.arrived||(g.target&&d2(g,g.target)<21));
    const planned=(g.state==='patrol'&&g.watch>0)||g.alertLook>0||atPoint;
    if(planned||Math.hypot(g.x-t.x,g.y-t.y)>6){t.x=g.x;t.y=g.y;t.s=0}else{t.s+=1/60;if(t.s>worst){worst=t.s;where={x:Math.round(g.x),y:Math.round(g.y),state:g.state}}}}},
-  get worst(){return worst},get where(){return where}}}
+  get worst(){return worst},get where(){return where},get chaseWorst(){return chaseWorst}}}
 
 // A simple bot: follows A* waypoints with the stick in world directions.
 function bot(T){let goal=null,path=[],repath=0;
@@ -52,12 +53,14 @@ function bot(T){let goal=null,path=[],repath=0;
 //  → when he walks from his first round point to the second (east edge, facing away, too far to see the hedge gap) it slips
 //  north through the gap by the hedge to the spot by the top fence (705,80), which nothing in his cycle ever sees (found by a
 //  search over a full cycle) → 2nd trip: the pile on the bed (2.8 s away) → if he is still at the tap, run to the far exit;
-//  if he is already coming back (level 3: the window only fits the pile), slip into the north-east corner, out of his cone
+//  if he is already coming back, slip into the north-east corner, out of his cone
 //  and range, and leave when he walks to the east round point (or, if he found the pile, once he has run to the near exit).
-function playLevel(T,breed,lv){T.start(breed,lv);const C=T.consts,B=bot(T),mon=stillMonitor(T);
+// Level 3 (a wheelbarrow trip before the tap): from the near cover bush, the pile in two goes — or plan 'one': in one go.
+function playLevel(T,breed,lv,plan='two'){T.start(breed,lv);const C=T.consts,B=bot(T),mon=stillMonitor(T);
  const deed=i=>T.state().deeds[i],[pileI,hydI,cornerI]=[0,1,2],bush={x:598,y:406},north=[{x:680,y:300},{x:684,y:226},{x:705,y:80}],ne={x:925,y:88},nearExit=C.EXITS.find(e=>e.id==='near'),farExit=C.EXITS.find(e=>e.id==='far');let out=[];const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+ const two=!!C.LEVELS[lv].barrow,cover=C.bushes.reduce((m,b)=>dist(b,C.zone)<dist(m,C.zone)?b:m),z=C.zone,dcz=dist(cover,z),holdSpot={x:z.x+(cover.x-z.x)*46/dcz,y:z.y+(cover.y-z.y)*46/dcz},coverIn={x:cover.x+(z.x-cover.x)*(cover.r-14)/dcz,y:cover.y+(z.y-cover.y)*(cover.r-14)/dcz};let p1=0,kept=null;
  let phase='toCorner',waited=0,trips=0,wasTap=false,wp=0;const log=[];const set=p=>{phase=p;log.push(p+'@'+T.state().elapsed.toFixed(1))};
- T.step(600,()=>{mon.tick();const s=T.state(),g=s.guards[0],tapIdx=g.pts.findIndex(p=>p.icon==='🚰'),r2=g.pts.findIndex(p=>p.x>900);
+ T.step(600,()=>{mon.tick();const s=T.state(),g=s.guards[0],tapIdx=g.pts.findIndex(p=>p.icon==='🚰'),r2=g.pts.findIndex(p=>p.x>900),cartIdx=g.pts.findIndex(p=>p.icon==='🛒');
   const onTrip=g.state==='patrol'&&g.idx===tapIdx,newTrip=onTrip&&!wasTap;wasTap=onTrip;
   switch(phase){
    case 'toCorner':if(B.go(deed(cornerI),.6)<12){B.stop();set('markCorner')}break;
@@ -67,14 +70,24 @@ function playLevel(T,breed,lv){T.start(breed,lv);const C=T.consts,B=bot(T),mon=s
    case 'toHydrant':if(B.go(deed(hydI),.7)<12){B.stop();set('markHydrant')}break;
    case 'markHydrant':T.hold(true);if(deed(hydI).done){T.hold(false);set('toBush')}break;
    case 'waitRound':waited+=1/60;if(g.state==='patrol'&&g.idx===r2&&!(g.watch>0)){wp=0;set('toNorth')}break;
-   case 'toNorth':if(B.go(north[wp],.7)<10){if(++wp>=north.length){B.stop();set('waitNorth')}}break;
+   case 'toNorth':if(B.go(north[wp],.7)<10){if(++wp>=north.length){B.stop();set(two?'toCover':'waitNorth')}}break;
+   // Level 3, the pile in two goes: short window (to the wheelbarrow) — first go, duck into the near bush while he glances back,
+   // long window (to the tap) — finish it, duck again; then leave as below.
+   case 'toCover':if(B.go(coverIn,.3)<6){B.stop();set('waitCart')}break;
+   case 'waitCart':waited+=1/60;if(g.state==='patrol'&&g.idx===cartIdx&&!(g.watch>0)){trips++;set(plan==='one'?'waitTap':'toBed1')}break;
+   case 'toBed1':if(B.go(holdSpot,.7)<5){B.stop();set('pile1')}break;
+   case 'pile1':T.hold(true);if(deed(pileI).done||g.idx!==cartIdx||(g.watch>0&&g.watch<1.25)){T.hold(false);p1=deed(pileI).p;set(deed(pileI).done?'hide':'duck')}break;
+   case 'duck':if(B.go(coverIn,.7)<6){B.stop();set('waitTap')}break;
+   case 'waitTap':waited+=1/60;if(g.state==='patrol'&&g.idx===tapIdx){trips++;set('toBed2')}break;
+   case 'toBed2':if(B.go(holdSpot,.7)<5){B.stop();kept=deed(pileI).p;set('pile2')}break;
+   case 'pile2':T.hold(true);if(deed(pileI).done){T.hold(false);set('hide')}break;
    case 'waitNorth':waited+=1/60;if(newTrip){trips++;set('toBed')}break;
    case 'toBed':if(B.go(deed(pileI),.7)<20){B.stop();set('pile')}break;
    case 'pile':T.hold(true);if(deed(pileI).done){T.hold(false);if(onTrip){wp=0;out=[farExit];set('toExit')}else set('hide')}break;
-   case 'hide':if(B.go(ne,1)<10){B.stop();set('waitOut')}break;
+   case 'hide':if(B.go(two?coverIn:ne,two?.7:1)<6){B.stop();set('waitOut')}break;
    case 'waitOut':waited+=1/60;if(s.discovered?dist(g,nearExit)<120:g.state==='patrol'&&g.idx===r2&&!(g.watch>0)){wp=0;out=s.discovered?[farExit]:[{x:705,y:80},{x:500,y:85},nearExit];set('toExit')}break;
    case 'toExit':if(B.go(out[wp],1)<10&&wp<out.length-1)wp++;break}});
- const s=T.state();return {state:s.state,elapsed:s.elapsed,spotted:s.spotted,accident:s.accident,discovered:s.discovered,phase,waited,trips,log,still:mon.worst,stillWhere:mon.where}}
+ const s=T.state();return {state:s.state,elapsed:s.elapsed,spotted:s.spotted,accident:s.accident,discovered:s.discovered,phase,waited,trips,log,still:mon.worst,stillWhere:mon.where,chaseStill:mon.chaseWorst,two,p1,kept}}
 
 // The gardener's window at the tap, measured in the simulation: how long the bed stays out of his sight around his stop
 // at the tap. The dog is parked far away, out of everyone's way.
@@ -85,13 +98,25 @@ function measureWindow(T,lv){T.start('lab',lv);let t=0,lastSeen=0,inGap=false,ga
   if(seen&&inGap){inGap=false;if(atTap&&gapStart>0)wins.push(t-gapStart)}});
  return wins}
 
+// Level 3's short window (to the wheelbarrow) and the glance between it and the long one (to the tap).
+function measureCart(T,lv){T.start('lab',lv);let t=0,inGap=false,gapStart=0,atCart=false,atTap=false,cartEnd=null;const short=[],pause=[];
+ T.step(200,()=>{t+=1/60;T.place(150,640);const g=T.state().guards[0],seen=T.bedSeen(),icon=g.state==='patrol'&&g.watch>0&&g.step?.icon;
+  if(!seen&&!inGap){inGap=true;gapStart=t;atCart=false;atTap=false;if(cartEnd!==null){pause.push(t-cartEnd);cartEnd=null}}
+  if(!seen&&icon==='🛒')atCart=true;if(!seen&&icon==='🚰')atTap=true;
+  if(seen&&inGap){inGap=false;if(atCart&&!atTap&&gapStart>0){short.push(t-gapStart);cartEnd=t}else cartEnd=null}});
+ return {short,pause}}
+
 async function run(){
  // ---- 1. Bot passes every level with every playable breed; no gardener sticks. Bot times feed the par check (lab).
  const botTime={};
  {const {T,f}=await frame(844,390);const L=T.consts.LEVELS;
   for(let lv=0;lv<L.length;lv++)for(const breed of ['lab','jack','corgi']){const r=playLevel(T,breed,lv);if(breed==='lab')botTime[lv]=r.elapsed;
    check(`Бот проходит уровень ${lv+1} (${breed})`,r.state==='won',`итог ${r.state}, ${r.elapsed.toFixed(1)} с, ждал ${r.waited.toFixed(1)} с, отлучек ${r.trips}, заметили: ${r.spotted?'да':'нет'}, улику нашли: ${r.discovered?'да':'нет'}, авария: ${r.accident?'да':'нет'}; фазы: ${r.log.join(' → ')}`);
-   check(`Садовник не стоит дольше 8 с вне расписания (уровень ${lv+1}, ${breed})`,r.still<8,`наибольший простой ${r.still.toFixed(1)} с${r.stillWhere?' в '+JSON.stringify(r.stillWhere):''}`)}
+   check(`Садовник не стоит дольше 8 с вне расписания (уровень ${lv+1}, ${breed})`,r.still<8,`наибольший простой ${r.still.toFixed(1)} с${r.stillWhere?' в '+JSON.stringify(r.stillWhere):''}`);
+   if(r.two)check(`Куча в два захода, уровень ${lv+1} (${breed})`,r.state==='won'&&r.p1>0&&r.p1<6&&r.kept>0,`первый заход ${r.p1.toFixed(1)} с, ко второму осталось ${r.kept===null?'—':r.kept.toFixed(1)+' с'}, итог ${r.state}`);
+   check(`Садовник в погоне не стоит дольше 2 с (уровень ${lv+1}, ${breed})`,r.chaseStill<=2,`наибольший простой в погоне ${r.chaseStill.toFixed(1)} с`)}
+  // Not a requirement: whether the pile also fits in one go in the long window (a bypass we keep, not plug) — for the notes.
+  for(let lv=0;lv<L.length;lv++)if(L[lv].barrow){const r=playLevel(T,'lab',lv,'one');report('info',`Уровень ${lv+1} одним заходом в длинном окне (lab)`,`${r.state==='won'?'проходится':'не проходится'}: ${r.elapsed.toFixed(1)} с, заметили: ${r.spotted?'да':'нет'}, улику нашли: ${r.discovered?'да':'нет'}`)}
   T.start('lab',0);f.remove()}
 
  // ---- 2. Gardener sticking scenarios from 3D-0.11.
@@ -104,6 +129,18 @@ async function run(){
   for(const [name,setup] of scen){T.start('lab');T.place(900,650);const g=T.state().guards[0];setup(g);const mon=stillMonitor(T);let back=null;
    T.step(25,t=>{T.place(900,650);mon.tick();if(back===null&&g.state==='patrol'&&t>.2)back=t});
    check(`Садовник не залипает: ${name}`,mon.worst<8&&back!==null,`вернулся к патрулю через ${back===null?'—':back.toFixed(1)+' с'}, наибольший простой ${mon.worst.toFixed(1)} с`)}
+  f.remove()}
+
+ // ---- 2b. Chase stall (3D-1.2): the dog pressed against a trunk (its point moves to a free cell right under the gardener,
+ // just out of catch range) or behind a hedge. In a chase he never stands > 2 s: he catches, goes round, or gives up.
+ {const {T,f}=await frame(844,390);
+  const scen=[['собака прижалась к стволу',{x:900,y:262},{x:873,y:262}],['собака за изгородью, 4 м',{x:370,y:250},{x:300,y:250}],
+   ['собака у изгороди, вплотную',{x:362,y:250},{x:300,y:250}]];
+  for(const [name,dog,gp] of scen){T.start('lab');T.place(dog.x,dog.y);const g=T.state().guards[0];Object.assign(g,{state:'chase',x:gp.x,y:gp.y,target:{...dog},sus:1,seen:0,path:[],repath:0});
+   const mon=stillMonitor(T);let end=null;
+   T.step(12,t=>{if(T.state().state==='playing')T.place(dog.x,dog.y);mon.tick();if(end===null&&(T.state().state!=='playing'||g.state!=='chase'))end={t,how:T.state().state==='lost'?'поймал':g.state}});
+   if(end===null&&T.state().state==='lost')end={t:T.state().elapsed,how:'поймал'};
+   check(`Погоня не стоит на месте: ${name}`,mon.chaseWorst<=2,`наибольший простой в погоне ${mon.chaseWorst.toFixed(1)} с; ${end?`${end.how} через ${end.t.toFixed(1)} с`:'всё ещё погоня через 12 с'}`)}
   f.remove()}
 
  // ---- 3. Stamina never sticks at zero with the stick held; the dog keeps walking and recovers on release.
@@ -144,6 +181,11 @@ async function run(){
  {const {T,f}=await frame(844,390);const L=T.consts.LEVELS,pile=T.consts.DEED_KIND.pile.hold;
   for(let lv=0;lv<L.length;lv++){const w=measureWindow(T,lv),avg=w.length?w.reduce((a,b)=>a+b,0)/w.length:NaN;
    check(`Окно садовника, уровень ${lv+1}: ${L[lv].window} ± 2 с`,w.length>0&&w.every(x=>Math.abs(x-L[lv].window)<=2),`замерено ${w.map(x=>x.toFixed(1)).join(', ')||'—'} с (пауза у крана ${L[lv].tapWait} с); куча ${pile} с — ${avg>=pile+4?'влезает с запасом':avg>=pile?'влезает впритык':'в одно окно не влезает'}`)}
+  // ---- 6a. Level 3: a second, short trip (to the wheelbarrow) with a glance back at the bed before the long one — the pile
+  // in two goes needs the glance short enough for part of the first go to survive (grace DEED_GRACE s, then drain ×DEED_DRAIN).
+  for(let lv=0;lv<L.length;lv++){const b=L[lv].barrow;if(!b)continue;const {short,pause}=measureCart(T,lv);
+   check(`Короткое окно (тачка), уровень ${lv+1}: ${b.window} ± 1.5 с`,short.length>0&&short.every(x=>Math.abs(x-b.window)<=1.5),`замерено ${short.map(x=>x.toFixed(1)).join(', ')||'—'} с (пауза у тачки ${b.wait} с)`);
+   check(`Пауза между окнами, уровень ${lv+1}: не больше 6 с`,pause.length>0&&pause.every(x=>x<=6),`замерено ${pause.map(x=>x.toFixed(1)).join(', ')||'—'} с (оглядка на клумбу ${b.glance} с)`)}
   // ---- 6b. Par time = lab bot time × 1.8 rounded up to 5 s; must stay within 1.4–2.4 × bot time.
   for(let lv=0;lv<L.length;lv++){const b=botTime[lv],par=L[lv].par,want=Math.ceil(b*1.8/5)*5;
    check(`Время на третью звезду, уровень ${lv+1}`,b>0&&par>=1.4*b&&par<=2.4*b,`бот ${b?b.toFixed(1):'—'} с → par ${par} с (${b?(par/b).toFixed(2):'—'}× бота, допустимо 1.4–2.4×; по формуле ×1.8 вышло бы ${b?want:'—'} с)`)}

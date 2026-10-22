@@ -50,7 +50,7 @@ setTimeout(()=>{if(!window.SneakyDog3D){const v=document.getElementById('veil');
 <script type="module">
 import * as THREE from 'three';
 
-const VERSION='3D-1.1';
+const VERSION='3D-1.2';
 // Test mode (index.html?test, used by tests.html): the simulation does not run on its own and does not pause on blur;
 // tests advance it frame by frame through SneakyDog3D.test, so results do not depend on the real clock.
 const TEST=new URLSearchParams(location.search).has('test');
@@ -112,16 +112,20 @@ const NEED_TIME=150;
 // about ONE deed (+ 4–6 s); doing everything in one trip is not meant to be possible. Targets: 16 s (learning, a pile fits
 // easily), 12 s (a pile just fits), 9 s (a pile is tight). Set by the pause at the tap (tapWait), checked by tests.html.
 // par — time for the third star = bot time × 1.8 rounded up to 5 s (a calm player is about twice as slow as the bot).
-const LEVELS=[{name:'Первый выгул',window:16,tapWait:7.7,par:150},{name:'Не на моей клумбе!',window:12,tapWait:3.7,par:140},{name:'Впритык',window:9,tapWait:.7,par:160}];
+const LEVELS=[{name:'Первый выгул',window:16,tapWait:7.7,par:150},{name:'Не на моей клумбе!',window:12,tapWait:3.7,par:140},{name:'Впритык',window:9,tapWait:.7,par:180,barrow:{window:7,wait:4.1,glance:1}}];
 let level=0;try{const l=+localStorage.getItem('sneaky-dog-3d-level');if(LEVELS[l])level=l}catch{}
 // Third star: not spotted, no accident and within the level's par time.
 
 // TAP — the tap pipe; the gardener stands at TAP_STAND facing it (west, away from the bed, 230 units ≈ 14.5 m from his spot
 // at the bed: close enough for short windows, far enough that the bed is out of his sight range while he is there).
-const BED={x:870,y:224},TAP={x:604,y:232},TAP_STAND={x:640,y:232};
+const BED={x:870,y:224},TAP={x:604,y:232},TAP_STAND={x:640,y:232},BARROW={x:880,y:320};
+// BARROW — a wheelbarrow south of the bed. On level 3 the gardener first walks to it (a short window), glances back at the bed
+// for a second, then goes on to the tap (the long window): a pile can be done in two goes with a duck into the near bush.
 const BED_RECT={x:797,y:94,w:108,h:105};
-// The bush nearest to the bed sits 14 m from it (≈ 4 s at a walk, GDD: 3–5 s): before, it touched the bed and hiding cost nothing.
-const bushes=[{x:240,y:550,r:49},{x:598,y:406,r:51},{x:700,y:430,r:48},{x:195,y:296,r:44},{x:431,y:133,r:41}];
+// Two bushes by the bed: the one you creep up from, 14 m away (≈ 4 s at a walk, GDD: 3–5 s), and a cover right by the bed,
+// 2.6 m edge to edge (≈ 0.9 s from the pile spot to cover, start and stop included), to duck into between the two goes of
+// a pile (3D-1.2), in a corner the gardener's cycle never sees.
+const bushes=[{x:240,y:550,r:49},{x:598,y:406,r:51},{x:700,y:430,r:48},{x:195,y:296,r:44},{x:431,y:133,r:41},{x:729,y:117,r:40}];
 const solids=[{x:315,y:431,w:155,h:30,type:'bench'},{x:325,y:190,w:36,h:101,type:'hedge'},{x:821,y:398,w:105,h:34,type:'bench'},{x:625,y:90,w:36,h:123,type:'hedge'},{x:408,y:607,w:176,h:32,type:'flower'}];
 const trees=[{x:86,y:122,r:34},{x:912,y:284,r:32},{x:91,y:435,r:31},{x:870,y:627,r:35}];
 
@@ -149,7 +153,8 @@ function route(lv=level){
  const work=w=>({...BED,wait:w,look:'bed',amp:1.25,sp:1.15,icon:'💧',bed:true});
  const round=(x,y,w)=>({x,y,wait:w,look:'out',amp:.8,sp:1.6,icon:'👀',bed:true});
  const tap=w=>({...TAP_STAND,wait:w,look:Math.PI,amp:.35,sp:2,icon:'🚰'});
- return [work(6),round(760,245,1.4),round(925,250,1.4),work(4),tap(LEVELS[lv].tapWait)];
+ const b=LEVELS[lv].barrow,cart=b?[{...BARROW,wait:b.wait,look:'out',amp:.3,sp:2,icon:'🛒'},{...BARROW,wait:b.glance,look:'bed',amp:.1,sp:2,icon:'👀'}]:[];
+ return [work(6),round(760,245,1.4),round(925,250,1.4),work(4),...cart,tap(LEVELS[lv].tapWait)];
 }
 
 // ---------- Frozen numbers and the remembered camera view ----------
@@ -234,6 +239,8 @@ function buildWorld(){
 // Fire hydrant — a mark spot (visual only: the dog stands right next to it, the gardener's sight passes over it). mesh(new THREE.CylinderGeometry(.13,.15,.55,14),'#c94f43',HYDRANT.x*U,.275,HYDRANT.y*U,world);mesh(new THREE.SphereGeometry(.14,14,8),'#c94f43',HYDRANT.x*U,.56,HYDRANT.y*U,world);mesh(new THREE.BoxGeometry(.38,.08,.08),'#a83c33',HYDRANT.x*U,.38,HYDRANT.y*U,world);blob(HYDRANT.x*U,HYDRANT.y*U,.3,.3,world);
  // Watering can by the bed and the tap the gardener walks to.
  mesh(new THREE.BoxGeometry(.4,.3,.25),'#4f8fb8',(BED.x+22)*U,.15,(BED.y+2)*U,world);
+ // Wheelbarrow by the gardener's stop BARROW (level 3 sends him here; on the other levels it just stands there).
+ {const bx=(BARROW.x+16)*U,bz=(BARROW.y+12)*U;mesh(new THREE.BoxGeometry(.95,.32,.6),'#5b8a96',bx,.5,bz,world);mesh(new THREE.CylinderGeometry(.18,.18,.08,14),'#3a3a3a',bx+.55,.18,bz,world).rotation.x=Math.PI/2;for(const s of [-1,1]){mesh(new THREE.BoxGeometry(.9,.05,.05),'#8a6a44',bx-.55,.55,bz+s*.22,world);mesh(new THREE.BoxGeometry(.05,.34,.05),'#8a6a44',bx-.25,.17,bz+s*.22,world)}}
  const puddle=mesh(discGeo,unlit('#7fc6e8',.55),TAP.x*U,.02,(TAP.y+22)*U,world);puddle.scale.set(18*U,1,7*U);
  m0=mark();mesh(new THREE.CylinderGeometry(.08,.08,1.1,10),'#6f7f86',TAP.x*U,.55,TAP.y*U,world);mesh(new THREE.BoxGeometry(.45,.1,.1),'#8e9ea5',TAP.x*U,1.05,TAP.y*U,world);mesh(new THREE.CylinderGeometry(.11,.11,.05,12),'#c94f43',TAP.x*U,1.14,TAP.y*U,world);
  // Obstacles: hedges and benches block sight, the flower box is low.
@@ -404,7 +411,7 @@ function update(dt){if(state!=='playing')return;elapsed+=dt;abilityCD=Math.max(0
  rings=rings.filter(r=>{if(r.age<r.life)return true;scene.remove(r.m);r.m.material.dispose();return false});
  for(const g of guards){if(g.state!=='patrol')g.watch=0;const distance=dist(g,player);const to=Math.atan2(player.y-g.y,player.x-g.x),diff=Math.atan2(Math.sin(to-g.angle),Math.cos(to-g.angle));const vis=LV.vision*(g.angry?1.15:1);let sees=distance<vis&&Math.abs(diff)<.64&&lineClear(g,player)&&(!hidden||distance<43);
   if(distance<36&&lineClear(g,player))sees=true;
-  if(sees){g.sus=clamp(g.sus+dt*(g.state==='chase'?3:.8+1.3*clamp(1-distance/vis,0,1)),0,1);if(g.state!=='chase'){g.alertLook=.7;g.lookAt={x:player.x,y:player.y}}g.seen=0;g.target={x:player.x,y:player.y};if(g.sus>=1&&g.state!=='chase'){g.state='chase';spotted=true;g.repath=0;beep(200,.18);toast('Он тебя заметил! Спрячься за препятствием.')}}else{g.sus=Math.max(0,g.sus-dt*.55);g.seen+=dt}
+  if(sees){g.sus=clamp(g.sus+dt*(g.state==='chase'?3:.8+1.3*clamp(1-distance/vis,0,1)),0,1);if(g.state!=='chase'){g.alertLook=.7;g.lookAt={x:player.x,y:player.y}}g.seen=0;g.target={x:player.x,y:player.y};if(g.sus>=1&&g.state!=='chase'&&!(g.noChase>0)){g.state='chase';spotted=true;g.repath=0;beep(200,.18);toast('Он тебя заметил! Спрячься за препятствием.')}}else{g.sus=Math.max(0,g.sus-dt*.55);g.seen+=dt}
   // Evidence (a pile on the bed or an accident on the way): seeing any of it makes all gardeners angry.
   if(evidence.length&&!discovered&&g.state!=='chase'&&evidence.some(e=>{const dz=dist(g,e),az=Math.atan2(e.y-g.y,e.x-g.x)-g.angle;return dz<vis&&Math.abs(Math.atan2(Math.sin(az),Math.cos(az)))<.64&&lineClear(g,e)})){{discovered=true;for(const o of guards)o.angry=true;g.state='search';{const ex=nearestExit(player);g.target={x:ex.x,y:ex.y}}g.wait=0;g.repath=0;g.path=[];beep(220,.25);toast('Садовник нашёл сюрприз и бежит к ближнему к тебе выходу!',3)}}
   if(g.state==='chase'&&!sees&&g.seen>2.1){g.state='search';g.wait=3;g.repath=0}
@@ -434,6 +441,13 @@ function update(dt){if(state!=='playing')return;elapsed+=dt;abilityCD=Math.max(0
     if(got<.15*step){g.stuckT+=dt;g.okT=0}else{g.okT=(g.okT||0)+dt;if(g.okT>.5){g.stuckT=0;g.stuckN=0}}
     if(g.stuckN===0&&g.stuckT>.6){g.path=[];g.repath=0;g.partial=false;g.stuckN=1}
     if(g.state==='chase'?g.stuckT>1.5:g.stuckT>2.1){g.stuckT=0;if(g.state==='chase'){g.state='search';g.wait=3;g.repath=0}else g.arrived=true}}}
+  // Chase stall (3D-1.2): the dog pressed against a trunk or a hedge — its point moves to the free cell nearest to it, he
+  // reaches that cell and stands there just out of the 26 catch range, never "trying to walk", so the detector above never ran.
+  // Got as close as the map allows and the dog is within arm's reach → caught. Otherwise standing in a chase > 1.5 s → search,
+  // and for 2 s he can't flip straight back into a chase.
+  if(g.state==='chase'&&distance<36&&lineClear(g,player)&&target&&dist(g,target)<4){finish(false);break}
+  if(g.state==='chase'&&g.moved<5){g.stallT=(g.stallT||0)+dt;if(g.stallT>1.5){g.stallT=0;g.state='search';g.wait=3;g.repath=0;g.path=[];g.sus=.5;g.noChase=2}}else g.stallT=0;
+  if(g.noChase>0)g.noChase-=dt;
   if(g.state==='chase'&&distance<26&&lineClear(g,player)){finish(false);break}
  }
  if(state==='playing'&&done&&EXITS.some(e=>dist(player,e)<e.r))finish(true);
