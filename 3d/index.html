@@ -28,7 +28,7 @@
 <div class="progress" id="progress"><span>Тихо… почти готово!</span><div class="track"><div class="fill" id="toiletFill"></div></div></div>
 <div class="status" id="status"></div>
 <div class="controls"><div><div id="stick" aria-label="Джойстик"><div id="knob"></div></div><div class="energy"><i id="energyFill"></i></div></div><div class="actions"><button id="ability" class="action secondary" aria-label="Мяч"><span>🎾</span><small id="abilityText">МЯЧ</small></button><button id="toilet" class="action" aria-label="Удерживать, чтобы сделать дело"><span>💩</span><small>ДЕРЖИ</small></button></div></div>
-<div class="control-help">WASD — идти · C — красться · Shift — бег · E — мяч · пробел — дело · V — камера · ⚙ — настройки</div>
+<div class="control-help">WASD — идти · C — красться · Shift — бег · E — мяч · пробел — дело · Q/R или мышь — повернуть камеру · V — режим · ⚙ — настройки</div>
 <div id="tune" hidden></div>
 <div id="toast" role="status"></div><div id="veil"><div class="card solo"><h1>SNEAKY DOG 3D</h1><p class="subtitle">Загружаю 3D…</p></div></div>
 </div>
@@ -40,7 +40,7 @@ setTimeout(()=>{if(!window.SneakyDog3D){const v=document.getElementById('veil');
 <script type="module">
 import * as THREE from 'three';
 
-const VERSION='3D-0.2';
+const VERSION='3D-0.3';
 const $=id=>document.getElementById(id);
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),D2R=Math.PI/180;
 
@@ -86,14 +86,22 @@ const CHASE_TUNE=[
  ['back','Погоня: позади',1,30,.1,' м',1],
  ['up','Погоня: высота',.5,25,.1,' м',1],
  ['pitch','Погоня: наклон',5,80,1,'°',0]];
+// Turning the camera by hand: swipe on the empty screen (or drag the mouse, Q/R on a keyboard).
+const SWIPE_TUNE=[
+ ['sens','Поворот пальцем',60,360,10,'° / ½ экрана',0],
+ ['hold','Пауза до возврата',0,5,.1,' с',1],
+ ['ret','Время возврата',.1,3,.05,' с',2]];
 const GAME_TUNE=[
- ['tempo','Темп (все скорости)',.5,1.5,.05,'×',2],
+ ['tempo','Темп (все скорости)',.2,1,.02,'×',2],
  ['mapScale','Размер лужайки',.6,1.6,.05,'×',2]];
 const CAM_DEF={high:{back:4,up:3.4,pitch:38,fov:45,lag:.2,turn:.8},low:{back:3,up:2,pitch:20,fov:50,lag:.12,turn:.5},iso:{back:19,up:16,pitch:40,fov:35,lag:.25,turn:1.2}};
-const freshCfg=()=>({mode:'high',tempo:.6,mapScale:1,cam:JSON.parse(JSON.stringify(CAM_DEF)),chase:{back:4,up:3,pitch:30}});
+const CFG_REV=3;
+const freshCfg=()=>({rev:CFG_REV,mode:'high',tempo:.38,mapScale:1,cam:JSON.parse(JSON.stringify(CAM_DEF)),chase:{back:4,up:3,pitch:30},swipe:{sens:180,hold:1.2,ret:.8}});
 const CFG_KEY='sneaky-dog-3d-cam3';
 let cfg=freshCfg();
-try{const s=JSON.parse(localStorage.getItem(CFG_KEY));if(s){if(MODES[s.mode])cfg.mode=s.mode;for(const [k,,min,max] of GAME_TUNE)if(Number.isFinite(s[k]))cfg[k]=clamp(s[k],min,max);for(const m in MODES)for(const [k,,min,max] of CAM_TUNE)if(Number.isFinite(s.cam?.[m]?.[k]))cfg.cam[m][k]=clamp(s.cam[m][k],min,max);for(const [k,,min,max] of CHASE_TUNE)if(Number.isFinite(s.chase?.[k]))cfg.chase[k]=clamp(s.chase[k],min,max)}}catch{}
+try{const s=JSON.parse(localStorage.getItem(CFG_KEY));if(s){if(MODES[s.mode])cfg.mode=s.mode;for(const [k,,min,max] of GAME_TUNE)if(Number.isFinite(s[k]))cfg[k]=clamp(s[k],min,max);for(const m in MODES)for(const [k,,min,max] of CAM_TUNE)if(Number.isFinite(s.cam?.[m]?.[k]))cfg.cam[m][k]=clamp(s.cam[m][k],min,max);for(const [k,,min,max] of CHASE_TUNE)if(Number.isFinite(s.chase?.[k]))cfg.chase[k]=clamp(s.chase[k],min,max);for(const [k,,min,max] of SWIPE_TUNE)if(Number.isFinite(s.swipe?.[k]))cfg.swipe[k]=clamp(s.swipe[k],min,max);
+ // Settings saved before 3D-0.3 kept tempo 0.6, which proved far too fast: pull it down once.
+ if((s.rev||0)<3&&cfg.tempo>.5)cfg.tempo=.38}}catch{}
 const CAM=()=>cfg.cam[cfg.mode];
 const saveCfg=()=>{try{localStorage.setItem(CFG_KEY,JSON.stringify(cfg))}catch{}};
 let U=.06*cfg.mapScale; // metres per 2D unit: 1000×760 → 60×45.6 m
@@ -202,10 +210,10 @@ function setupRound(){clearRound();player={...start,angle:-Math.PI/4,moving:fals
 function setLabel(s,text,on){const n=label(text,on?'#fff5d9':'#102f2a',on?'#102f2a':'#fff5d9');s.material.map.dispose();s.material.map=n.material.map;s.material.needsUpdate=true;n.material.dispose()}
 
 function menu(){state='menu';clearInput();setupRound();$('veil').classList.remove('hidden');
- $('veil').innerHTML=`<div class="card solo"><div class="eyebrow">Прототип ${VERSION} · примитивы</div><h1>SNEAKY DOG 3D</h1><p class="subtitle">Проверяем ощущение: каково бегать по лужайке от садовника. Сделай дело на клумбе и вернись к воротам.</p><button class="primary" id="play">На лужайку!</button><p class="fine">Режим камеры — кнопка 🎥 (на ПК — V), настройки — ⚙.<br>Телефон: джойстик (слабо — красться, сильно — бег), 🎾 и 💩.<br>ПК: WASD, C — красться, Shift — бег, E — мяч, пробел — дело, V — режим камеры.</p><a href="../">← 2D-версия</a></div>`;
+ $('veil').innerHTML=`<div class="card solo"><div class="eyebrow">Прототип ${VERSION} · примитивы</div><h1>SNEAKY DOG 3D</h1><p class="subtitle">Проверяем ощущение: каково бегать по лужайке от садовника. Сделай дело на клумбе и вернись к воротам.</p><button class="primary" id="play">На лужайку!</button><p class="fine">Свайп по экрану — повернуть камеру. Режим камеры — 🎥 (на ПК — V), настройки — ⚙.<br>Телефон: джойстик (слабо — красться, сильно — бег), 🎾 и 💩.<br>ПК: WASD, C — красться, Shift — бег, E — мяч, пробел — дело, Q/R или мышь — поворот камеры, V — режим камеры.</p><a href="../">← 2D-версия</a></div>`;
  $('play').onclick=begin}
 function begin(){setupRound();state='playing';clearInput();$('veil').classList.add('hidden');toast('Садовник стережёт клумбу. Дождись, когда он уйдёт к крану!',4.5);beep(550,.08)}
-function clearInput(){keys.clear();joy={x:0,y:0,id:null};toiletHeld=false;$('knob').style.transform='';$('toilet').classList.remove('active')}
+function clearInput(){keys.clear();drag=null;joy={x:0,y:0,id:null};toiletHeld=false;$('knob').style.transform='';$('toilet').classList.remove('active')}
 function pause(){if(state!=='playing')return;state='paused';clearInput();$('veil').classList.remove('hidden');
  $('veil').innerHTML=`<div class="card result"><div class="result-icon">🍃</div><h1>Передышка</h1><p class="fine">Экран ${screenW}×${screenH} · поле ${canvas.width}×${canvas.height} · ${fps} fps</p><div class="result-actions" style="margin-top:16px"><button class="primary" id="resume">Продолжить</button><button class="plain" id="restart">Сначала</button><button class="plain" id="back">В меню</button></div></div>`;
  $('resume').onclick=()=>{state='playing';$('veil').classList.add('hidden')};$('restart').onclick=begin;$('back').onclick=menu}
@@ -225,7 +233,7 @@ function update(dt){if(state!=='playing')return;elapsed+=dt;abilityCD=Math.max(0
  let x=joy.x,y=joy.y;const kx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),ky=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);const sneakKey=keys.has('c');if(kx||ky){const kl=Math.hypot(kx,ky),sn=sneakKey?.55:1;x=kx/kl*sn;y=ky/kl*sn}let len=Math.hypot(x,y);if(len>1){x/=len;y/=len;len=1}
  const sprint=((keys.has('shift')&&!sneakKey)||(joy.id!==null&&len>.88))&&stamina>2&&len>.1;const speed=DOG.speed*cfg.tempo*(sprint?1.35:1);stamina=clamp(stamina+(sprint?-28:18)*dt,0,DOG.stamina);
  // Stick "up" means "away from the camera", whatever the camera yaw is.
- const c=Math.cos(camState.yaw),s=Math.sin(camState.yaw),mx=x*c-y*s,my=x*s+y*c;
+ const c=Math.cos(camYaw()),s=Math.sin(camYaw()),mx=x*c-y*s,my=x*s+y*c;
  player.moving=len>.1;player.mode=!player.moving?'stand':sprint?'run':len<.6?'sneak':'walk';player.speed=player.moving?len*speed:0;
  if(player.moving){move={x:mx/len,y:my/len};player.angle=Math.atan2(my,mx);travel(player,mx*speed*dt,my*speed*dt,13);progress=0}
  const bush=bushes.find(b=>dist(player,b)<b.r-8);const hidden=!!bush&&!sprint&&!player.moving||!!bush&&!sprint&&len<.88;hiddenNow=hidden;const near=dist(player,zone)<zone.r;const doing=(toiletHeld||keys.has(' '))&&near&&!done&&!player.moving;
@@ -253,15 +261,24 @@ function update(dt){if(state!=='playing')return;elapsed+=dt;abilityCD=Math.max(0
 }
 
 // ---------- Camera: isometric-ish follow with lag; pulls back during a chase ----------
-const camState={x:0,z:0,chase:0,yaw:Math.PI/4,init:false};
+// yaw follows the dog; off is the player's manual turn on top of it (swipe / mouse drag / Q,R).
+const camState={x:0,z:0,chase:0,yaw:Math.PI/4,off:0,idle:0,retFrom:null,retT:0,init:false};
+let drag=null;
+const wrapAngle=a=>Math.atan2(Math.sin(a),Math.cos(a)),camYaw=()=>camState.yaw+camState.off;
 // Camera sits `back` metres behind and `up` metres above the dog and looks down at `pitch`;
 // it swings behind the running dog with its own lag and blends into the lower, closer chase framing.
-function updateCamera(dt){const M=CAM(),C=cfg.chase,chasing=state==='playing'&&guards.some(g=>g.state==='chase');
+function updateCamera(dt){const M=CAM(),C=cfg.chase,S=cfg.swipe,chasing=state==='playing'&&guards.some(g=>g.state==='chase');
  const k=M.lag>0?1-Math.exp(-dt/M.lag):1,kc=1-Math.exp(-dt/.5),want=player.angle+Math.PI/2;
- if(!camState.init){camState.x=player.x*U;camState.z=player.y*U;camState.yaw=want;camState.chase=0;camState.init=true}
- if(player.moving){const d=Math.atan2(Math.sin(want-camState.yaw),Math.cos(want-camState.yaw));camState.yaw+=d*(1-Math.exp(-dt/M.turn))}
+ if(!camState.init){camState.x=player.x*U;camState.z=player.y*U;camState.yaw=want;camState.chase=0;camState.off=0;camState.retFrom=null;camState.init=true}
+ // Manual turn: while a finger / key steers, auto-follow is off; after `hold` s the offset eases back to 0 over `ret` s.
+ const keyTurn=(keys.has('r')?1:0)-(keys.has('q')?1:0),steering=!!drag||keyTurn!==0;
+ if(keyTurn)camState.off+=keyTurn*S.sens*D2R*.8*dt;
+ let follow=true;
+ if(steering){camState.idle=0;camState.retFrom=null;follow=false}
+ else if(camState.off!==0){camState.idle+=dt;if(camState.idle<S.hold)follow=false;else{if(camState.retFrom===null){camState.retFrom=wrapAngle(camState.off);camState.retT=0}camState.retT+=dt;const u=Math.min(1,camState.retT/S.ret);camState.off=camState.retFrom*(1-u*u*(3-2*u));if(u>=1){camState.off=0;camState.retFrom=null}}}
+ if(follow&&player.moving){const d=wrapAngle(want-camState.yaw);camState.yaw+=d*(1-Math.exp(-dt/M.turn))}
  camState.x+=(player.x*U-camState.x)*k;camState.z+=(player.y*U-camState.z)*k;camState.chase+=((chasing?1:0)-camState.chase)*kc;
- const t=camState.chase,back=M.back+(C.back-M.back)*t,up=M.up+(C.up-M.up)*t,pitch=(M.pitch+(C.pitch-M.pitch)*t)*D2R,yaw=camState.yaw,fx=Math.sin(yaw),fz=-Math.cos(yaw);
+ const t=camState.chase,back=M.back+(C.back-M.back)*t,up=M.up+(C.up-M.up)*t,pitch=(M.pitch+(C.pitch-M.pitch)*t)*D2R,yaw=camYaw(),fx=Math.sin(yaw),fz=-Math.cos(yaw);
  camera.position.set(camState.x-fx*back,.3+up,camState.z-fz*back);
  camera.lookAt(camera.position.x+fx*Math.cos(pitch),camera.position.y-Math.sin(pitch),camera.position.z+fz*Math.cos(pitch))}
 function applyFov(){const a=screenW/Math.max(1,screenH),f=CAM().fov;camera.aspect=a;
@@ -309,7 +326,7 @@ function loop(t){requestAnimationFrame(loop);if(innerWidth!==lastVW||Math.round(
  update(dt);updateCamera(dt);syncScene(dt);renderer.render(scene,camera)}
 
 // ---------- Tuning panel ----------
-function renderTune(){const rows=[...CAM_TUNE.map(t=>[t,CAM(),'c']),...CHASE_TUNE.map(t=>[t,cfg.chase,'p']),...GAME_TUNE.map(t=>[t,cfg,'g'])],fmt=([k,,,,,unit,dp],o)=>o[k].toFixed(dp)+unit;
+function renderTune(){const rows=[...CAM_TUNE.map(t=>[t,CAM(),'c']),...SWIPE_TUNE.map(t=>[t,cfg.swipe,'s']),...CHASE_TUNE.map(t=>[t,cfg.chase,'p']),...GAME_TUNE.map(t=>[t,cfg,'g'])],fmt=([k,,,,,unit,dp],o)=>o[k].toFixed(dp)+unit;
  $('tune').innerHTML=`<div class="head"><span>Камера и темп</span><span><span id="fpsVal">${fps}</span> fps</span></div><div class="btns" style="margin:0 0 10px">${Object.entries(MODES).map(([m,n])=>`<button data-mode="${m}" style="${m===cfg.mode?'background:#f8d36c;color:#102f2a':''}">${n}</button>`).join('')}</div>`+rows.map(([t,o,g])=>{const [k,name,min,max,step]=t;return `<div class="row"><label for="t-${g}${k}"><span>${name}</span><b id="v-${g}${k}">${fmt(t,o)}</b></label><input id="t-${g}${k}" type="range" min="${min}" max="${max}" step="${step}" value="${o[k]}"></div>`}).join('')+`<div class="fine" id="mapSize"></div><div class="btns"><button id="tReset">Сбросить</button><button id="tCopy">Скопировать</button><button id="tClose">Закрыть</button></div><code id="tJson"></code>`;
  for(const b of $('tune').querySelectorAll('[data-mode]'))b.onclick=()=>setMode(b.dataset.mode);
  for(const [t,o,g] of rows){const k=t[0];$('t-'+g+k).addEventListener('input',e=>{o[k]=+e.target.value;$('v-'+g+k).textContent=fmt(t,o);if(k==='mapScale')needRebuild=true;if(k==='fov')applyFov();saveCfg();tuneInfo()})}
@@ -328,13 +345,17 @@ function resetJoy(e){if(e.pointerId===joy.id){joy={x:0,y:0,id:null};$('knob').st
 $('toilet').addEventListener('pointerdown',e=>{if(state!=='playing')return;e.preventDefault();$('toilet').setPointerCapture(e.pointerId);toiletHeld=true;$('toilet').classList.add('active');if(!done&&dist(player,zone)>=zone.r)toast('Сначала подойди к клумбе наверху справа')});
 for(const t of ['pointerup','pointercancel','lostpointercapture'])$('toilet').addEventListener(t,()=>{toiletHeld=false;$('toilet').classList.remove('active')});
 $('ability').addEventListener('pointerdown',e=>{e.preventDefault();ability()});$('ability').onclick=e=>{if(e.detail===0)ability()};
+// Swipe / mouse drag on the empty field turns the camera around the dog (yaw only). Swipe right — look right.
+canvas.addEventListener('pointerdown',e=>{if(state!=='playing'||drag)return;e.preventDefault();drag={id:e.pointerId,x:e.clientX};try{canvas.setPointerCapture(e.pointerId)}catch{}});
+canvas.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;const dx=e.clientX-drag.x;drag.x=e.clientX;camState.off+=dx/(Math.max(200,screenW)/2)*cfg.swipe.sens*D2R});
+for(const t of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(t,e=>{if(drag&&e.pointerId===drag.id)drag=null});
 $('pause').onclick=pause;$('sound').onclick=()=>{muted=!muted;$('sound').textContent=muted?'♪':'♫';$('sound').setAttribute('aria-label',muted?'Включить звук':'Выключить звук');beep(660,.1)};
-const CODES={KeyW:'w',KeyA:'a',KeyS:'s',KeyD:'d',KeyE:'e',KeyC:'c',Space:' ',ShiftLeft:'shift',ShiftRight:'shift',ArrowUp:'arrowup',ArrowDown:'arrowdown',ArrowLeft:'arrowleft',ArrowRight:'arrowright',Escape:'escape'};const keyOf=e=>CODES[e.code]||(e.key||'').toLowerCase();
+const CODES={KeyW:'w',KeyA:'a',KeyS:'s',KeyD:'d',KeyE:'e',KeyC:'c',KeyQ:'q',KeyR:'r',Space:' ',ShiftLeft:'shift',ShiftRight:'shift',ArrowUp:'arrowup',ArrowDown:'arrowdown',ArrowLeft:'arrowleft',ArrowRight:'arrowright',Escape:'escape'};const keyOf=e=>CODES[e.code]||(e.key||'').toLowerCase();
 window.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const k=keyOf(e);if(CODES[e.code])inputMode='keys';if([' ','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(k))e.preventDefault();if(k==='escape'){if(state==='playing')pause();else if(state==='paused')$('resume').click();return}if(e.code==='KeyV'&&!e.repeat){nextMode();return}if(state!=='playing')return;keys.add(k);if(k==='e'&&!e.repeat)ability()});
 window.addEventListener('keyup',e=>keys.delete(keyOf(e)));window.addEventListener('blur',()=>{if(state==='playing')pause();clearInput()});document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='playing')pause()});canvas.addEventListener('contextmenu',e=>e.preventDefault());
 
 // Read-only hook for build verification and debugging; it never changes game state.
-window.SneakyDog3D={version:VERSION,snapshot:()=>({version:VERSION,state,player:player?{x:+player.x.toFixed(1),y:+player.y.toFixed(1),mode:player.mode,hidden:hiddenNow}:null,guards:guards.map(g=>({x:+g.x.toFixed(1),y:+g.y.toFixed(1),state:g.state,idx:g.idx,watch:+g.watch.toFixed(2),icon:g.step?.icon||null,angry:g.angry,sus:+g.sus.toFixed(2)})),done,discovered,progress:+progress.toFixed(2),elapsed:+elapsed.toFixed(2),stamina:Math.round(stamina),cfg:{...cfg},camera:{x:+camera.position.x.toFixed(2),y:+camera.position.y.toFixed(2),z:+camera.position.z.toFixed(2),fov:+camera.fov.toFixed(1)},screen:{w:screenW,h:screenH,canvas:[canvas.width,canvas.height]},fps})};
+window.SneakyDog3D={version:VERSION,snapshot:()=>({version:VERSION,state,player:player?{x:+player.x.toFixed(1),y:+player.y.toFixed(1),mode:player.mode,hidden:hiddenNow}:null,guards:guards.map(g=>({x:+g.x.toFixed(1),y:+g.y.toFixed(1),state:g.state,idx:g.idx,watch:+g.watch.toFixed(2),icon:g.step?.icon||null,angry:g.angry,sus:+g.sus.toFixed(2)})),done,discovered,progress:+progress.toFixed(2),elapsed:+elapsed.toFixed(2),stamina:Math.round(stamina),cfg:{...cfg},camera:{x:+camera.position.x.toFixed(2),y:+camera.position.y.toFixed(2),z:+camera.position.z.toFixed(2),fov:+camera.fov.toFixed(1),yaw:+(camYaw()/D2R).toFixed(1),off:+(camState.off/D2R).toFixed(1),dragging:!!drag},screen:{w:screenW,h:screenH,canvas:[canvas.width,canvas.height]},fps})};
 
 buildWorld();resize();menu();requestAnimationFrame(loop);
 </script>
