@@ -46,7 +46,7 @@ setTimeout(()=>{if(!window.SneakyDog3D){const v=document.getElementById('veil');
 <script type="module">
 import * as THREE from 'three';
 
-const VERSION='3D-0.7';
+const VERSION='3D-0.8';
 const $=id=>document.getElementById(id);
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),D2R=Math.PI/180;
 
@@ -55,12 +55,19 @@ const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),clamp=(v,a,b)=>Math.max(a,Math.min
 // Breeds (GDD §4). The menu dots are computed from these same numbers, so they cannot drift apart.
 // speed — base walking speed (2D units/s, × cfg.tempo); runMult / sneakMult — top / sneaking multipliers of it;
 // stamina — pool; drain — per second at full run (less for a partial run); regen — per second at walking pace or slower;
-// accel — speed smoothing in s (smaller = nimbler); aim — camera aim height, m; size — model scale. vip — planned, locked.
+// accel — speed smoothing in s (smaller = nimbler); aim — camera aim height, m; size — model scale.
+// vip («Твой щенок») — a paid attraction, not a balance unit: best at every field, no weak spots (the counterweight is level
+// design). Locked: not playable yet. Its menu card lists abilities instead of dots, since the dots cap at 5 for everyone.
 const BREEDS={
  lab:{name:'Лабрадор',icon:'🐕',color:'#e8b960',speed:153,runMult:1.35,sneakMult:.5,stamina:100,drain:28,regen:18,accel:.12,aim:.45,size:1,cooldown:12},
  jack:{name:'Джек-рассел',icon:'🐶',color:'#f3efe2',patch:'#975326',speed:174,runMult:1.45,sneakMult:.5,stamina:55,drain:32,regen:20,accel:.08,aim:.38,size:.85,cooldown:12},
  corgi:{name:'Корги',icon:'🦊',color:'#d9893d',speed:140,runMult:1.3,sneakMult:.55,stamina:85,drain:24,regen:18,accel:.14,aim:.36,size:.82,cooldown:12},
- vip:{name:'Твой щенок',icon:'⭐',color:'#c98f5a',speed:150,runMult:1.55,sneakMult:.5,stamina:50,drain:34,regen:18,accel:.1,aim:.42,size:.9,cooldown:12,locked:true}};
+ vip:{name:'Твой щенок',icon:'⭐',color:'#c98f5a',speed:175,runMult:1.6,sneakMult:.55,stamina:120,drain:22,regen:24,accel:.08,aim:.42,size:.9,cooldown:9,locked:true,abilities:['Рывок','Вой','Копает быстро']}};
+// Guard against balance regressions: VIP must not lose to any other breed on any gameplay field.
+// +1 — bigger is better, −1 — smaller is better. Cosmetic fields (aim, size, colours) are not compared.
+{const BETTER={speed:1,runMult:1,sneakMult:1,stamina:1,drain:-1,regen:1,accel:-1,cooldown:-1},v=BREEDS.vip;
+ for(const [id,b] of Object.entries(BREEDS))if(id!=='vip')for(const [k,dir] of Object.entries(BETTER))if((v[k]-b[k])*dir<0)console.warn(`VIP хуже породы «${b.name}» по полю ${k}: ${v[k]} против ${b[k]}`);
+ if(v.speed*v.runMult<Math.max(...Object.values(BREEDS).filter(b=>b!==v).map(b=>b.speed*b.runMult)))console.warn('VIP не самый быстрый по максимальной скорости')}
 // Dots 1..5 as in GDD §4: speed from the top speed (speed × runMult), energy from stamina.
 const breedDots=b=>({speed:clamp(Math.round(1+(b.speed*b.runMult-160)/23),1,5),energy:clamp(Math.round((b.stamina-25)/15),1,5)});
 let breedId='lab';try{const s=localStorage.getItem('sneaky-dog-3d-breed');if(BREEDS[s]&&!BREEDS[s].locked)breedId=s}catch{}
@@ -262,7 +269,7 @@ function setupRound(){clearRound();player={...start,angle:-Math.PI/4,moving:fals
 function setLabel(s,text,on){const n=label(text,on?'#fff5d9':'#102f2a',on?'#102f2a':'#fff5d9');s.material.map.dispose();s.material.map=n.material.map;s.material.needsUpdate=true;n.material.dispose()}
 
 function menu(){state='menu';clearInput();setupRound();$('veil').classList.remove('hidden');
- $('veil').innerHTML=`<div class="card solo"><div class="eyebrow">Прототип ${VERSION} · примитивы</div><h1>SNEAKY DOG 3D</h1><p class="subtitle">Проверяем ощущение: каково бегать по лужайке от садовника. Сделай дело на клумбе и вернись к воротам.</p><div class="dogs breeds">${Object.entries(BREEDS).map(([id,b])=>{const d=breedDots(b),dots=n=>'●'.repeat(n)+'○'.repeat(5-n);return `<button class="dog-card ${id===breedId?'selected':''}" data-breed="${id}" ${b.locked?'disabled':''} title="Скорость ${d.speed}/5, энергия ${d.energy}/5"><span>${b.icon}</span><b>${b.name}</b><i class="dots">Скор. ${dots(d.speed)}</i><i class="dots">Энерг. ${dots(d.energy)}</i>${b.locked?'<i class="dots">скоро</i>':''}</button>`}).join('')}</div><button class="primary" id="play">На лужайку!</button><p class="fine">Один палец по экрану — повернуть и наклонить камеру, два пальца — приблизить. Настройки — ⚙.<br>Телефон: джойстик (слабо — красться, сильно — бег), 🎾 и 💩.</p><a href="../">← 2D-версия</a></div>`;
+ $('veil').innerHTML=`<div class="card solo"><div class="eyebrow">Прототип ${VERSION} · примитивы</div><h1>SNEAKY DOG 3D</h1><p class="subtitle">Проверяем ощущение: каково бегать по лужайке от садовника. Сделай дело на клумбе и вернись к воротам.</p><div class="dogs breeds">${Object.entries(BREEDS).map(([id,b])=>{const d=breedDots(b),dots=n=>'●'.repeat(n)+'○'.repeat(5-n);return `<button class="dog-card ${id===breedId?'selected':''}" data-breed="${id}" ${b.locked?'disabled':''} title="Скорость ${d.speed}/5, энергия ${d.energy}/5"><span>${b.icon}</span><b>${b.name}</b>${b.abilities?b.abilities.map(a=>`<i class="dots">${a}</i>`).join(''):`<i class="dots">Скор. ${dots(d.speed)}</i><i class="dots">Энерг. ${dots(d.energy)}</i>`}${b.locked?'<i class="dots">скоро</i>':''}</button>`}).join('')}</div><button class="primary" id="play">На лужайку!</button><p class="fine">Один палец по экрану — повернуть и наклонить камеру, два пальца — приблизить. Настройки — ⚙.<br>Телефон: джойстик (слабо — красться, сильно — бег), 🎾 и 💩.</p><a href="../">← 2D-версия</a></div>`;
  for(const b of $('veil').querySelectorAll('[data-breed]'))b.onclick=()=>{setBreed(b.dataset.breed);menu()};
  $('play').onclick=begin}
 function begin(){setupRound();state='playing';clearInput();$('veil').classList.add('hidden');toast('Садовник стережёт клумбу. Дождись, когда он уйдёт к крану!',4.5);beep(550,.08)}
