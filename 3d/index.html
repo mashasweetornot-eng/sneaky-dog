@@ -46,7 +46,7 @@ setTimeout(()=>{if(!window.SneakyDog3D){const v=document.getElementById('veil');
 <script type="module">
 import * as THREE from 'three';
 
-const VERSION='3D-0.10';
+const VERSION='3D-0.11';
 const $=id=>document.getElementById(id);
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),D2R=Math.PI/180;
 
@@ -94,6 +94,17 @@ function findPath(a,b){const cell=25,cols=40,rows=31;const key=(x,y)=>y*cols+x;c
  while(open.length&&iterations++<1300){open.sort((a,b)=>a.f-b.f);const c=open.shift(),k=key(c.x,c.y);if(c.x===bx&&c.y===by){end=c;break}for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){let x=c.x+dx,y=c.y+dy;if(x<0||y<0||x>=cols||y>=rows||blocked(x*cell+12.5,y*cell+12.5,15))continue;if(dx&&dy&&(blocked((c.x+dx)*cell+12.5,c.y*cell+12.5,15)||blocked(c.x*cell+12.5,(c.y+dy)*cell+12.5,15)))continue;let nk=key(x,y),g=c.g+(dx&&dy?1.414:1);if(g>=(cost.get(nk)??Infinity))continue;cost.set(nk,g);prev.set(nk,k);open.push({x,y,g,f:g+Math.hypot(bx-x,by-y)})}}
  if(!end)return [];let k=key(end.x,end.y),path=[];while(prev.has(k)){path.unshift({x:(k%cols)*cell+12.5,y:Math.floor(k/cols)*cell+12.5});k=prev.get(k)}return path;
 }
+// Gardener safety (3D-0.11): he must never stand forever at a point he cannot reach.
+const INSPECT_MAX=6,SEARCH_MAX=10;
+// It also records the state change itself, so a new inspect started in the very next frame (noise, ball) gets a fresh timer.
+function backToPatrol(g){g.state='patrol';g.lastState='patrol';g.stateT=0;g.target=null;g.path=[];g.repath=0;g.wait=0;g.arrived=false;g.partial=false;g.stuckT=0;g.stuckN=0;g.idx=Math.max(0,g.pts.findIndex(p=>p.bed))}
+// A target inside an obstacle → the nearest free point on an expanding ring of grid cells (up to 4 cells away).
+function freeSpot(t){if(!blocked(t.x,t.y,15))return t;let best=null;
+ for(let r=1;r<=4&&!best;r++)for(let i=-r;i<=r;i++)for(let j=-r;j<=r;j++){if(Math.max(Math.abs(i),Math.abs(j))!==r)continue;const p={x:t.x+i*25,y:t.y+j*25};if(!blocked(p.x,p.y,15)&&(!best||dist(p,t)<dist(best,t)))best=p}
+ return best||t}
+// No route to the target: the nearest free point around it that does have a route (or a straight line) from where he stands.
+function partialPath(g,t){const c=[];for(let r=1;r<=6;r++)for(let i=-r;i<=r;i++)for(let j=-r;j<=r;j++)if(Math.max(Math.abs(i),Math.abs(j))===r){const p={x:t.x+i*25,y:t.y+j*25};if(!blocked(p.x,p.y,15))c.push(p)}
+ c.sort((a,b)=>dist(a,t)-dist(b,t));for(const p of c.slice(0,8)){if(lineClear(g,p,16))return [p];const path=findPath(g,p);if(path.length)return [...path,p]}return []}
 // Gardener's day: water the bed → walk a round → water again → go to the tap (the dog's window) → back.
 function route(){
  const work=w=>({...BED,wait:w,look:'bed',amp:1.25,sp:1.15,icon:'💧',bed:true});
@@ -102,62 +113,39 @@ function route(){
  return [work(6),round(760,245,1.4),round(925,250,1.4),work(4),tap(4)];
 }
 
-// ---------- Live camera settings (the main thing to tune by feel) ----------
-// Camera modes from GDD §11. 'high' (third person from above-behind) is the chosen view; low / iso stay in ⚙ for comparison.
-// The camera sits on the view line through the aim point: position = aim − viewDir·distance, so changing the
-// distance (zoom) keeps the pitch. In every mode it turns behind the running dog and in a chase drops lower and closer.
-const MODES={high:'Сзади-сверху',low:'Сзади, низко',iso:'Изометрия'};
-const CAM_TUNE=[
- ['dist','Дистанция',1,40,.1,' м',1,'cmp'],   // low / iso only; 'high' uses the zoom distance
- ['pitch','Наклон вниз',5,80,1,'°',0],
- ['yaw','Поворот относительно спины',-180,180,1,'°',0],
- ['fov','Перспектива (FOV)',15,90,1,'°',0],
- ['bias','Собака ниже центра',-.5,.6,.01,'',2],
- ['lag','Запаздывание',0,1,.01,' с',2],
- ['turn','Доворот за движением',.1,3,.05,' с',2]];
-const ZOOM_TUNE=[
- ['k','Расстояние (зум)',1,12,.1,' дл.',1],   // in body lengths of the breed: metres = k × DOG.len
- ['start','Зум: старт',1,12,.1,' дл.',1],
- ['min','Зум: минимум',1,12,.1,' дл.',1],
- ['max','Зум: максимум',1,12,.1,' дл.',1],
- ['pinch','Чувствительность щипка',.3,3,.05,'×',2],
- ['smooth','Сглаживание зума',0,1,.01,' с',2]];
-// The aim height itself is per breed (DOG.hgt × 0.8); ⚙ only adds a correction.
-const AIM_TUNE=[['aimOff','Прицел: поправка',-.3,.3,.01,' м',2]];
+// ---------- Camera and tuning settings ----------
+// One view, chosen (GDD §11): third person from above-behind. The camera sits on the view line through the aim point:
+// position = aim − viewDir·distance, so the zoom keeps the pitch. Its geometry is fixed here; the player sets distance,
+// yaw and pitch with the fingers, and that view is remembered automatically (cfg.view) and restored at start.
+const VIEW={pitch:40,fov:48,bias:.12,lag:.2};   // bias — the dog sits below centre by this share of half the screen
+const CHASE={k:.9,pitch:30};                    // in a chase the distance × k and the pitch blends towards 30°
+const ZOOM={start:5,min:2,max:8,smooth:.2};     // in body lengths of the breed: metres = k × DOG.len
+// ⚙ keeps only what a gesture cannot set.
+const SWIPE_TUNE=[
+ ['sens','Поворот пальцем',60,360,10,'° / ½ экрана',0],
+ ['sensY','Наклон пальцем',20,240,5,'° / ½ экрана',0]];
+const ZOOM_TUNE=[['pinch','Чувствительность щипка',.3,3,.05,'×',2]];
 const RAY_TUNE=[
  ['spread','Лучи: разнос',0,.6,.01,' м',2],
  ['pad','Лучи: зазор до помехи',0,.8,.01,' м',2],
  ['back','Лучи: возврат',.1,3,.05,' с',2]];
-const CHASE_TUNE=[
- ['k','Погоня: расстояние',.5,1.5,.05,'×',2],
- ['pitch','Погоня: наклон',5,80,1,'°',0]];
-// Turning the camera by hand: one finger on the empty screen (or the mouse; Q/R for yaw in tests).
-const SWIPE_TUNE=[
- ['sens','Поворот пальцем',60,360,10,'° / ½ экрана',0],
- ['sensY','Наклон пальцем',20,240,5,'° / ½ экрана',0],
- ['hold','Пауза до возврата',0,5,.1,' с',1],
- ['ret','Время возврата',.1,3,.05,' с',2]];
 const GAME_TUNE=[
  ['tempo','Темп (все скорости)',.2,1,.02,'×',2],
  ['mapScale','Размер лужайки',.6,1.6,.05,'×',2]];
-const CAM_DEF={high:{pitch:40,fov:48,bias:.12,lag:.2,turn:.8},low:{dist:3.6,pitch:20,fov:50,bias:.1,lag:.12,turn:.5},iso:{dist:24.8,pitch:40,fov:35,bias:0,lag:.25,turn:1.2}};
-const CFG_REV=5;
-const freshCfg=()=>({rev:CFG_REV,mode:'high',tempo:.38,mapScale:1.05,aimOff:0,cam:JSON.parse(JSON.stringify(CAM_DEF)),
- zoom:{k:5,start:5,min:2,max:8,pinch:1,smooth:.2},rays:{spread:.25,pad:.25,back:.6},chase:{k:.9,pitch:30},swipe:{sens:180,sensY:90,hold:1.2,ret:.8,auto:false}});
+const CFG_REV=6;
+// view.yaw — absolute camera yaw in degrees, null = behind the dog; view.pitch — the player's pitch (chase blend not included).
+const freshCfg=()=>({rev:CFG_REV,tempo:.38,mapScale:1.05,zoom:{pinch:1},rays:{spread:.25,pad:.25,back:.6},swipe:{sens:180,sensY:90},view:{k:ZOOM.start,yaw:null,pitch:VIEW.pitch}});
 const CFG_KEY='sneaky-dog-3d-cam3';
 let cfg=freshCfg();
 const loadGroup=(src,dst,tune)=>{if(src)for(const [k,,min,max] of tune)if(Number.isFinite(src[k]))dst[k]=clamp(src[k],min,max)};
-try{const s=JSON.parse(localStorage.getItem(CFG_KEY));if(s){loadGroup(s,cfg,GAME_TUNE);loadGroup(s.swipe,cfg.swipe,SWIPE_TUNE);if(typeof s.swipe?.auto==='boolean')cfg.swipe.auto=s.swipe.auto;
- // Before 3D-0.5 the camera was set by back/up and the chase by back/up too: those settings no longer apply, start from the new defaults.
- // Before 3D-0.9 the zoom was in metres (now in body lengths), so an older saved zoom is not loaded.
- if((s.rev||0)>=4){for(const m in MODES)loadGroup(s.cam?.[m],cfg.cam[m],CAM_TUNE);if((s.rev||0)>=5)loadGroup(s.zoom,cfg.zoom,ZOOM_TUNE);loadGroup(s,cfg,AIM_TUNE);loadGroup(s.rays,cfg.rays,RAY_TUNE);loadGroup(s.chase,cfg.chase,CHASE_TUNE)}
+try{const s=JSON.parse(localStorage.getItem(CFG_KEY));if(s){loadGroup(s,cfg,GAME_TUNE);loadGroup(s.swipe,cfg.swipe,SWIPE_TUNE);loadGroup(s.zoom,cfg.zoom,ZOOM_TUNE);loadGroup(s.rays,cfg.rays,RAY_TUNE);
+ const v=s.view;if(v){if(Number.isFinite(v.k))cfg.view.k=clamp(v.k,ZOOM.min,ZOOM.max);if(Number.isFinite(v.yaw))cfg.view.yaw=v.yaw;if(Number.isFinite(v.pitch))cfg.view.pitch=clamp(v.pitch,8,75)}
+ // 3D-0.9/0.10 saved only the zoom (in body lengths) — keep it; earlier zooms were in metres and are not used.
+ else if((s.rev||0)>=5&&Number.isFinite(s.zoom?.k))cfg.view.k=clamp(s.zoom.k,ZOOM.min,ZOOM.max);
  // Settings saved before 3D-0.3 kept tempo 0.6, which proved far too fast: pull it down once.
  if((s.rev||0)<3&&cfg.tempo>.5)cfg.tempo=.38;
  // 3D-0.9 chose the lawn size by time (diagonal at a walk 20–25 s): an untouched old 1.0 becomes 1.05.
  if((s.rev||0)<5&&cfg.mapScale===1)cfg.mapScale=1.05}}catch{}
-// The chosen view is the start view; other modes are only for comparison in ⚙.
-cfg.mode='high';cfg.zoom.k=clamp(cfg.zoom.k,cfg.zoom.min,cfg.zoom.max);
-const CAM=()=>cfg.cam[cfg.mode];
 const saveCfg=()=>{try{localStorage.setItem(CFG_KEY,JSON.stringify(cfg))}catch{}};
 let U=.06*cfg.mapScale; // metres per 2D unit: 1000×760 → 60×45.6 m
 
@@ -317,7 +305,7 @@ function ability(){if(state!=='playing'||abilityCD>0)return;abilityCD=DOG.cooldo
 
 // ---------- Update: the 2D rules, with input turned to match the camera ----------
 // Game rules (speeds, detection, hiding, abilities) read only the simulation state and cfg.tempo. They never read the
-// camera: cfg.zoom, cfg.cam, cfg.rays, camState and colliders are presentation only. The one link is camYaw(), which only
+// camera: cfg.view, cfg.zoom, cfg.rays, camState and colliders are presentation only. The one link is camYaw(), which only
 // turns the stick into a world direction ("up" = away from the camera).
 function update(dt){if(state!=='playing')return;elapsed+=dt;abilityCD=Math.max(0,abilityCD-dt);if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)$('toast').style.display='none'}
  let x=joy.x,y=joy.y;const kx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),ky=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);const sneakKey=keys.has('c');if(kx||ky){const kl=Math.hypot(kx,ky),sn=sneakKey?.55:1;x=kx/kl*sn;y=ky/kl*sn}let len=Math.hypot(x,y);if(len>1){x/=len;y/=len;len=1}
@@ -363,11 +351,30 @@ function update(dt){if(state!=='playing')return;elapsed+=dt;abilityCD=Math.max(0
   if(g.state==='chase'&&!sees&&g.seen>2.1){g.state='search';g.wait=3;g.repath=0}
   let frozen=false;if(g.state!=='chase'&&g.alertLook>0){frozen=true;g.alertLook-=dt;const want=Math.atan2(g.lookAt.y-g.y,g.lookAt.x-g.x),d=Math.atan2(Math.sin(want-g.angle),Math.cos(want-g.angle));g.angle+=clamp(d,-5*dt,5*dt);
    if(g.alertLook<=0){frozen=false;if(g.sus>.12){g.state='inspect';g.target={...g.lookAt};g.wait=0;g.repath=0;g.path=[];toast('Садовник что-то заметил и идёт проверить',1.8)}}}
-  let target=frozen?null:g.state==='patrol'?g.pts[g.idx]:g.target;const speedG=LV.speed*cfg.tempo/cfg.mapScale*(g.state==='chase'?1.58:1)*(g.angry?1.2:1);g.moved=0;
+  // State timeout (fix 1): inspect ≤ INSPECT_MAX s, search ≤ SEARCH_MAX s from entering it, whether he got anywhere or not.
+  if(g.state!==g.lastState){g.lastState=g.state;g.stateT=0;g.stuckT=0;g.stuckN=0;g.arrived=false;g.partial=false}else g.stateT+=dt;
+  if((g.state==='inspect'&&g.stateT>INSPECT_MAX)||(g.state==='search'&&g.stateT>SEARCH_MAX))backToPatrol(g);
+  let target=frozen?null:g.state==='patrol'?g.pts[g.idx]:g.target;
+  // Unreachable target (fix 3): a point inside an obstacle is moved to the nearest free cell.
+  if(target&&g.state!=='patrol')target=freeSpot(target);
+  if(target&&!(g.lastTarget&&dist(target,g.lastTarget)<1)){g.lastTarget=target;g.arrived=false;g.partial=false;g.stuckT=0;g.stuckN=0}
+  const speedG=LV.speed*cfg.tempo/cfg.mapScale*(g.state==='chase'?1.58:1)*(g.angry?1.2:1);g.moved=0;
   if(!frozen&&g.state==='patrol'&&g.watch>0){g.watch-=dt;g.watchT+=dt;g.angle=g.lookBase+Math.sin(g.watchT*g.step.sp)*g.step.amp;target=null;if(g.watch<=0){g.idx=(g.idx+1)%g.pts.length;g.repath=0}}
-  else if(!frozen&&g.state==='patrol'&&dist(g,target)<19){const st=target;if(st.wait){g.watch=st.wait;g.watchT=0;g.step=st;g.lookBase=st.look==='bed'?Math.atan2(zone.y-g.y,zone.x-g.x):st.look==='out'?Math.atan2(g.y-zone.y,g.x-zone.x):st.look;target=null}else{g.idx=(g.idx+1)%g.pts.length;target=g.pts[g.idx];g.repath=0}}
-  if(target&&dist(g,target)<21&&g.state!=='patrol'&&g.state!=='chase'){g.wait+=dt;g.angle+=dt*.85;if((g.state==='inspect'&&g.wait>2.6)||(g.state==='search'&&g.wait>5.5)){g.state='patrol';g.target=null;g.path=[];g.repath=0;g.wait=0;g.idx=Math.max(0,g.pts.findIndex(p=>p.bed))}}
-  else if(target){g.repath-=dt;if(lineClear(g,target,16)){g.path=[]}else if(g.repath<=0){g.path=findPath(g,target);g.repath=.65}let next=g.path[0]||target;if(g.path.length&&dist(g,next)<16){g.path.shift();next=g.path[0]||target}let dx=next.x-g.x,dy=next.y-g.y,l=Math.hypot(dx,dy);if(l>2){g.angle=Math.atan2(dy,dx);const ox=g.x,oy=g.y;travel(g,dx/l*speedG*dt,dy/l*speedG*dt,14);g.moved=Math.hypot(g.x-ox,g.y-oy)/dt}}
+  else if(!frozen&&g.state==='patrol'&&(dist(g,target)<19||g.arrived)){const st=target;g.arrived=false;if(st.wait){g.watch=st.wait;g.watchT=0;g.step=st;g.lookBase=st.look==='bed'?Math.atan2(zone.y-g.y,zone.x-g.x):st.look==='out'?Math.atan2(g.y-zone.y,g.x-zone.x):st.look;target=null}else{g.idx=(g.idx+1)%g.pts.length;target=g.pts[g.idx];g.repath=0}}
+  if(target&&(dist(g,target)<21||g.arrived)&&g.state!=='patrol'&&g.state!=='chase'){g.wait+=dt;g.angle+=dt*.85;if((g.state==='inspect'&&g.wait>2.6)||(g.state==='search'&&g.wait>5.5))backToPatrol(g)}
+  else if(target){g.repath-=dt;
+   if(lineClear(g,target,16)){g.path=[];g.partial=false}
+   else if(g.repath<=0&&!(g.partial&&g.path.length)){g.path=findPath(g,target);g.partial=false;g.repath=.65;
+    // No route and no line of sight: walk to the nearest reachable point towards the target instead of standing still.
+    if(!g.path.length){g.path=partialPath(g,target);g.partial=g.path.length>0}}
+   let next=g.path[0]||target;if(g.path.length&&dist(g,next)<16){g.path.shift();next=g.path[0]||target;if(!g.path.length&&g.partial)g.arrived=true}
+   const dx=next.x-g.x,dy=next.y-g.y,l=Math.hypot(dx,dy);
+   if(l>2){g.angle=Math.atan2(dy,dx);const ox=g.x,oy=g.y,step=speedG*dt;travel(g,dx/l*step,dy/l*step,14);const got=Math.hypot(g.x-ox,g.y-oy);g.moved=got/dt;
+    // Stuck detector (fix 2): trying to walk but covering < 15% of the expected distance. After 0.6 s rebuild the route once;
+    // still stuck — in a chase after 1.5 s he gives up into search, otherwise after 1.5 s more the target counts as reached.
+    if(got<.15*step){g.stuckT+=dt;g.okT=0}else{g.okT=(g.okT||0)+dt;if(g.okT>.5){g.stuckT=0;g.stuckN=0}}
+    if(g.stuckN===0&&g.stuckT>.6){g.path=[];g.repath=0;g.partial=false;g.stuckN=1}
+    if(g.state==='chase'?g.stuckT>1.5:g.stuckT>2.1){g.stuckT=0;if(g.state==='chase'){g.state='search';g.wait=3;g.repath=0}else g.arrived=true}}}
   if(g.state==='chase'&&distance<26&&lineClear(g,player)){finish(false);break}
  }
  if(state==='playing'&&done&&EXITS.some(e=>dist(player,e)<e.r))finish(true);
@@ -378,12 +385,12 @@ function update(dt){if(state!=='playing')return;elapsed+=dt;abilityCD=Math.max(0
 }
 
 // ---------- Camera. Presentation only: nothing here (zoom, yaw, pitch, rays) is read by the game rules in update(). ----------
-// yaw is set behind the dog at the start and by «Сбросить камеру»; off / poff are the player's manual yaw / pitch on top of it (one finger, mouse; Q,R for yaw in tests).
-// The rest position (where the camera returns after a gesture) is the mode's yaw offset and pitch, set by «Запомнить камеру».
+// yaw — where the view started (the remembered view, or behind the dog); off / poff — the player's yaw / pitch on top of it
+// (one finger, mouse; Q,R for yaw in tests). The camera never turns by itself; the view is remembered (cfg.view) on its own.
 const PITCH_MIN=8*D2R,PITCH_MAX=75*D2R;
-const camState={x:0,z:0,aimY:0,chase:0,yaw:Math.PI/4,yawVel:0,off:0,poff:0,pitch:0,lift:0,dist:0,pull:0,eff:0,idle:0,retFrom:null,retT:0,init:false};
+const camState={x:0,z:0,aimY:0,chase:0,yaw:Math.PI/4,off:0,poff:0,pitch:0,lift:0,dist:0,pull:0,eff:0,saveT:0,init:false};
 let drag=null,pinch=null;const touches=new Map();
-const wrapAngle=a=>Math.atan2(Math.sin(a),Math.cos(a)),camYaw=()=>camState.yaw+camState.off,restYaw=()=>(CAM().yaw||0)*D2R;
+const wrapAngle=a=>Math.atan2(Math.sin(a),Math.cos(a)),camYaw=()=>camState.yaw+camState.off;
 const ray=new THREE.Raycaster(),rayO=new THREE.Vector3(),rayD=new THREE.Vector3(),aimV=new THREE.Vector3();
 // Distance from the aim point to the first solid obstacle towards the camera: a centre ray plus four rays offset
 // by `spread` across the view (a cheap stand-in for a sphere cast).
@@ -391,26 +398,22 @@ function obstacleDistance(ax,ay,az,dx,dy,dz,fx,fz,pitch,far){const s=cfg.rays.sp
  rayD.set(dx,dy,dz);ray.far=far;
  for(const [a,b] of [[0,0],[1,0],[-1,0],[0,1],[0,-1]]){rayO.set(ax+(rx*a+ux*b)*s,ay+uy*b*s,az+(rz*a+uz*b)*s);ray.set(rayO,rayD);const h=ray.intersectObjects(colliders,false)[0];if(h&&h.distance<best)best=h.distance}
  return best}
-function updateCamera(dt){const M=CAM(),Z=cfg.zoom,C=cfg.chase,S=cfg.swipe,R=cfg.rays,chasing=state==='playing'&&guards.some(g=>g.state==='chase');
- const k=M.lag>0?1-Math.exp(-dt/M.lag):1,kc=1-Math.exp(-dt/.5),want=player.angle+Math.PI/2,rest=restYaw();
+function updateCamera(dt){const V=cfg.view,S=cfg.swipe,R=cfg.rays,chasing=state==='playing'&&guards.some(g=>g.state==='chase');
+ const k=VIEW.lag>0?1-Math.exp(-dt/VIEW.lag):1,kc=1-Math.exp(-dt/.5);
  // Aim at the body centre; raised on the flowerbed. Steps and body bob are not followed (player.x/y and aim height only).
- const onBed=player.x>BED_RECT.x&&player.x<BED_RECT.x+BED_RECT.w&&player.y>BED_RECT.y&&player.y<BED_RECT.y+BED_RECT.h,aimH=DOG.hgt*.8+cfg.aimOff+(onBed?.18:0);
- // Distance in body lengths: every breed fills the same share of the frame. low / iso keep their own (comparison) distance.
- const zoomDist=cfg.mode==='high'?clamp(Z.k,Z.min,Z.max)*DOG.len:(M.dist||8)*(Z.k/Z.start)*(DOG.len/1.1);
- if(!camState.init){camState.x=player.x*U;camState.z=player.y*U;camState.aimY=aimH;camState.yaw=want;camState.chase=0;camState.off=rest;camState.poff=0;camState.retFrom=null;camState.dist=zoomDist;camState.pull=0;camState.lift=0;camState.yawVel=0;camState.init=true}
- // The camera never turns by itself: yaw changes only by the finger (or Q/R in tests) and by «Сбросить камеру».
- // Optional auto-return (cfg.swipe.auto, off by default): after `hold` s both offsets ease back to rest over `ret` s.
- const keyTurn=(keys.has('r')?1:0)-(keys.has('q')?1:0),steering=!!drag||!!pinch||keyTurn!==0;
- if(keyTurn)camState.off+=keyTurn*S.sens*D2R*.8*dt;
- if(steering){camState.idle=0;camState.retFrom=null}
- else if(S.auto&&(Math.abs(camState.off-rest)>1e-4||camState.poff!==0)){camState.idle+=dt;if(camState.idle>=S.hold){if(camState.retFrom===null){camState.retFrom={y:wrapAngle(camState.off-rest),p:camState.poff};camState.retT=0}camState.retT+=dt;const u=Math.min(1,camState.retT/S.ret),e=1-u*u*(3-2*u);camState.off=rest+camState.retFrom.y*e;camState.poff=camState.retFrom.p*e;if(u>=1){camState.off=rest;camState.poff=0;camState.retFrom=null}}}
+ const onBed=player.x>BED_RECT.x&&player.x<BED_RECT.x+BED_RECT.w&&player.y>BED_RECT.y&&player.y<BED_RECT.y+BED_RECT.h,aimH=DOG.hgt*.8+(onBed?.18:0);
+ // Distance in body lengths: every breed fills the same share of the frame.
+ const zoomDist=clamp(V.k,ZOOM.min,ZOOM.max)*DOG.len;
+ // Start from the remembered view (yaw null = behind the dog).
+ if(!camState.init){camState.x=player.x*U;camState.z=player.y*U;camState.aimY=aimH;camState.yaw=V.yaw===null?player.angle+Math.PI/2:V.yaw*D2R;camState.chase=0;camState.off=0;camState.poff=(V.pitch-VIEW.pitch)*D2R;camState.dist=zoomDist;camState.pull=0;camState.lift=0;camState.saveT=0;camState.init=true}
+ const keyTurn=(keys.has('r')?1:0)-(keys.has('q')?1:0);if(keyTurn)camState.off+=keyTurn*S.sens*D2R*.8*dt;
  camState.x+=(player.x*U-camState.x)*k;camState.z+=(player.y*U-camState.z)*k;camState.aimY+=(aimH-camState.aimY)*k;camState.chase+=((chasing?1:0)-camState.chase)*kc;
- // Pitch: the mode's pitch blended to the chase pitch, plus the finger's offset, kept in 8°..75°.
- const t=camState.chase,basePitch=(M.pitch+(C.pitch-M.pitch)*t)*D2R;
+ // Pitch: the view pitch blended to the chase pitch, plus the finger's offset, kept in 8°..75°.
+ const t=camState.chase,basePitch=(VIEW.pitch+(CHASE.pitch-VIEW.pitch)*t)*D2R;
  camState.poff=clamp(camState.poff,PITCH_MIN-basePitch,PITCH_MAX-basePitch);
  const yaw=camYaw(),fx=Math.sin(yaw),fz=-Math.cos(yaw);camState.pitch=basePitch+camState.poff;
- // Distance: the chosen zoom (smoothed), a bit closer in a chase; never written back to cfg.zoom here.
- camState.dist+=(zoomDist*(1+(C.k-1)*t)-camState.dist)*(Z.smooth>0?1-Math.exp(-dt/Z.smooth):1);
+ // Distance: the chosen zoom (smoothed), a bit closer in a chase; the chase never changes the saved zoom.
+ camState.dist+=(zoomDist*(1+(CHASE.k-1)*t)-camState.dist)*(1-Math.exp(-dt/ZOOM.smooth));
  // Obstacles. Something solid right behind the dog would pull the camera into the dog, so first the camera lifts
  // (up to +35°) to look over it; whatever is still in the way pulls it closer, but not nearer than CAM_NEAR.
  // Both react fast and ease back after the obstacle is gone. Camera-only: nothing here changes what the gardener sees.
@@ -425,17 +428,14 @@ function updateCamera(dt){const M=CAM(),Z=cfg.zoom,C=cfg.chase,S=cfg.swipe,R=cfg
  const d=camState.eff=Math.max(CAM_NEAR,camState.dist-camState.pull);
  camera.position.set(ax+bx*d,ay+by*d,az+bz*d);camera.lookAt(aimV.set(ax,ay,az));
  // Frame bias: shift the frustum so the aim point sits below centre (more room ahead of the dog than behind).
- camera.setViewOffset(screenW||1,screenH||1,0,-(M.bias||0)*(screenH||1)/2,screenW||1,screenH||1)}
-function applyFov(){const a=screenW/Math.max(1,screenH),f=CAM().fov;camera.aspect=a;
+ camera.setViewOffset(screenW||1,screenH||1,0,-VIEW.bias*(screenH||1)/2,screenW||1,screenH||1);
+ // Remember the view the fingers set: checked once a second, written only when it changed (not every frame).
+ camState.saveT+=dt;if(camState.saveT>1&&state==='playing'){camState.saveT=0;const yaw=Math.round(wrapAngle(camYaw())/D2R*10)/10,pv=Math.round((VIEW.pitch+camState.poff/D2R)*10)/10;if(V.yaw!==yaw||V.pitch!==pv){V.yaw=yaw;V.pitch=pv;saveCfg()}}}
+function applyFov(){const a=screenW/Math.max(1,screenH),f=VIEW.fov;camera.aspect=a;
  // In portrait keep a similar framing across the narrow side (geometric middle between width- and height-fit).
  camera.fov=a<1?2*Math.atan(Math.tan(f*D2R/2)/Math.sqrt(a))/D2R:f;camera.updateProjectionMatrix()}
-// «Запомнить камеру»: what the fingers set now becomes the start / rest position.
-function rememberCamera(){const M=CAM(),C=cfg.chase,base=(M.pitch+(C.pitch-M.pitch)*camState.chase);M.pitch=Math.round(clamp(base+camState.poff/D2R,8,75));camState.poff=0;
- M.yaw=Math.round(wrapAngle(camState.off)/D2R);camState.off=M.yaw*D2R;camState.retFrom=null;
- if(cfg.mode==='high')cfg.zoom.start=+cfg.zoom.k.toFixed(1);saveCfg();toast('Камера запомнена: '+cfg.zoom.k.toFixed(1)+' дл., наклон '+M.pitch+'°, поворот '+M.yaw+'°',2.5)}
-// Pause → «Сбросить камеру»: back to the start distance, yaw and pitch.
-function resetCamera(){cfg.zoom.k=cfg.zoom.start;camState.off=restYaw();camState.poff=0;camState.retFrom=null;if(player)camState.yaw=player.angle+Math.PI/2;saveCfg()}
-function setMode(m){cfg.mode=m;saveCfg();applyFov();if(!$('tune').hidden)renderTune();toast('Камера: '+MODES[m],1.5)}
+// Pause → «Сбросить камеру»: start distance, behind the dog, start pitch.
+function resetCamera(){const V=cfg.view;V.k=ZOOM.start;V.yaw=null;V.pitch=VIEW.pitch;camState.off=0;camState.poff=0;if(player)camState.yaw=player.angle+Math.PI/2;saveCfg()}
 
 // ---------- Draw: move meshes to the simulation state ----------
 const v3=new THREE.Vector3();
@@ -483,19 +483,16 @@ function loop(t){requestAnimationFrame(loop);if(innerWidth!==lastVW||Math.round(
  update(dt);updateCamera(dt);syncScene(dt);renderer.render(scene,camera)}
 
 // ---------- Tuning panel ----------
-// Only what a gesture cannot set. Distance, yaw and pitch are set with the fingers and saved by «Запомнить камеру».
+// Only what a gesture cannot set: tempo, lawn size, swipe / pinch sensitivity, obstacle rays, plus the park measured in time.
+// Distance, yaw and pitch are set with the fingers and remembered on their own (cfg.view).
 const row=(list,k)=>list.find(t=>t[0]===k);
-function panelRows(){return [[row(CAM_TUNE,'lag'),CAM(),'c'],[row(AIM_TUNE,'aimOff'),cfg,'a'],[row(CAM_TUNE,'bias'),CAM(),'c'],[row(ZOOM_TUNE,'pinch'),cfg.zoom,'z'],[row(SWIPE_TUNE,'sens'),cfg.swipe,'s'],[row(SWIPE_TUNE,'sensY'),cfg.swipe,'s'],
- ...RAY_TUNE.map(t=>[t,cfg.rays,'r']),...GAME_TUNE.map(t=>[t,cfg,'g'])]}
-function liveCamera(){return {k:+cfg.zoom.k.toFixed(2),dist:+(cfg.zoom.k*DOG.len).toFixed(2),yaw:Math.round(wrapAngle(camState.off)/D2R),pitch:Math.round(camState.pitch/D2R)}}
+function panelRows(){return [...GAME_TUNE.map(t=>[t,cfg,'g']),[row(SWIPE_TUNE,'sens'),cfg.swipe,'s'],[row(SWIPE_TUNE,'sensY'),cfg.swipe,'s'],[row(ZOOM_TUNE,'pinch'),cfg.zoom,'z'],...RAY_TUNE.map(t=>[t,cfg.rays,'r'])]}
+function liveCamera(){return {k:+cfg.view.k.toFixed(2),dist:+(cfg.view.k*DOG.len).toFixed(2),yaw:Math.round(wrapAngle(camYaw())/D2R),pitch:Math.round(camState.pitch/D2R)}}
 function renderTune(){const rows=panelRows(),fmt=([k,,,,,unit,dp],o)=>o[k].toFixed(dp)+unit;
- $('tune').innerHTML=`<div class="head"><span>Камера и темп</span><span><span id="fpsVal">${fps}</span> fps</span></div><div class="btns" style="margin:0 0 10px">${Object.entries(MODES).map(([m,n])=>`<button data-mode="${m}" style="${m===cfg.mode?'background:#f8d36c;color:#102f2a':''}">${n}</button>`).join('')}</div>`+rows.map(([t,o,g])=>{const [k,name,min,max,step]=t;return `<div class="row"><label for="t-${g}${k}"><span>${name}</span><b id="v-${g}${k}">${fmt(t,o)}</b></label><input id="t-${g}${k}" type="range" min="${min}" max="${max}" step="${step}" value="${o[k]}"></div>`}).join('')+`<div class="btns" style="margin:0 0 8px"><button id="tAuto">Автовозврат камеры: ${cfg.swipe.auto?'вкл':'выкл'}</button></div><div class="fine" id="mapSize"></div><div class="btns"><button id="tRemember">Запомнить камеру</button><button id="tCopy">Скопировать</button></div><div class="btns"><button id="tReset">Сброс</button><button id="tClose">Закрыть</button></div><code id="tJson"></code>`;
- for(const b of $('tune').querySelectorAll('[data-mode]'))b.onclick=()=>setMode(b.dataset.mode);
+ $('tune').innerHTML=`<div class="head"><span>Темп и настройки</span><span><span id="fpsVal">${fps}</span> fps</span></div>`+rows.map(([t,o,g])=>{const [k,name,min,max,step]=t;return `<div class="row"><label for="t-${g}${k}"><span>${name}</span><b id="v-${g}${k}">${fmt(t,o)}</b></label><input id="t-${g}${k}" type="range" min="${min}" max="${max}" step="${step}" value="${o[k]}"></div>`}).join('')+`<div class="fine" id="mapSize"></div><div class="btns"><button id="tCopy">Скопировать</button><button id="tReset">Сброс</button><button id="tClose">Закрыть</button></div><code id="tJson"></code>`;
  for(const [t,o,g] of rows){const k=t[0];$('t-'+g+k).addEventListener('input',e=>{o[k]=+e.target.value;$('v-'+g+k).textContent=fmt(t,o);if(k==='mapScale')needRebuild=true;saveCfg();tuneInfo()})}
- $('tRemember').onclick=()=>{rememberCamera();tuneInfo()};
- $('tAuto').onclick=()=>{cfg.swipe.auto=!cfg.swipe.auto;camState.idle=0;camState.retFrom=null;saveCfg();renderTune()};
- // Factory values: everything, including the remembered camera.
- $('tReset').onclick=()=>{const rb=cfg.mapScale!==freshCfg().mapScale;cfg=freshCfg();if(rb)needRebuild=true;camState.off=0;camState.poff=0;camState.retFrom=null;saveCfg();applyFov();renderTune();toast('Заводские настройки',1.5)};
+ // Factory values: everything, including the remembered camera view.
+ $('tReset').onclick=()=>{const rb=cfg.mapScale!==freshCfg().mapScale;cfg=freshCfg();if(rb)needRebuild=true;camState.init=false;saveCfg();renderTune();toast('Заводские настройки',1.5)};
  $('tCopy').onclick=()=>{const s=JSON.stringify({version:VERSION,live:liveCamera(),cfg});navigator.clipboard?.writeText(s).then(()=>toast('Настройки скопированы'),()=>toast('Не удалось скопировать — сделай скриншот'))};
  $('tClose').onclick=()=>{$('tune').hidden=true};tuneInfo()}
 // The park measured in time, from the current cfg and breed (the map scale is chosen by these numbers, not by eye).
@@ -512,7 +509,7 @@ function mapMetrics(){const B=DOG,u=.06*cfg.mapScale,walk=B.speed*cfg.tempo*.06,
  const window=toTap/gv+4+Math.max(0,back-LV.vision*u)/gv;
  return {dogLen:B.len,parkW:916*u,parkH:647*u,diagWalk:Math.hypot(916,647)*u/walk,exits,bushToBed:bushGap/walk,window,needWindow:[LV.hold+4,LV.hold+6]}}
 function tuneInfo(){const c=liveCamera(),m=mapMetrics(),f=v=>v.toFixed(1),ok=(v,a,b)=>v>=a&&v<=b?'✓':'✗',name={near:'Ближний выход',far:'Дальний выход'};
- $('mapSize').innerHTML=`Камера: ${c.k} дл. = ${c.dist} м, наклон ${c.pitch}°, поворот ${c.yaw}° · старт ${cfg.zoom.start} дл.<br>`+
+ $('mapSize').innerHTML=`Камера: ${c.k} дл. = ${c.dist} м, наклон ${c.pitch}°, поворот ${c.yaw}° · старт ${ZOOM.start} дл.<br>`+
  `Собака: ${m.dogLen.toFixed(2)} м · парк ${Math.round(m.parkW)}×${Math.round(m.parkH)} м<br>`+
  `Масштаб — диагональ шагом: ${f(m.diagWalk)} с ${ok(m.diagWalk,20,25)} (20–25)<br>`+
  m.exits.map((e,i)=>`${name[e.id]}: ${Math.round(e.m)} м по пути · в погоне ${f(e.panic)} с${i===0?' '+ok(e.panic,8,12)+' (8–12)':''} · без погони ${f(e.calm)} с<br>`).join('')+
@@ -533,11 +530,11 @@ $('ability').addEventListener('pointerdown',e=>{e.preventDefault();ability()});$
 // one finger — orbit (horizontal: yaw, swipe right looks right; vertical: pitch, swipe up looks up), scaled by half the screen width;
 // two fingers — pinch zoom of the distance, continuous. When a second finger lands the orbit stops on the spot;
 // when one is lifted the zoom stops (no inertia) and the remaining finger orbits again from where it is now.
-const zoomTo=k=>{cfg.zoom.k=clamp(k,cfg.zoom.min,cfg.zoom.max)};
+const zoomTo=k=>{cfg.view.k=clamp(k,ZOOM.min,ZOOM.max)};
 const pinchSpan=()=>{const [a,b]=[...touches.values()];return Math.max(1,Math.hypot(a.x-b.x,a.y-b.y))};
 canvas.addEventListener('pointerdown',e=>{if(state!=='playing')return;e.preventDefault();touches.set(e.pointerId,{x:e.clientX,y:e.clientY});try{canvas.setPointerCapture(e.pointerId)}catch{}
  if(touches.size===1)drag={id:e.pointerId,x:e.clientX,y:e.clientY};
- else if(touches.size===2){drag=null;pinch={span:pinchSpan(),k:cfg.zoom.k}}});
+ else if(touches.size===2){drag=null;pinch={span:pinchSpan(),k:cfg.view.k}}});
 canvas.addEventListener('pointermove',e=>{const p=touches.get(e.pointerId);if(!p)return;p.x=e.clientX;p.y=e.clientY;
  if(pinch&&touches.size>=2){zoomTo(pinch.k*Math.pow(pinch.span/pinchSpan(),cfg.zoom.pinch));return}
  if(!drag||e.pointerId!==drag.id)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y,half=Math.max(200,screenW)/2;drag.x=e.clientX;drag.y=e.clientY;camState.off+=dx/half*cfg.swipe.sens*D2R;camState.poff+=dy/half*cfg.swipe.sensY*D2R});
@@ -545,14 +542,14 @@ for(const t of ['pointerup','pointercancel','lostpointercapture'])canvas.addEven
  if(drag&&e.pointerId===drag.id)drag=null;
  if(pinch&&touches.size<2){pinch=null;saveCfg();if(touches.size===1){const [[id,p]]=[...touches];drag={id,x:p.x,y:p.y}}}});
 // Mouse wheel zooms too (handy for tuning) and never scrolls the page.
-let wheelSave=0;canvas.addEventListener('wheel',e=>{e.preventDefault();zoomTo(cfg.zoom.k*Math.exp(e.deltaY*.0015*cfg.zoom.pinch));clearTimeout(wheelSave);wheelSave=setTimeout(saveCfg,300)},{passive:false});
+let wheelSave=0;canvas.addEventListener('wheel',e=>{e.preventDefault();zoomTo(cfg.view.k*Math.exp(e.deltaY*.0015*cfg.zoom.pinch));clearTimeout(wheelSave);wheelSave=setTimeout(saveCfg,300)},{passive:false});
 $('pause').onclick=pause;$('sound').onclick=()=>{muted=!muted;$('sound').textContent=muted?'♪':'♫';$('sound').setAttribute('aria-label',muted?'Включить звук':'Выключить звук');beep(660,.1)};
 const CODES={KeyW:'w',KeyA:'a',KeyS:'s',KeyD:'d',KeyE:'e',KeyC:'c',KeyQ:'q',KeyR:'r',Space:' ',ShiftLeft:'shift',ShiftRight:'shift',ArrowUp:'arrowup',ArrowDown:'arrowdown',ArrowLeft:'arrowleft',ArrowRight:'arrowright',Escape:'escape'};const keyOf=e=>CODES[e.code]||(e.key||'').toLowerCase();
 window.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const k=keyOf(e);if(CODES[e.code])inputMode='keys';if([' ','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(k))e.preventDefault();if(k==='escape'){if(state==='playing')pause();else if(state==='paused')$('resume').click();return}if(state!=='playing')return;keys.add(k);if(k==='e'&&!e.repeat)ability()});
 window.addEventListener('keyup',e=>keys.delete(keyOf(e)));window.addEventListener('blur',()=>{if(state==='playing')pause();clearInput()});document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='playing')pause()});canvas.addEventListener('contextmenu',e=>e.preventDefault());
 
 // Read-only hook for build verification and debugging; it never changes game state.
-window.SneakyDog3D={version:VERSION,metrics:()=>mapMetrics(),snapshot:()=>({version:VERSION,state,player:player?{x:+player.x.toFixed(1),y:+player.y.toFixed(1),mode:player.mode,hidden:hiddenNow,mult:+speedMult.toFixed(3),panic:panicNow,panicT:+panicT.toFixed(2)}:null,breed:breedId,guards:guards.map(g=>({x:+g.x.toFixed(1),y:+g.y.toFixed(1),state:g.state,idx:g.idx,watch:+g.watch.toFixed(2),icon:g.step?.icon||null,angry:g.angry,sus:+g.sus.toFixed(2)})),done,discovered,progress:+progress.toFixed(2),elapsed:+elapsed.toFixed(2),stamina:Math.round(stamina),cfg:{...cfg},camera:{x:+camera.position.x.toFixed(2),y:+camera.position.y.toFixed(2),z:+camera.position.z.toFixed(2),fov:+camera.fov.toFixed(1),yaw:+(camYaw()/D2R).toFixed(1),off:+(camState.off/D2R).toFixed(1),pitch:+(camState.pitch/D2R).toFixed(1),poff:+(camState.poff/D2R).toFixed(1),dist:+camState.dist.toFixed(2),eff:+camState.eff.toFixed(2),lift:+(camState.lift/D2R).toFixed(1),zoom:cfg.zoom.k,dragging:!!drag},screen:{w:screenW,h:screenH,canvas:[canvas.width,canvas.height]},fps})};
+window.SneakyDog3D={version:VERSION,metrics:()=>mapMetrics(),snapshot:()=>({version:VERSION,state,player:player?{x:+player.x.toFixed(1),y:+player.y.toFixed(1),mode:player.mode,hidden:hiddenNow,mult:+speedMult.toFixed(3),panic:panicNow,panicT:+panicT.toFixed(2)}:null,breed:breedId,guards:guards.map(g=>({x:+g.x.toFixed(1),y:+g.y.toFixed(1),state:g.state,idx:g.idx,watch:+g.watch.toFixed(2),icon:g.step?.icon||null,angry:g.angry,sus:+g.sus.toFixed(2)})),done,discovered,progress:+progress.toFixed(2),elapsed:+elapsed.toFixed(2),stamina:Math.round(stamina),cfg:{...cfg},camera:{x:+camera.position.x.toFixed(2),y:+camera.position.y.toFixed(2),z:+camera.position.z.toFixed(2),fov:+camera.fov.toFixed(1),yaw:+(camYaw()/D2R).toFixed(1),off:+(camState.off/D2R).toFixed(1),pitch:+(camState.pitch/D2R).toFixed(1),poff:+(camState.poff/D2R).toFixed(1),dist:+camState.dist.toFixed(2),eff:+camState.eff.toFixed(2),lift:+(camState.lift/D2R).toFixed(1),zoom:cfg.view.k,dragging:!!drag},screen:{w:screenW,h:screenH,canvas:[canvas.width,canvas.height]},fps})};
 
 buildWorld();resize();menu();requestAnimationFrame(loop);
 </script>
