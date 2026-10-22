@@ -46,7 +46,7 @@ setTimeout(()=>{if(!window.SneakyDog3D){const v=document.getElementById('veil');
 <script type="module">
 import * as THREE from 'three';
 
-const VERSION='3D-0.9';
+const VERSION='3D-0.10';
 const $=id=>document.getElementById(id);
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),D2R=Math.PI/180;
 
@@ -75,7 +75,11 @@ let breedId='lab';try{const s=localStorage.getItem('sneaky-dog-3d-breed');if(BRE
 let DOG=BREEDS[breedId];
 const LV={vision:190,speed:90,hold:4};
 const NOISE=165;
-const zone={x:850,y:147,r:51},exit={x:118,y:674,r:45},start={x:120,y:625};
+const zone={x:850,y:147,r:51},start={x:120,y:625};
+// Exits: the retreat length is a level parameter, chosen after the deed. near — top fence by the tap, ~45 m from the bed
+// along a walkable route, but on the gardener's way to his chore; far — bottom left, ~61 m, away from his routes.
+const EXITS=[{id:'far',x:118,y:674,r:45,side:'bottom'},{id:'near',x:250,y:88,r:45,side:'top'}];
+const nearestExit=p=>EXITS.reduce((a,e)=>dist(p,e)<dist(p,a)?e:a);
 const BED={x:870,y:224},TAP={x:230,y:146};
 const BED_RECT={x:797,y:94,w:108,h:105};
 const bushes=[{x:240,y:550,r:49},{x:598,y:406,r:51},{x:778,y:181,r:48},{x:195,y:296,r:44},{x:431,y:133,r:41}];
@@ -180,7 +184,7 @@ function label(text,bg,fg){const c=document.createElement('canvas');c.width=256;
 // ---------- World (rebuilt when the lawn size changes) ----------
 // colliders — solid meshes the camera must not pass through (fence, gate, tap, hedges, benches, flower box, trunks);
 // foliage (bushes, crowns) is not here: it fades instead. Camera-only: game rules never read this list.
-let world=null,bedLabel=null,gateLabel=null,zoneRing=null,exitRing=null,pile=null,fadeables=[],colliders=[];
+let world=null,bedLabel=null,gateLabels=[],zoneRing=null,exitRings=[],pile=null,fadeables=[],colliders=[];
 function rect(x0,y0,x1,y1,color,y,parent){const o=mesh(planeGeo,color,(x0+x1)/2*U,y,(y0+y1)/2*U,parent);o.scale.set((x1-x0)*U,1,(y1-y0)*U);return o}
 function stroke(pts,w,color,y,parent){for(let i=0;i<pts.length;i++){const [x,z]=pts[i];const d=mesh(discGeo,color,x*U,y,z*U,parent);d.scale.setScalar(w/2*U);if(i){const [px,pz]=pts[i-1],len=Math.hypot(x-px,z-pz);const s=mesh(planeGeo,color,(x+px)/2*U,y,(z+pz)/2*U,parent);s.scale.set(len*U,1,w*U);s.rotation.y=-Math.atan2(z-pz,x-px)}}}
 function buildWorld(){
@@ -197,16 +201,18 @@ function buildWorld(){
  // Paths, same polylines as in 2D.
  const main=[[117,711],[117,529],[497,529],[763,529],[763,324],[762,145],[867,145]],side=[[496,529],[496,251],[235,251]];
  stroke(main,69,'#cdbd89',.01,world);stroke(main,58,'#ddcc9b',.013,world);stroke(side,48,'#ddcc9b',.015,world);
- // Fence with a gap for the gate (bottom left).
+ // Fence with a gap for each exit gate.
  let m0=mark();
- const posts=[];for(let x=42;x<970;x+=28){if(x<72||x>168)posts.push([x+5,715]);posts.push([x+5,59])}for(let y=70;y<700;y+=28){posts.push([39,y+10]);posts.push([962,y+10])}
+ const fenceY={top:59,bottom:715},inGap=(side,x)=>EXITS.some(e=>e.side===side&&x>e.x-48&&x<e.x+50);
+ const posts=[];for(let x=42;x<970;x+=28){if(!inGap('bottom',x+5))posts.push([x+5,715]);if(!inGap('top',x+5))posts.push([x+5,59])}for(let y=70;y<700;y+=28){posts.push([39,y+10]);posts.push([962,y+10])}
  const postMesh=new THREE.InstancedMesh(new THREE.BoxGeometry(.14,.95,.14),mat('#d2bd86'),posts.length);posts.forEach(([x,y],i)=>{p.set(x*U,.475,y*U);sc.set(1,1,1);m4.compose(p,q,sc);postMesh.setMatrixAt(i,m4)});world.add(postMesh);
  const rail=(x0,y0,x1,y1)=>{const o=mesh(new THREE.BoxGeometry(Math.max(.08,(x1-x0)*U),.08,Math.max(.08,(y1-y0)*U)),'#ae9464',(x0+x1)/2*U,.62,(y0+y1)/2*U,world)};
- rail(42,59,960,59);rail(39,59,39,715);rail(962,59,962,715);rail(42,715,72,715);rail(170,715,962,715);
- for(const gx of [70,168]){mesh(new THREE.BoxGeometry(.22,1.6,.22),'#a77547',gx*U,.8,715*U,world)}
+ rail(39,59,39,715);rail(962,59,962,715);
+ for(const side of ['top','bottom']){const y=fenceY[side];let x0=42;for(const e of EXITS.filter(e=>e.side===side).sort((a,b)=>a.x-b.x)){rail(x0,y,e.x-48,y);x0=e.x+52}rail(x0,y,962,y)}
+ for(const e of EXITS)for(const gx of [e.x-48,e.x+50])mesh(new THREE.BoxGeometry(.22,1.6,.22),'#a77547',gx*U,.8,fenceY[e.side]*U,world);
  take(m0);
- gateLabel=label('ВОРОТА','#102f2a','#fff5d9');gateLabel.position.set(119*U,1.9,715*U);world.add(gateLabel);
- exitRing=mesh(new THREE.RingGeometry(.93,1,48).rotateX(-Math.PI/2),unlit('#fff5d9',.35),exit.x*U,.03,exit.y*U,world);exitRing.scale.setScalar(exit.r*U);
+ gateLabels=EXITS.map(e=>{const s=label('ВОРОТА','#102f2a','#fff5d9');s.position.set((e.x+1)*U,1.9,fenceY[e.side]*U);world.add(s);return s});
+ exitRings=EXITS.map(e=>{const o=mesh(new THREE.RingGeometry(.93,1,48).rotateX(-Math.PI/2),unlit('#fff5d9',.35),e.x*U,.03,e.y*U,world);o.scale.setScalar(e.r*U);return o});
  // The flowerbed the dog is after.
  const B=BED_RECT;mesh(new THREE.BoxGeometry(B.w*U,.16,B.h*U),'#65553d',(B.x+B.w/2)*U,.08,(B.y+B.h/2)*U,world);mesh(new THREE.BoxGeometry((B.w-14)*U,.18,(B.h-12)*U),'#795d40',(B.x+B.w/2)*U,.09,(B.y+B.h/2)*U,world);
  const fl=new THREE.InstancedMesh(new THREE.SphereGeometry(.13,6,4),mat('#ffffff'),42);for(let i=0;i<42;i++){p.set((812+(i%7)*13)*U,.32,(108+Math.floor(i/7)*14)*U);sc.set(1,1,1);m4.compose(p,q,sc);fl.setMatrixAt(i,m4);fl.setColorAt(i,new THREE.Color(['#fcba9f','#fff3bb','#ff6f73'][i%3]))}world.add(fl);
@@ -267,11 +273,14 @@ let energyRing=makeEnergyRing();
 function setBreed(id){if(!BREEDS[id]||BREEDS[id].locked)return;breedId=id;DOG=BREEDS[id];scene.remove(dogRig.g);dogRig=makeDog();scene.add(dogRig.g);scene.remove(energyRing);energyRing.geometry.dispose();energyRing.userData.track.geometry.dispose();energyRing=makeEnergyRing();stamina=DOG.stamina;try{localStorage.setItem('sneaky-dog-3d-breed',id)}catch{}}
 
 // ---------- Game state ----------
-let speedMult=0,hideLatch=false,energyCapped=false,energyMoving=false;
+let speedMult=0,hideLatch=false,energyCapped=false,energyMoving=false,panicT=0,panicNow=false;
 // One step of the breed's speed model (stamina ceiling, smoothing, drain / regen). The game and the ⚙ time measurements both
 // use it, so they cannot disagree. Returns the multiplier the stamina allows now.
-function speedStep(B,st,want,dt){const allowed=Math.min(want,1+(B.runMult-1)*clamp(st.stamina/25,0,1));st.mult+=(allowed-st.mult)*(1-Math.exp(-dt/B.accel));
- const over=clamp((st.mult-1)/(B.runMult-1),0,1);st.stamina=clamp(st.stamina+(B.regen*clamp(1-over/.05,0,1)-B.drain*over)*dt,0,B.stamina);return allowed}
+// panic — chase panic: no stamina ceiling, drain × PANIC_DRAIN, no regen (see update(): only while chased, at most PANIC_MAX s).
+const PANIC_DRAIN=.3,PANIC_MAX=12;
+function speedStep(B,st,want,dt,panic=false){const allowed=panic?want:Math.min(want,1+(B.runMult-1)*clamp(st.stamina/25,0,1));st.mult+=(allowed-st.mult)*(1-Math.exp(-dt/B.accel));
+ const over=clamp((st.mult-1)/(B.runMult-1),0,1),regen=panic?0:B.regen*clamp(1-over/.05,0,1),drain=B.drain*over*(panic?PANIC_DRAIN:1);
+ st.stamina=clamp(st.stamina+(regen-drain)*dt,0,B.stamina);return allowed}
 let state='menu',player=null,guards=[],elapsed=0,done=false,progress=0,spotted=false,discovered=false,abilityCD=0,ball=null,rings=[],stamina=DOG.stamina,noiseTimer=0,move={x:1,y:0},hiddenNow=false;
 let keys=new Set(),joy={x:0,y:0,id:null},toiletHeld=false,toastTimer=0,muted=true,audioCtx=null,inputMode=matchMedia('(pointer:coarse)').matches?'touch':'keys';
 let screenW=0,screenH=0,lastVW=0,lastVH=0,lastTime=0,fps=60,fpsN=0,fpsT=0,needRebuild=false;
@@ -282,8 +291,8 @@ function clearRound(){for(const g of guards){scene.remove(g.rig.g);scene.remove(
 function setupRound(){clearRound();player={...start,angle:-Math.PI/4,moving:false,mode:'stand',speed:0,phase:0};
  const pts=route();const rig=makeGardener();scene.add(rig.g);const tag=document.createElement('div');tag.className='tag';tag.innerHTML='<i class="ic"></i><i class="bar"><s></s></i>';$('tags').appendChild(tag);
  guards=[{x:pts[0].x,y:pts[0].y,angle:-Math.PI/2,idx:0,state:'patrol',sus:0,seen:0,target:null,wait:0,path:[],repath:0,pts,watch:0,watchT:0,lookBase:0,step:null,angry:false,alertLook:0,lookAt:null,rig,cone:makeCone(),tag,phase:0,moved:0}];
- discovered=false;elapsed=0;done=false;progress=0;spotted=false;abilityCD=0;noiseTimer=0;stamina=DOG.stamina;speedMult=0;hideLatch=false;move={x:1,y:-1};camState.init=false;
- pile.visible=false;setLabel(bedLabel,'КЛУМБА',false);setLabel(gateLabel,'ВОРОТА',false)}
+ discovered=false;elapsed=0;done=false;progress=0;spotted=false;abilityCD=0;noiseTimer=0;stamina=DOG.stamina;speedMult=0;hideLatch=false;panicT=0;panicNow=false;move={x:1,y:-1};camState.init=false;
+ pile.visible=false;setLabel(bedLabel,'КЛУМБА',false);for(const s of gateLabels)setLabel(s,'ВОРОТА',false)}
 function setLabel(s,text,on){const n=label(text,on?'#fff5d9':'#102f2a',on?'#102f2a':'#fff5d9');s.material.map.dispose();s.material.map=n.material.map;s.material.needsUpdate=true;n.material.dispose()}
 
 function menu(){state='menu';clearInput();setupRound();$('veil').classList.remove('hidden');
@@ -322,7 +331,10 @@ function update(dt){if(state!=='playing')return;elapsed+=dt;abilityCD=Math.max(0
  let wantMult=0;
  if(kx||ky)wantMult=sneakKey?B.sneakMult:keys.has('shift')?B.runMult:1;   // keyboard: tests only, three fixed levels
  else if(player.moving)wantMult=len<.35?B.sneakMult:len<.75?B.sneakMult+(1-B.sneakMult)*(len-.35)/.4:1+(B.runMult-1)*(len-.75)/.25;
- const ms={mult:speedMult,stamina},allowed=speedStep(B,ms,wantMult,dt);speedMult=ms.mult;
+ // Chase panic: while any gardener chases, the dog can run the whole chase flat out — drain ×0.3, no regen, no ceiling —
+ // for at most PANIC_MAX s in a row, then the normal economy. Stealth is untouched: until spotted nothing changes.
+ const chased=guards.some(g=>g.state==='chase');panicT=chased?panicT+dt:0;panicNow=chased&&panicT<=PANIC_MAX;
+ const ms={mult:speedMult,stamina},allowed=speedStep(B,ms,wantMult,dt,panicNow);speedMult=ms.mult;
  const staminaDelta=ms.stamina-stamina;stamina=ms.stamina;
  // The energy ring turns red while the stamina ceiling is what stops the run (the player asks for more than it allows).
  energyCapped=wantMult>allowed+.02;energyMoving=Math.abs(staminaDelta)>1e-4;
@@ -339,7 +351,7 @@ function update(dt){if(state!=='playing')return;elapsed+=dt;abilityCD=Math.max(0
  const bush=bushes.find(b=>dist(player,b)<b.r-8);
  if(!bush)hideLatch=false;else if(!hideLatch&&speedMult<=B.sneakMult*1.15)hideLatch=true;else if(hideLatch&&speedMult>B.sneakMult*1.3)hideLatch=false;
  const hidden=!!bush&&hideLatch;hiddenNow=hidden;const near=dist(player,zone)<zone.r;const doing=(toiletHeld||keys.has(' '))&&near&&!done&&!player.moving;
- if(doing){progress+=dt;if(progress>=LV.hold){done=true;progress=LV.hold;pile.visible=true;setLabel(bedLabel,'ГОТОВО ✓',true);setLabel(gateLabel,'ВЫХОД',true);beep(800,.18);toast('Готово! Теперь к воротам внизу слева.',4)}}else if(!done)progress=0;
+ if(doing){progress+=dt;if(progress>=LV.hold){done=true;progress=LV.hold;pile.visible=true;setLabel(bedLabel,'ГОТОВО ✓',true);for(const s of gateLabels)setLabel(s,'ВЫХОД',true);beep(800,.18);toast('Готово! Выходов два: ближний — у крана, дальний — внизу слева.',4.5)}}else if(!done)progress=0;
  // Noise grows with speed: 0 at sneaking level, NOISE at the breed's full run; rings come more often the faster.
  // A gardener reacts if he is inside the current radius — the player chooses how deep to push the stick.
  const noiseK=player.moving?clamp((speedMult-B.sneakMult*1.15)/(B.runMult-B.sneakMult*1.15),0,1):0,noiseR=NOISE*noiseK;
@@ -347,7 +359,7 @@ function update(dt){if(state!=='playing')return;elapsed+=dt;abilityCD=Math.max(0
  for(const g of guards){if(g.state!=='patrol')g.watch=0;const distance=dist(g,player);const to=Math.atan2(player.y-g.y,player.x-g.x),diff=Math.atan2(Math.sin(to-g.angle),Math.cos(to-g.angle));const vis=LV.vision*(g.angry?1.15:1);let sees=distance<vis&&Math.abs(diff)<.64&&lineClear(g,player)&&(!hidden||distance<43);
   if(distance<36&&lineClear(g,player))sees=true;
   if(sees){g.sus=clamp(g.sus+dt*(g.state==='chase'?3:.8+1.3*clamp(1-distance/vis,0,1)),0,1);if(g.state!=='chase'){g.alertLook=.7;g.lookAt={x:player.x,y:player.y}}g.seen=0;g.target={x:player.x,y:player.y};if(g.sus>=1&&g.state!=='chase'){g.state='chase';spotted=true;g.repath=0;beep(200,.18);toast('Он тебя заметил! Спрячься за препятствием.')}}else{g.sus=Math.max(0,g.sus-dt*.55);g.seen+=dt}
-  if(done&&!discovered&&g.state!=='chase'){const dz=dist(g,zone),az=Math.atan2(zone.y-g.y,zone.x-g.x)-g.angle;if(dz<vis&&Math.abs(Math.atan2(Math.sin(az),Math.cos(az)))<.64&&lineClear(g,zone)){discovered=true;for(const o of guards)o.angry=true;g.state='search';g.target={x:150,y:600};g.wait=0;g.repath=0;g.path=[];beep(220,.25);toast('Садовник нашёл сюрприз и бежит к воротам!',3)}}
+  if(done&&!discovered&&g.state!=='chase'){const dz=dist(g,zone),az=Math.atan2(zone.y-g.y,zone.x-g.x)-g.angle;if(dz<vis&&Math.abs(Math.atan2(Math.sin(az),Math.cos(az)))<.64&&lineClear(g,zone)){discovered=true;for(const o of guards)o.angry=true;g.state='search';{const ex=nearestExit(player);g.target={x:ex.x,y:ex.y}}g.wait=0;g.repath=0;g.path=[];beep(220,.25);toast('Садовник нашёл сюрприз и бежит к ближнему к тебе выходу!',3)}}
   if(g.state==='chase'&&!sees&&g.seen>2.1){g.state='search';g.wait=3;g.repath=0}
   let frozen=false;if(g.state!=='chase'&&g.alertLook>0){frozen=true;g.alertLook-=dt;const want=Math.atan2(g.lookAt.y-g.y,g.lookAt.x-g.x),d=Math.atan2(Math.sin(want-g.angle),Math.cos(want-g.angle));g.angle+=clamp(d,-5*dt,5*dt);
    if(g.alertLook<=0){frozen=false;if(g.sus>.12){g.state='inspect';g.target={...g.lookAt};g.wait=0;g.repath=0;g.path=[];toast('Садовник что-то заметил и идёт проверить',1.8)}}}
@@ -358,11 +370,11 @@ function update(dt){if(state!=='playing')return;elapsed+=dt;abilityCD=Math.max(0
   else if(target){g.repath-=dt;if(lineClear(g,target,16)){g.path=[]}else if(g.repath<=0){g.path=findPath(g,target);g.repath=.65}let next=g.path[0]||target;if(g.path.length&&dist(g,next)<16){g.path.shift();next=g.path[0]||target}let dx=next.x-g.x,dy=next.y-g.y,l=Math.hypot(dx,dy);if(l>2){g.angle=Math.atan2(dy,dx);const ox=g.x,oy=g.y;travel(g,dx/l*speedG*dt,dy/l*speedG*dt,14);g.moved=Math.hypot(g.x-ox,g.y-oy)/dt}}
   if(g.state==='chase'&&distance<26&&lineClear(g,player)){finish(false);break}
  }
- if(state==='playing'&&done&&dist(player,exit)<exit.r)finish(true);
+ if(state==='playing'&&done&&EXITS.some(e=>dist(player,e)<e.r))finish(true);
  for(const r of rings)r.age+=dt;rings=rings.filter(r=>{if(r.age<.7)return true;scene.remove(r.m);r.m.geometry.dispose();return false});
  if(ball){ball.age+=dt;ball.life-=dt;if(ball.life<=0){scene.remove(ball.m);ball=null}}
- $('clock').textContent=formatTime(elapsed);$('objective').textContent=done?'Вернись к воротам внизу слева':'Найди клумбу наверху справа';$('progress').style.display=doing&&!done?'block':'none';$('toiletFill').style.width=progress/LV.hold*100+'%';$('abilityText').textContent=abilityCD>0?Math.ceil(abilityCD)+'с':'МЯЧ';$('ability').disabled=abilityCD>0;
- const sneakHint=inputMode==='keys'?'держи C, чтобы красться':'отклони джойстик меньше';$('status').textContent=hidden?'🍃 Ты в укрытии':guards.some(g=>g.state==='chase')?'❗ Погоня — разорви линию зрения':bush?'👀 Слишком быстро — '+sneakHint:near&&!done?(inputMode==='keys'?'💩 Остановись и держи пробел':'💩 Остановись и удерживай кнопку'):done?'🐾 Дело сделано. Беги к воротам!':'Кусты прячут тебя, если '+(inputMode==='keys'?'красться (C)':'идти медленно');
+ $('clock').textContent=formatTime(elapsed);$('objective').textContent=done?'К выходу: ближний у крана или дальний внизу слева':'Найди клумбу наверху справа';$('progress').style.display=doing&&!done?'block':'none';$('toiletFill').style.width=progress/LV.hold*100+'%';$('abilityText').textContent=abilityCD>0?Math.ceil(abilityCD)+'с':'МЯЧ';$('ability').disabled=abilityCD>0;
+ const sneakHint=inputMode==='keys'?'держи C, чтобы красться':'отклони джойстик меньше';$('status').textContent=hidden?'🍃 Ты в укрытии':guards.some(g=>g.state==='chase')?'❗ Погоня — разорви линию зрения':bush?'👀 Слишком быстро — '+sneakHint:near&&!done?(inputMode==='keys'?'💩 Остановись и держи пробел':'💩 Остановись и удерживай кнопку'):done?'🐾 Дело сделано. Беги к выходу!':'Кусты прячут тебя, если '+(inputMode==='keys'?'красться (C)':'идти медленно');
 }
 
 // ---------- Camera. Presentation only: nothing here (zoom, yaw, pitch, rays) is read by the game rules in update(). ----------
@@ -432,9 +444,11 @@ function syncScene(dt){
  const onBed=player.x>BED_RECT.x&&player.x<BED_RECT.x+BED_RECT.w&&player.y>BED_RECT.y&&player.y<BED_RECT.y+BED_RECT.h;
  const d=dogRig;d.g.position.set(player.x*U,onBed?.18:0,player.y*U);d.g.rotation.y=-player.angle;
  // Energy ring: green, yellow below a third, red while the stamina ceiling is what stops the run.
- {const er=energyRing,frac=stamina/DOG.stamina,show=state==='playing'&&(frac<.995||energyMoving),em=er.material;
+ {const er=energyRing,frac=stamina/DOG.stamina,show=state==='playing'&&(frac<.995||energyMoving||panicNow),em=er.material;
   em.opacity+=((show?.95:0)-em.opacity)*Math.min(1,dt*10);er.visible=em.opacity>.02;er.userData.track.material.opacity=em.opacity*.5;
-  if(er.visible){er.position.set(player.x*U,(onBed?.18:0)+.03,player.y*U);er.geometry.setDrawRange(0,Math.ceil(clamp(frac,0,1)*RING_SEG)*6);em.color.set(energyCapped?'#ed6455':frac<1/3?'#f8d36c':'#a8de8a')}}
+  if(er.visible){er.position.set(player.x*U,(onBed?.18:0)+.03,player.y*U);er.geometry.setDrawRange(0,Math.ceil(clamp(frac,0,1)*RING_SEG)*6);em.color.set(energyCapped?'#ed6455':frac<1/3?'#f8d36c':'#a8de8a');
+   // Chase panic: the same colour pulses in brightness.
+   if(panicNow)em.color.multiplyScalar(.55+.45*(.5+.5*Math.sin(performance.now()/1000*9)))}}
  const low=player.mode==='sneak'||hiddenNow&&player.mode==='stand'?.8:1;d.body.scale.y+=(low-d.body.scale.y)*Math.min(1,dt*10);
  player.phase+=dt*player.speed*U*(player.mode==='run'?2.6:3.4);const sw=player.moving?Math.sin(player.phase):0,amp=player.mode==='run'?.9:.55;
  d.legs.forEach((l,i)=>l.rotation.z=sw*amp*(i%2?1:-1)*(i<2?1:-1));d.body.position.y=player.mode==='run'?Math.abs(Math.sin(player.phase))*.06:0;d.tail.rotation.x=Math.sin(elapsed*(done?16:9))*.5;
@@ -451,11 +465,11 @@ function syncScene(dt){
   g.tag.style.display=v3.z<1&&state!=='menu'?'flex':'none';g.tag.style.transform=`translate(${tx}px,${ty}px) translate(-50%,-100%)`;
   const alarm=g.state==='chase'?'!':g.sus>0||g.state==='inspect'||g.state==='search'?'?':'';ic.className='ic'+(alarm==='!'?' x':alarm?' q':'');ic.textContent=(alarm||(g.state==='patrol'&&g.watch>0&&g.step?.icon)||'')+(g.angry?'💢':'');
   bar.style.visibility=g.sus>0&&g.state!=='chase'?'visible':'hidden';bar.firstChild.style.width=g.sus*100+'%'}
- const t=performance.now()/1000;zoneRing.material.opacity=done?.5:.55+Math.sin(t*4)*.3;zoneRing.material.color.set(done?'#a8de8a':'#f8d36c');exitRing.material.opacity=done?.6+Math.sin(t*4)*.3:.3;
+ const t=performance.now()/1000;zoneRing.material.opacity=done?.5:.55+Math.sin(t*4)*.3;zoneRing.material.color.set(done?'#a8de8a':'#f8d36c');for(const r of exitRings)r.material.opacity=done?.6+Math.sin(t*4)*.3:.3;
  for(const r of rings){r.m.scale.setScalar(Math.max(.01,r.rad*U*r.age/.7));r.m.material.opacity=.55*(1-r.age/.7)}
  if(ball){const k=clamp(ball.age/.4,0,1);ball.m.position.set((ball.from.x+(ball.x-ball.from.x)*k)*U,.11+Math.sin(k*Math.PI)*1.4,(ball.from.y+(ball.y-ball.from.y)*k)*U)}
  // Arrow to the goal when it is off screen.
- const goal=done?exit:zone,ar=$('arrow');v3.set(goal.x*U,.3,goal.y*U).project(camera);let gx=v3.x,gy=v3.y;if(v3.z>1){gx=-gx;gy=-gy}
+ const goal=done?nearestExit(player):zone,ar=$('arrow');v3.set(goal.x*U,.3,goal.y*U).project(camera);let gx=v3.x,gy=v3.y;if(v3.z>1){gx=-gx;gy=-gy}
  if(state==='playing'&&(v3.z>1||Math.abs(gx)>.92||Math.abs(gy)>.86)){const m=Math.max(Math.abs(gx)/.8,Math.abs(gy)/.62,1e-3);const px=(gx/m*.5+.5)*screenW,py=(-gy/m*.5+.5)*screenH;ar.style.display='flex';ar.style.transform=`translate(${px-22}px,${py-22}px) rotate(${Math.atan2(-gy,gx)+Math.PI/2}rad)`}else ar.style.display='none';
  // Pointer to the gardener when he is out of frame (behind or to the side), with distance: no blind spot behind the camera.
  const gp=$('gptr'),g=guards[0];if(g&&state==='playing'){v3.set(g.x*U,1.6,g.y*U).project(camera);let qx=v3.x,qy=v3.y;const behind=v3.z>1;if(behind){qx=-qx;qy=-qy;if(Math.abs(qy)<.3)qy=-1}
@@ -465,7 +479,7 @@ function resize(){const app=$('app'),vh=Math.round(window.visualViewport?.height
 window.visualViewport?.addEventListener('resize',resize);window.addEventListener('resize',resize);window.addEventListener('orientationchange',()=>setTimeout(resize,300));
 function loop(t){requestAnimationFrame(loop);if(innerWidth!==lastVW||Math.round(window.visualViewport?.height||innerHeight)!==lastVH)resize();const dt=Math.min((t-lastTime)/1000,.033);lastTime=t;
  fpsN++;fpsT+=Math.min((t-(loop.prev??t))/1000,1);loop.prev=t;if(fpsT>=.5){fps=Math.round(fpsN/fpsT);fpsN=0;fpsT=0;const f=$('fpsVal');if(f)f.textContent=fps}
- if(needRebuild){needRebuild=false;buildWorld();camState.init=false;if(done){pile.visible=true;setLabel(bedLabel,'ГОТОВО ✓',true);setLabel(gateLabel,'ВЫХОД',true)}}
+ if(needRebuild){needRebuild=false;buildWorld();camState.init=false;if(done){pile.visible=true;setLabel(bedLabel,'ГОТОВО ✓',true);for(const s of gateLabels)setLabel(s,'ВЫХОД',true)}}
  update(dt);updateCamera(dt);syncScene(dt);renderer.render(scene,camera)}
 
 // ---------- Tuning panel ----------
@@ -487,19 +501,21 @@ function renderTune(){const rows=panelRows(),fmt=([k,,,,,unit,dp],o)=>o[k].toFix
 // The park measured in time, from the current cfg and breed (the map scale is chosen by these numbers, not by eye).
 // Paths are real walking routes (the same A* the gardener uses); runs go through speedStep, so stamina is included.
 function pathLen(a,b){let L=0,prev=a;for(const q of [...findPath(a,b),b]){L+=dist(prev,q);prev=q}return L}
-function travelTime(metres,want){const st={mult:0,stamina:DOG.stamina},dt=.05;let x=0,t=0;while(x<metres&&t<300){speedStep(DOG,st,want,dt);x+=DOG.speed*cfg.tempo*.06*st.mult*dt;t+=dt}return t}
+function travelTime(metres,want,panic=false){const st={mult:0,stamina:DOG.stamina},dt=.05;let x=0,t=0;while(x<metres&&t<300){speedStep(DOG,st,want,dt,panic&&t<=PANIC_MAX);x+=DOG.speed*cfg.tempo*.06*st.mult*dt;t+=dt}return t}
 function mapMetrics(){const B=DOG,u=.06*cfg.mapScale,walk=B.speed*cfg.tempo*.06,gv=LV.speed*cfg.tempo*.06;
- const bedGate=pathLen(zone,exit)*u,tap={x:230,y:182},toTap=pathLen(BED,tap)*u,back=pathLen(tap,BED)*u;
+ // Retreat: the walkable route (A*) from the bed to each exit; "panic" = run during a chase, "calm" = run with the normal stamina.
+ const exits=EXITS.map(e=>{const m=pathLen(zone,e)*u;return {id:e.id,m,panic:travelTime(m,B.runMult,true),calm:travelTime(m,B.runMult)}}).sort((a,b)=>a.m-b.m);
+ const tap={x:230,y:182},toTap=pathLen(BED,tap)*u,back=pathLen(tap,BED)*u;
  // Nearest cover: from standing hidden in a bush to standing in the bed zone, edge to edge.
  const bushGap=Math.min(...bushes.map(b=>Math.max(0,dist(b,zone)-(b.r-8)-zone.r)))*u;
  // Gardener's window at the tap: walking away he faces away from the bed; on the way back he sees it again from vision range.
  const window=toTap/gv+4+Math.max(0,back-LV.vision*u)/gv;
- return {dogLen:B.len,parkW:916*u,parkH:647*u,diagWalk:Math.hypot(916,647)*u/walk,bedGateM:bedGate,bedGateRun:travelTime(bedGate,B.runMult),bedGateRunNoStamina:bedGate/(walk*B.runMult),bushToBed:bushGap/walk,window,needWindow:[LV.hold+4,LV.hold+6]}}
-function tuneInfo(){const c=liveCamera(),m=mapMetrics(),f=v=>v.toFixed(1),ok=(v,a,b)=>v>=a&&v<=b?'✓':'✗';
+ return {dogLen:B.len,parkW:916*u,parkH:647*u,diagWalk:Math.hypot(916,647)*u/walk,exits,bushToBed:bushGap/walk,window,needWindow:[LV.hold+4,LV.hold+6]}}
+function tuneInfo(){const c=liveCamera(),m=mapMetrics(),f=v=>v.toFixed(1),ok=(v,a,b)=>v>=a&&v<=b?'✓':'✗',name={near:'Ближний выход',far:'Дальний выход'};
  $('mapSize').innerHTML=`Камера: ${c.k} дл. = ${c.dist} м, наклон ${c.pitch}°, поворот ${c.yaw}° · старт ${cfg.zoom.start} дл.<br>`+
  `Собака: ${m.dogLen.toFixed(2)} м · парк ${Math.round(m.parkW)}×${Math.round(m.parkH)} м<br>`+
- `Диагональ шагом: ${f(m.diagWalk)} с ${ok(m.diagWalk,20,25)} (20–25)<br>`+
- `Клумба → ворота бегом: ${f(m.bedGateRun)} с ${ok(m.bedGateRun,8,12)} (8–12), путь ${Math.round(m.bedGateM)} м; без учёта выносливости ${f(m.bedGateRunNoStamina)} с<br>`+
+ `Масштаб — диагональ шагом: ${f(m.diagWalk)} с ${ok(m.diagWalk,20,25)} (20–25)<br>`+
+ m.exits.map((e,i)=>`${name[e.id]}: ${Math.round(e.m)} м по пути · в погоне ${f(e.panic)} с${i===0?' '+ok(e.panic,8,12)+' (8–12)':''} · без погони ${f(e.calm)} с<br>`).join('')+
  `Ближайший куст → клумба шагом: ${f(m.bushToBed)} с ${ok(m.bushToBed,3,5)} (3–5)<br>`+
  `Окно садовника у крана: ${f(m.window)} с ${m.window>=m.needWindow[1]?'✓':m.window>=m.needWindow[0]?'≈':'✗'} (нужно ≥ дело ${LV.hold} с + 4–6 = ${m.needWindow[0]}–${m.needWindow[1]} с)<br>`+
  `Скорости: шаг ${f(DOG.speed*cfg.tempo*.06)} м/с, бег ${f(DOG.speed*DOG.runMult*cfg.tempo*.06)} · садовник ${f(LV.speed*cfg.tempo*.06)}, погоня ${f(LV.speed*1.58*cfg.tempo*.06)} м/с`;
@@ -536,7 +552,7 @@ window.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const
 window.addEventListener('keyup',e=>keys.delete(keyOf(e)));window.addEventListener('blur',()=>{if(state==='playing')pause();clearInput()});document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='playing')pause()});canvas.addEventListener('contextmenu',e=>e.preventDefault());
 
 // Read-only hook for build verification and debugging; it never changes game state.
-window.SneakyDog3D={version:VERSION,metrics:()=>mapMetrics(),snapshot:()=>({version:VERSION,state,player:player?{x:+player.x.toFixed(1),y:+player.y.toFixed(1),mode:player.mode,hidden:hiddenNow,mult:+speedMult.toFixed(3)}:null,breed:breedId,guards:guards.map(g=>({x:+g.x.toFixed(1),y:+g.y.toFixed(1),state:g.state,idx:g.idx,watch:+g.watch.toFixed(2),icon:g.step?.icon||null,angry:g.angry,sus:+g.sus.toFixed(2)})),done,discovered,progress:+progress.toFixed(2),elapsed:+elapsed.toFixed(2),stamina:Math.round(stamina),cfg:{...cfg},camera:{x:+camera.position.x.toFixed(2),y:+camera.position.y.toFixed(2),z:+camera.position.z.toFixed(2),fov:+camera.fov.toFixed(1),yaw:+(camYaw()/D2R).toFixed(1),off:+(camState.off/D2R).toFixed(1),pitch:+(camState.pitch/D2R).toFixed(1),poff:+(camState.poff/D2R).toFixed(1),dist:+camState.dist.toFixed(2),eff:+camState.eff.toFixed(2),lift:+(camState.lift/D2R).toFixed(1),zoom:cfg.zoom.k,dragging:!!drag},screen:{w:screenW,h:screenH,canvas:[canvas.width,canvas.height]},fps})};
+window.SneakyDog3D={version:VERSION,metrics:()=>mapMetrics(),snapshot:()=>({version:VERSION,state,player:player?{x:+player.x.toFixed(1),y:+player.y.toFixed(1),mode:player.mode,hidden:hiddenNow,mult:+speedMult.toFixed(3),panic:panicNow,panicT:+panicT.toFixed(2)}:null,breed:breedId,guards:guards.map(g=>({x:+g.x.toFixed(1),y:+g.y.toFixed(1),state:g.state,idx:g.idx,watch:+g.watch.toFixed(2),icon:g.step?.icon||null,angry:g.angry,sus:+g.sus.toFixed(2)})),done,discovered,progress:+progress.toFixed(2),elapsed:+elapsed.toFixed(2),stamina:Math.round(stamina),cfg:{...cfg},camera:{x:+camera.position.x.toFixed(2),y:+camera.position.y.toFixed(2),z:+camera.position.z.toFixed(2),fov:+camera.fov.toFixed(1),yaw:+(camYaw()/D2R).toFixed(1),off:+(camState.off/D2R).toFixed(1),pitch:+(camState.pitch/D2R).toFixed(1),poff:+(camState.poff/D2R).toFixed(1),dist:+camState.dist.toFixed(2),eff:+camState.eff.toFixed(2),lift:+(camState.lift/D2R).toFixed(1),zoom:cfg.zoom.k,dragging:!!drag},screen:{w:screenW,h:screenH,canvas:[canvas.width,canvas.height]},fps})};
 
 buildWorld();resize();menu();requestAnimationFrame(loop);
 </script>
