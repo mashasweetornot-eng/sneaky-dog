@@ -17,9 +17,10 @@
 :root{--stick:150px;--knob:calc(var(--stick)*.4);--stick-border:2px}
 #stick{width:var(--stick);height:var(--stick);background:#102f2a2e;border:var(--stick-border) solid #fff5d933}#stick::before{content:'';position:absolute;inset:-16px;border-radius:50%}
 #knob{width:var(--knob);height:var(--knob);left:calc((var(--stick) - var(--knob))/2 - var(--stick-border));top:calc((var(--stick) - var(--knob))/2 - var(--stick-border));background:#fff5d980;border:2px solid #fff5d9a6}
-@media(max-height:550px){:root{--stick:132px}#veil{align-items:flex-start}#veil>.card{margin:auto}.result-actions{gap:8px}.result .plain{padding:9px}.result .primary{padding:10px}}
+@media(max-height:550px){:root{--stick:132px}.card.solo .subtitle{display:none}.card.solo h1{margin:4px 0 8px}#veil{align-items:flex-start}#veil>.card{margin:auto}.result-actions{gap:8px}.result .plain{padding:9px}.result .primary{padding:10px}}
 @media(max-width:650px){.status{bottom:calc(var(--stick) + 62px)}}
 #tune{position:absolute;top:calc(max(16px,env(safe-area-inset-top)) + 52px);right:max(12px,env(safe-area-inset-right));width:280px;max-height:calc(100% - 200px);overflow:auto;background:#102f2aeb;border:1px solid #ffffff22;border-radius:18px;padding:12px 14px;font-size:13px;-webkit-overflow-scrolling:touch}#tune .row{margin:0 0 9px}#tune label{display:flex;justify-content:space-between;color:#d6e6d8}#tune label b{color:var(--gold)}#tune input{width:100%;margin:4px 0 0;accent-color:#f8d36c}#tune .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:900;color:var(--gold)}#tune .btns{display:flex;gap:8px;margin-top:4px}#tune .btns button{flex:1;background:#ffffff12;border:1px solid #ffffff22;border-radius:10px;padding:8px 4px;font-weight:800}#tune code{display:block;margin-top:8px;font-size:11px;color:#b7d0bf;word-break:break-all}
+.breeds{grid-template-columns:repeat(4,1fr);gap:6px;margin:4px 0 14px}.breeds .dog-card{padding:8px 3px}.breeds .dog-card span{font-size:24px;margin-bottom:4px}.breeds .dog-card b{font-size:12px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dots{display:block;font-style:normal;font-size:10px;line-height:1.35;color:#d6e6d8;white-space:nowrap;margin-top:2px}
 .card.solo{display:block;max-width:440px;padding:28px;text-align:center}.card.solo .primary{margin-top:6px}.card.solo a{color:var(--green);display:inline-block;margin-top:14px;font-size:14px}
 @media(max-width:650px){.iconbtn{width:37px;height:37px;font-size:16px}.logo{font-size:15px}.hud-right{gap:5px}.pill{padding:8px 8px}}
 @media(max-height:550px){#tune{max-height:calc(100% - 150px);top:calc(max(12px,env(safe-area-inset-top)) + 46px)}.card.solo{padding:18px}}
@@ -45,13 +46,25 @@ setTimeout(()=>{if(!window.SneakyDog3D){const v=document.getElementById('veil');
 <script type="module">
 import * as THREE from 'three';
 
-const VERSION='3D-0.6';
+const VERSION='3D-0.7';
 const $=id=>document.getElementById(id);
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),D2R=Math.PI/180;
 
 // ---------- Simulation: same plane and units as the 2D game (1000×760), park 1 rules ----------
 // aim — height of the body centre the camera looks at; set per breed so other model sizes frame right.
-const DOG={name:'Лабрадор',color:'#e8b960',speed:153,stamina:100,cooldown:12,aim:.45};
+// Breeds (GDD §4). The menu dots are computed from these same numbers, so they cannot drift apart.
+// speed — base walking speed (2D units/s, × cfg.tempo); runMult / sneakMult — top / sneaking multipliers of it;
+// stamina — pool; drain — per second at full run (less for a partial run); regen — per second at walking pace or slower;
+// accel — speed smoothing in s (smaller = nimbler); aim — camera aim height, m; size — model scale. vip — planned, locked.
+const BREEDS={
+ lab:{name:'Лабрадор',icon:'🐕',color:'#e8b960',speed:153,runMult:1.35,sneakMult:.5,stamina:100,drain:28,regen:18,accel:.12,aim:.45,size:1,cooldown:12},
+ jack:{name:'Джек-рассел',icon:'🐶',color:'#f3efe2',patch:'#975326',speed:174,runMult:1.45,sneakMult:.5,stamina:55,drain:32,regen:20,accel:.08,aim:.38,size:.85,cooldown:12},
+ corgi:{name:'Корги',icon:'🦊',color:'#d9893d',speed:140,runMult:1.3,sneakMult:.55,stamina:85,drain:24,regen:18,accel:.14,aim:.36,size:.82,cooldown:12},
+ vip:{name:'Твой щенок',icon:'⭐',color:'#c98f5a',speed:150,runMult:1.55,sneakMult:.5,stamina:50,drain:34,regen:18,accel:.1,aim:.42,size:.9,cooldown:12,locked:true}};
+// Dots 1..5 as in GDD §4: speed from the top speed (speed × runMult), energy from stamina.
+const breedDots=b=>({speed:clamp(Math.round(1+(b.speed*b.runMult-160)/23),1,5),energy:clamp(Math.round((b.stamina-25)/15),1,5)});
+let breedId='lab';try{const s=localStorage.getItem('sneaky-dog-3d-breed');if(BREEDS[s]&&!BREEDS[s].locked)breedId=s}catch{}
+let DOG=BREEDS[breedId];
 const LV={vision:190,speed:90,hold:4};
 const NOISE=165;
 const zone={x:850,y:147,r:51},exit={x:118,y:674,r:45},start={x:120,y:625};
@@ -97,7 +110,8 @@ const ZOOM_TUNE=[
  ['max','Зум: максимум',1,20,.1,' м',1],
  ['pinch','Чувствительность щипка',.3,3,.05,'×',2],
  ['smooth','Сглаживание зума',0,1,.01,' с',2]];
-const AIM_TUNE=[['aim','Точка прицела (высота)',.1,1.2,.01,' м',2]];
+// The aim height itself is per breed (DOG.aim); ⚙ only adds a correction.
+const AIM_TUNE=[['aimOff','Прицел: поправка',-.3,.3,.01,' м',2]];
 const RAY_TUNE=[
  ['spread','Лучи: разнос',0,.6,.01,' м',2],
  ['pad','Лучи: зазор до помехи',0,.8,.01,' м',2],
@@ -116,7 +130,7 @@ const GAME_TUNE=[
  ['mapScale','Размер лужайки',.6,1.6,.05,'×',2]];
 const CAM_DEF={high:{pitch:40,fov:48,bias:.12,lag:.2,turn:.8},low:{dist:3.6,pitch:20,fov:50,bias:.1,lag:.12,turn:.5},iso:{dist:24.8,pitch:40,fov:35,bias:0,lag:.25,turn:1.2}};
 const CFG_REV=4;
-const freshCfg=()=>({rev:CFG_REV,mode:'high',tempo:.38,mapScale:1,aim:DOG.aim,cam:JSON.parse(JSON.stringify(CAM_DEF)),
+const freshCfg=()=>({rev:CFG_REV,mode:'high',tempo:.38,mapScale:1,aimOff:0,cam:JSON.parse(JSON.stringify(CAM_DEF)),
  zoom:{dist:5.5,start:5.5,min:2.2,max:9,pinch:1,smooth:.2},rays:{spread:.25,pad:.25,back:.6},chase:{k:.9,pitch:30},swipe:{sens:180,sensY:90,hold:1.2,ret:.8,auto:false}});
 const CFG_KEY='sneaky-dog-3d-cam3';
 let cfg=freshCfg();
@@ -217,6 +231,8 @@ function makeDog(){const g=new THREE.Group(),body=new THREE.Group(),c=DOG.color;
  mesh(new THREE.BoxGeometry(.06,.2,.3),'#d65148',.25,.43,0,body);
  const tail=new THREE.Group();tail.position.set(-.33,.4,0);const tm=mesh(new THREE.CylinderGeometry(.025,.035,.26,6),c,0,.12,0,tail);tail.rotation.z=.75;body.add(tail);
  const legs=[];for(const [lx,lz] of [[.2,.09],[.2,-.09],[-.18,.09],[-.18,-.09]]){const pv=new THREE.Group();pv.position.set(lx,.24,lz);mesh(new THREE.BoxGeometry(.075,.24,.075),c,0,-.12,0,pv);body.add(pv);legs.push(pv)}
+ if(DOG.patch)mesh(new THREE.SphereGeometry(.11,10,8),DOG.patch,-.1,.43,.04,body);
+ g.scale.setScalar(DOG.size);
  const shadow=blob(0,0,.42,.26,g,.02);return {g,body,legs,tail,shadow}}
 function makeGardener(){const g=new THREE.Group();
  const legs=[],arms=[];for(const s of [-1,1]){const pv=new THREE.Group();pv.position.set(0,.86,s*.11);mesh(new THREE.BoxGeometry(.16,.86,.15),'#183b37',0,-.43,0,pv);mesh(new THREE.BoxGeometry(.26,.08,.16),'#2b2a26',.05,-.84,0,pv);g.add(pv);legs.push(pv)}
@@ -226,10 +242,11 @@ function makeGardener(){const g=new THREE.Group();
  mesh(new THREE.CylinderGeometry(.32,.32,.03,20),'#dcc186',0,1.74,0,g);mesh(new THREE.CylinderGeometry(.14,.16,.13,16),'#f4d9a0',0,1.81,0,g);
  const can=mesh(new THREE.BoxGeometry(.22,.18,.14),'#4f8fb8',0,-.66,0,arms[1]);
  blob(0,0,.5,.4,g,.02);return {g,legs,arms,can}}
-const dogRig=makeDog();scene.add(dogRig.g);
+let dogRig=makeDog();scene.add(dogRig.g);
+function setBreed(id){if(!BREEDS[id]||BREEDS[id].locked)return;breedId=id;DOG=BREEDS[id];scene.remove(dogRig.g);dogRig=makeDog();scene.add(dogRig.g);stamina=DOG.stamina;try{localStorage.setItem('sneaky-dog-3d-breed',id)}catch{}}
 
 // ---------- Game state ----------
-let sprinting=false,strongStick=false,spent=false,runK=0;
+let speedMult=0,hideLatch=false;
 let state='menu',player=null,guards=[],elapsed=0,done=false,progress=0,spotted=false,discovered=false,abilityCD=0,ball=null,rings=[],stamina=DOG.stamina,noiseTimer=0,move={x:1,y:0},hiddenNow=false;
 let keys=new Set(),joy={x:0,y:0,id:null},toiletHeld=false,toastTimer=0,muted=true,audioCtx=null,inputMode=matchMedia('(pointer:coarse)').matches?'touch':'keys';
 let screenW=0,screenH=0,lastVW=0,lastVH=0,lastTime=0,fps=60,fpsN=0,fpsT=0,needRebuild=false;
@@ -240,12 +257,13 @@ function clearRound(){for(const g of guards){scene.remove(g.rig.g);scene.remove(
 function setupRound(){clearRound();player={...start,angle:-Math.PI/4,moving:false,mode:'stand',speed:0,phase:0};
  const pts=route();const rig=makeGardener();scene.add(rig.g);const tag=document.createElement('div');tag.className='tag';tag.innerHTML='<i class="ic"></i><i class="bar"><s></s></i>';$('tags').appendChild(tag);
  guards=[{x:pts[0].x,y:pts[0].y,angle:-Math.PI/2,idx:0,state:'patrol',sus:0,seen:0,target:null,wait:0,path:[],repath:0,pts,watch:0,watchT:0,lookBase:0,step:null,angry:false,alertLook:0,lookAt:null,rig,cone:makeCone(),tag,phase:0,moved:0}];
- discovered=false;elapsed=0;done=false;progress=0;spotted=false;abilityCD=0;noiseTimer=0;stamina=DOG.stamina;sprinting=false;strongStick=false;spent=false;runK=0;move={x:1,y:-1};camState.init=false;
+ discovered=false;elapsed=0;done=false;progress=0;spotted=false;abilityCD=0;noiseTimer=0;stamina=DOG.stamina;speedMult=0;hideLatch=false;move={x:1,y:-1};camState.init=false;
  pile.visible=false;setLabel(bedLabel,'КЛУМБА',false);setLabel(gateLabel,'ВОРОТА',false)}
 function setLabel(s,text,on){const n=label(text,on?'#fff5d9':'#102f2a',on?'#102f2a':'#fff5d9');s.material.map.dispose();s.material.map=n.material.map;s.material.needsUpdate=true;n.material.dispose()}
 
 function menu(){state='menu';clearInput();setupRound();$('veil').classList.remove('hidden');
- $('veil').innerHTML=`<div class="card solo"><div class="eyebrow">Прототип ${VERSION} · примитивы</div><h1>SNEAKY DOG 3D</h1><p class="subtitle">Проверяем ощущение: каково бегать по лужайке от садовника. Сделай дело на клумбе и вернись к воротам.</p><button class="primary" id="play">На лужайку!</button><p class="fine">Один палец по экрану — повернуть и наклонить камеру, два пальца — приблизить. Настройки — ⚙.<br>Телефон: джойстик (слабо — красться, сильно — бег), 🎾 и 💩.<br>ПК: WASD, C — красться, Shift — бег, E — мяч, пробел — дело, мышь — камера, колесо — зум.</p><a href="../">← 2D-версия</a></div>`;
+ $('veil').innerHTML=`<div class="card solo"><div class="eyebrow">Прототип ${VERSION} · примитивы</div><h1>SNEAKY DOG 3D</h1><p class="subtitle">Проверяем ощущение: каково бегать по лужайке от садовника. Сделай дело на клумбе и вернись к воротам.</p><div class="dogs breeds">${Object.entries(BREEDS).map(([id,b])=>{const d=breedDots(b),dots=n=>'●'.repeat(n)+'○'.repeat(5-n);return `<button class="dog-card ${id===breedId?'selected':''}" data-breed="${id}" ${b.locked?'disabled':''} title="Скорость ${d.speed}/5, энергия ${d.energy}/5"><span>${b.icon}</span><b>${b.name}</b><i class="dots">Скор. ${dots(d.speed)}</i><i class="dots">Энерг. ${dots(d.energy)}</i>${b.locked?'<i class="dots">скоро</i>':''}</button>`}).join('')}</div><button class="primary" id="play">На лужайку!</button><p class="fine">Один палец по экрану — повернуть и наклонить камеру, два пальца — приблизить. Настройки — ⚙.<br>Телефон: джойстик (слабо — красться, сильно — бег), 🎾 и 💩.</p><a href="../">← 2D-версия</a></div>`;
+ for(const b of $('veil').querySelectorAll('[data-breed]'))b.onclick=()=>{setBreed(b.dataset.breed);menu()};
  $('play').onclick=begin}
 function begin(){setupRound();state='playing';clearInput();$('veil').classList.add('hidden');toast('Садовник стережёт клумбу. Дождись, когда он уйдёт к крану!',4.5);beep(550,.08)}
 function clearInput(){keys.clear();drag=null;pinch=null;touches.clear();joy={x:0,y:0,id:null};toiletHeld=false;$('knob').style.transform='';$('toilet').classList.remove('active')}
@@ -269,25 +287,36 @@ function ability(){if(state!=='playing'||abilityCD>0)return;abilityCD=DOG.cooldo
 // turns the stick into a world direction ("up" = away from the camera).
 function update(dt){if(state!=='playing')return;elapsed+=dt;abilityCD=Math.max(0,abilityCD-dt);if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)$('toast').style.display='none'}
  let x=joy.x,y=joy.y;const kx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),ky=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);const sneakKey=keys.has('c');if(kx||ky){const kl=Math.hypot(kx,ky),sn=sneakKey?.55:1;x=kx/kl*sn;y=ky/kl*sn}let len=Math.hypot(x,y);if(len>1){x/=len;y/=len;len=1}
- // Hysteresis, so nothing flickers at a threshold: "strong deflection" turns on above .90 and off below .72;
- // the run starts only with stamina > 25 and stops at 0 (or when the run intent is gone). After running dry it stays a walk
- // until the player lets go of the run (stick below .72 / Shift up) — holding on never pulses run-walk-run.
- // The speed multiplier follows the run state over ~0.15 s instead of jumping. Hiding, noise and animation use the same states.
- player.moving=len>.1;
- if(!strongStick&&len>.9)strongStick=true;else if(strongStick&&len<.72)strongStick=false;
- const runIntent=player.moving&&((kx||ky)?keys.has('shift')&&!sneakKey:joy.id!==null&&strongStick);
- if(!runIntent)spent=false;
- if(!sprinting&&runIntent&&!spent&&stamina>25)sprinting=true;else if(sprinting&&(!runIntent||stamina<=0))sprinting=false;
- stamina=clamp(stamina+(sprinting?-28:18)*dt,0,DOG.stamina);if(stamina<=0&&sprinting){sprinting=false;spent=true}
- runK+=clamp((sprinting?1:0)-runK,-dt/.15,dt/.15);
- const speed=DOG.speed*cfg.tempo*(1+.35*runK);
+ // Speed follows the stick continuously — no run switch, nothing to flicker at a threshold:
+ //   len < .12 — stand; .12–.35 — sneak (sneakMult); .35–.75 — sneakMult → 1 linearly; .75–1 — 1 → runMult linearly.
+ // Stamina never switches the run off, it lowers the ceiling: maxMult = 1 + (runMult − 1)·clamp(stamina / 25, 0, 1).
+ // Drain is proportional to the excess over walking speed; regen works only at walking pace or slower (fading out over
+ // the first 5% of excess), so a dog that ran dry slides smoothly down to a walk and stays there.
+ // The multiplier is smoothed over the breed's accel (~0.12 s). Mode, hiding and noise all read this one number.
+ const B=DOG;player.moving=len>=.12;
+ let wantMult=0;
+ if(kx||ky)wantMult=sneakKey?B.sneakMult:keys.has('shift')?B.runMult:1;   // keyboard: tests only, three fixed levels
+ else if(player.moving)wantMult=len<.35?B.sneakMult:len<.75?B.sneakMult+(1-B.sneakMult)*(len-.35)/.4:1+(B.runMult-1)*(len-.75)/.25;
+ wantMult=Math.min(wantMult,1+(B.runMult-1)*clamp(stamina/25,0,1));
+ speedMult+=(wantMult-speedMult)*(1-Math.exp(-dt/B.accel));
+ const over=clamp((speedMult-1)/(B.runMult-1),0,1);
+ stamina=clamp(stamina+(B.regen*clamp(1-over/.05,0,1)-B.drain*over)*dt,0,B.stamina);
+ const speed=B.speed*cfg.tempo*speedMult;
  // Stick "up" means "away from the camera", whatever the camera yaw is.
  const c=Math.cos(camYaw()),s=Math.sin(camYaw()),mx=x*c-y*s,my=x*s+y*c;
- player.mode=!player.moving?'stand':sprinting?'run':len<.6?'sneak':'walk';player.speed=player.moving?len*speed:0;
- if(player.moving){move={x:mx/len,y:my/len};player.angle=Math.atan2(my,mx);travel(player,mx*speed*dt,my*speed*dt,13);progress=0}
- const bush=bushes.find(b=>dist(player,b)<b.r-8);const hidden=!!bush&&!sprinting&&!strongStick;hiddenNow=hidden;const near=dist(player,zone)<zone.r;const doing=(toiletHeld||keys.has(' '))&&near&&!done&&!player.moving;
+ // Animation mode from the same multiplier.
+ player.mode=!player.moving?'stand':speedMult<=B.sneakMult*1.15?'sneak':speedMult<=1.05?'walk':'run';player.speed=player.moving?speed:0;
+ if(player.moving){move={x:mx/len,y:my/len};player.angle=Math.atan2(my,mx);travel(player,move.x*speed*dt,move.y*speed*dt,13);progress=0}
+ // Hiding in a bush works while the multiplier stays at sneaking level (≤ sneakMult·1.15). It is a visible on/off
+ // state, so it has a small hysteresis: once hidden, it holds until the multiplier passes sneakMult·1.3.
+ const bush=bushes.find(b=>dist(player,b)<b.r-8);
+ if(!bush)hideLatch=false;else if(!hideLatch&&speedMult<=B.sneakMult*1.15)hideLatch=true;else if(hideLatch&&speedMult>B.sneakMult*1.3)hideLatch=false;
+ const hidden=!!bush&&hideLatch;hiddenNow=hidden;const near=dist(player,zone)<zone.r;const doing=(toiletHeld||keys.has(' '))&&near&&!done&&!player.moving;
  if(doing){progress+=dt;if(progress>=LV.hold){done=true;progress=LV.hold;pile.visible=true;setLabel(bedLabel,'ГОТОВО ✓',true);setLabel(gateLabel,'ВЫХОД',true);beep(800,.18);toast('Готово! Теперь к воротам внизу слева.',4)}}else if(!done)progress=0;
- noiseTimer-=dt;if(sprinting&&noiseTimer<=0){noiseTimer=.7;const m=mesh(new THREE.RingGeometry(.9,1,48).rotateX(-Math.PI/2),unlit('#fff5d9',.55),player.x*U,.05,player.y*U);scene.add(m);rings.push({age:0,m});for(const g of guards)if(g.state!=='chase'&&dist(g,player)<NOISE){if(g.state==='patrol')toast('Садовник услышал топот!',1.5);g.state='inspect';g.target={x:player.x,y:player.y};g.repath=0;g.wait=0}}
+ // Noise grows with speed: 0 at sneaking level, NOISE at the breed's full run; rings come more often the faster.
+ // A gardener reacts if he is inside the current radius — the player chooses how deep to push the stick.
+ const noiseK=player.moving?clamp((speedMult-B.sneakMult*1.15)/(B.runMult-B.sneakMult*1.15),0,1):0,noiseR=NOISE*noiseK;
+ noiseTimer-=dt;if(noiseK>.03&&noiseTimer<=0){noiseTimer=1.6-.9*noiseK;const m=mesh(new THREE.RingGeometry(.9,1,48).rotateX(-Math.PI/2),unlit('#fff5d9',.55),player.x*U,.05,player.y*U);scene.add(m);rings.push({age:0,m,rad:noiseR});for(const g of guards)if(g.state!=='chase'&&dist(g,player)<noiseR){if(g.state==='patrol')toast(noiseK>.6?'Садовник услышал топот!':'Садовник услышал шаги!',1.5);g.state='inspect';g.target={x:player.x,y:player.y};g.repath=0;g.wait=0}}
  for(const g of guards){if(g.state!=='patrol')g.watch=0;const distance=dist(g,player);const to=Math.atan2(player.y-g.y,player.x-g.x),diff=Math.atan2(Math.sin(to-g.angle),Math.cos(to-g.angle));const vis=LV.vision*(g.angry?1.15:1);let sees=distance<vis&&Math.abs(diff)<.64&&lineClear(g,player)&&(!hidden||distance<43);
   if(distance<36&&lineClear(g,player))sees=true;
   if(sees){g.sus=clamp(g.sus+dt*(g.state==='chase'?3:.8+1.3*clamp(1-distance/vis,0,1)),0,1);if(g.state!=='chase'){g.alertLook=.7;g.lookAt={x:player.x,y:player.y}}g.seen=0;g.target={x:player.x,y:player.y};if(g.sus>=1&&g.state!=='chase'){g.state='chase';spotted=true;g.repath=0;beep(200,.18);toast('Он тебя заметил! Спрячься за препятствием.')}}else{g.sus=Math.max(0,g.sus-dt*.55);g.seen+=dt}
@@ -326,7 +355,7 @@ function obstacleDistance(ax,ay,az,dx,dy,dz,fx,fz,pitch,far){const s=cfg.rays.sp
 function updateCamera(dt){const M=CAM(),Z=cfg.zoom,C=cfg.chase,S=cfg.swipe,R=cfg.rays,chasing=state==='playing'&&guards.some(g=>g.state==='chase');
  const k=M.lag>0?1-Math.exp(-dt/M.lag):1,kc=1-Math.exp(-dt/.5),want=player.angle+Math.PI/2,rest=restYaw();
  // Aim at the body centre; raised on the flowerbed. Steps and body bob are not followed (player.x/y and aim height only).
- const onBed=player.x>BED_RECT.x&&player.x<BED_RECT.x+BED_RECT.w&&player.y>BED_RECT.y&&player.y<BED_RECT.y+BED_RECT.h,aimH=cfg.aim+(onBed?.18:0);
+ const onBed=player.x>BED_RECT.x&&player.x<BED_RECT.x+BED_RECT.w&&player.y>BED_RECT.y&&player.y<BED_RECT.y+BED_RECT.h,aimH=DOG.aim+cfg.aimOff+(onBed?.18:0);
  const zoomDist=cfg.mode==='high'?clamp(Z.dist,Z.min,Z.max):(M.dist||8)*Z.dist/Z.start;
  if(!camState.init){camState.x=player.x*U;camState.z=player.y*U;camState.aimY=aimH;camState.yaw=want;camState.chase=0;camState.off=rest;camState.poff=0;camState.retFrom=null;camState.dist=zoomDist;camState.pull=0;camState.lift=0;camState.yawVel=0;camState.init=true}
  // The camera never turns by itself: yaw changes only by the finger (or Q/R in tests) and by «Сбросить камеру».
@@ -391,7 +420,7 @@ function syncScene(dt){
   const alarm=g.state==='chase'?'!':g.sus>0||g.state==='inspect'||g.state==='search'?'?':'';ic.className='ic'+(alarm==='!'?' x':alarm?' q':'');ic.textContent=(alarm||(g.state==='patrol'&&g.watch>0&&g.step?.icon)||'')+(g.angry?'💢':'');
   bar.style.visibility=g.sus>0&&g.state!=='chase'?'visible':'hidden';bar.firstChild.style.width=g.sus*100+'%'}
  const t=performance.now()/1000;zoneRing.material.opacity=done?.5:.55+Math.sin(t*4)*.3;zoneRing.material.color.set(done?'#a8de8a':'#f8d36c');exitRing.material.opacity=done?.6+Math.sin(t*4)*.3:.3;
- for(const r of rings){r.m.scale.setScalar(Math.max(.01,NOISE*U*r.age/.7));r.m.material.opacity=.55*(1-r.age/.7)}
+ for(const r of rings){r.m.scale.setScalar(Math.max(.01,r.rad*U*r.age/.7));r.m.material.opacity=.55*(1-r.age/.7)}
  if(ball){const k=clamp(ball.age/.4,0,1);ball.m.position.set((ball.from.x+(ball.x-ball.from.x)*k)*U,.11+Math.sin(k*Math.PI)*1.4,(ball.from.y+(ball.y-ball.from.y)*k)*U)}
  // Arrow to the goal when it is off screen.
  const goal=done?exit:zone,ar=$('arrow');v3.set(goal.x*U,.3,goal.y*U).project(camera);let gx=v3.x,gy=v3.y;if(v3.z>1){gx=-gx;gy=-gy}
@@ -410,7 +439,7 @@ function loop(t){requestAnimationFrame(loop);if(innerWidth!==lastVW||Math.round(
 // ---------- Tuning panel ----------
 // Only what a gesture cannot set. Distance, yaw and pitch are set with the fingers and saved by «Запомнить камеру».
 const row=(list,k)=>list.find(t=>t[0]===k);
-function panelRows(){return [[row(CAM_TUNE,'lag'),CAM(),'c'],[row(AIM_TUNE,'aim'),cfg,'a'],[row(CAM_TUNE,'bias'),CAM(),'c'],[row(ZOOM_TUNE,'pinch'),cfg.zoom,'z'],[row(SWIPE_TUNE,'sens'),cfg.swipe,'s'],[row(SWIPE_TUNE,'sensY'),cfg.swipe,'s'],
+function panelRows(){return [[row(CAM_TUNE,'lag'),CAM(),'c'],[row(AIM_TUNE,'aimOff'),cfg,'a'],[row(CAM_TUNE,'bias'),CAM(),'c'],[row(ZOOM_TUNE,'pinch'),cfg.zoom,'z'],[row(SWIPE_TUNE,'sens'),cfg.swipe,'s'],[row(SWIPE_TUNE,'sensY'),cfg.swipe,'s'],
  ...RAY_TUNE.map(t=>[t,cfg.rays,'r']),...GAME_TUNE.map(t=>[t,cfg,'g'])]}
 function liveCamera(){return {dist:+cfg.zoom.dist.toFixed(2),yaw:Math.round(wrapAngle(camState.off)/D2R),pitch:Math.round(camState.pitch/D2R)}}
 function renderTune(){const rows=panelRows(),fmt=([k,,,,,unit,dp],o)=>o[k].toFixed(dp)+unit;
@@ -456,7 +485,7 @@ window.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const
 window.addEventListener('keyup',e=>keys.delete(keyOf(e)));window.addEventListener('blur',()=>{if(state==='playing')pause();clearInput()});document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='playing')pause()});canvas.addEventListener('contextmenu',e=>e.preventDefault());
 
 // Read-only hook for build verification and debugging; it never changes game state.
-window.SneakyDog3D={version:VERSION,snapshot:()=>({version:VERSION,state,player:player?{x:+player.x.toFixed(1),y:+player.y.toFixed(1),mode:player.mode,hidden:hiddenNow}:null,guards:guards.map(g=>({x:+g.x.toFixed(1),y:+g.y.toFixed(1),state:g.state,idx:g.idx,watch:+g.watch.toFixed(2),icon:g.step?.icon||null,angry:g.angry,sus:+g.sus.toFixed(2)})),done,discovered,progress:+progress.toFixed(2),elapsed:+elapsed.toFixed(2),stamina:Math.round(stamina),cfg:{...cfg},camera:{x:+camera.position.x.toFixed(2),y:+camera.position.y.toFixed(2),z:+camera.position.z.toFixed(2),fov:+camera.fov.toFixed(1),yaw:+(camYaw()/D2R).toFixed(1),off:+(camState.off/D2R).toFixed(1),pitch:+(camState.pitch/D2R).toFixed(1),poff:+(camState.poff/D2R).toFixed(1),dist:+camState.dist.toFixed(2),eff:+camState.eff.toFixed(2),lift:+(camState.lift/D2R).toFixed(1),zoom:cfg.zoom.dist,dragging:!!drag},screen:{w:screenW,h:screenH,canvas:[canvas.width,canvas.height]},fps})};
+window.SneakyDog3D={version:VERSION,snapshot:()=>({version:VERSION,state,player:player?{x:+player.x.toFixed(1),y:+player.y.toFixed(1),mode:player.mode,hidden:hiddenNow,mult:+speedMult.toFixed(3)}:null,breed:breedId,guards:guards.map(g=>({x:+g.x.toFixed(1),y:+g.y.toFixed(1),state:g.state,idx:g.idx,watch:+g.watch.toFixed(2),icon:g.step?.icon||null,angry:g.angry,sus:+g.sus.toFixed(2)})),done,discovered,progress:+progress.toFixed(2),elapsed:+elapsed.toFixed(2),stamina:Math.round(stamina),cfg:{...cfg},camera:{x:+camera.position.x.toFixed(2),y:+camera.position.y.toFixed(2),z:+camera.position.z.toFixed(2),fov:+camera.fov.toFixed(1),yaw:+(camYaw()/D2R).toFixed(1),off:+(camState.off/D2R).toFixed(1),pitch:+(camState.pitch/D2R).toFixed(1),poff:+(camState.poff/D2R).toFixed(1),dist:+camState.dist.toFixed(2),eff:+camState.eff.toFixed(2),lift:+(camState.lift/D2R).toFixed(1),zoom:cfg.zoom.dist,dragging:!!drag},screen:{w:screenW,h:screenH,canvas:[canvas.width,canvas.height]},fps})};
 
 buildWorld();resize();menu();requestAnimationFrame(loop);
 </script>
