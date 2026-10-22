@@ -17,6 +17,9 @@
 :root{--stick:150px;--knob:calc(var(--stick)*.4);--stick-border:2px}
 #stick{width:var(--stick);height:var(--stick);background:#102f2a2e;border:var(--stick-border) solid #fff5d933}#stick::before{content:'';position:absolute;inset:-16px;border-radius:50%}
 #knob{width:var(--knob);height:var(--knob);left:calc((var(--stick) - var(--knob))/2 - var(--stick-border));top:calc((var(--stick) - var(--knob))/2 - var(--stick-border));background:#fff5d980;border:2px solid #fff5d9a6}
+/* Gait shown at the stick: knob colour + a small label above it (sneak / walk / run). */
+.stickwrap{position:relative}#gait{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:8px;padding:3px 10px;border-radius:12px;background:#102f2acc;font-size:12px;font-weight:900;letter-spacing:.3px;white-space:nowrap;pointer-events:none}#gait.sneak{color:#a8de8a}#gait.walk{color:#fff5d9}#gait.run{color:#f8a85c}
+#knob{transition:background-color .15s,border-color .15s}#stick.sneak #knob{background:#a8de8a99;border-color:#a8de8a}#stick.run #knob{background:#f8a85cb3;border-color:#f8a85c}
 @media(max-height:550px){:root{--stick:132px}.card.solo .subtitle{display:none}.card.solo h1{margin:4px 0 8px}#veil{align-items:flex-start}#veil>.card{margin:auto}.result-actions{gap:8px}.result .plain{padding:9px}.result .primary{padding:10px}}
 @media(max-width:650px){.status{bottom:calc(var(--stick) + 62px)}}
 #tune{position:absolute;top:calc(max(16px,env(safe-area-inset-top)) + 52px);right:max(12px,env(safe-area-inset-right));width:280px;max-height:calc(100% - 200px);overflow:auto;background:#102f2aeb;border:1px solid #ffffff22;border-radius:18px;padding:12px 14px;font-size:13px;-webkit-overflow-scrolling:touch}#tune .row{margin:0 0 9px}#tune label{display:flex;justify-content:space-between;color:#d6e6d8}#tune label b{color:var(--gold)}#tune input{width:100%;margin:4px 0 0;accent-color:#f8d36c}#tune .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:900;color:var(--gold)}#tune .btns{display:flex;gap:8px;margin-top:4px}#tune .btns button{flex:1;background:#ffffff12;border:1px solid #ffffff22;border-radius:10px;padding:8px 4px;font-weight:800}#tune code{display:block;margin-top:8px;font-size:11px;color:#b7d0bf;word-break:break-all}
@@ -33,7 +36,7 @@
 <div class="objective" id="objective">Найди клумбу наверху справа</div>
 <div class="progress" id="progress"><span>Тихо… почти готово!</span><div class="track"><div class="fill" id="toiletFill"></div></div></div>
 <div class="status" id="status"></div>
-<div class="controls"><div><div id="stick" aria-label="Джойстик"><div id="knob"></div></div></div><div class="actions"><button id="ability" class="action secondary" aria-label="Мяч"><span>🎾</span><small id="abilityText">МЯЧ</small></button><button id="toilet" class="action" aria-label="Удерживать, чтобы сделать дело"><span>💩</span><small>ДЕРЖИ</small></button></div></div>
+<div class="controls"><div class="stickwrap"><div id="gait" hidden></div><div id="stick" aria-label="Джойстик"><div id="knob"></div></div></div><div class="actions"><button id="ability" class="action secondary" aria-label="Мяч"><span>🎾</span><small id="abilityText">МЯЧ</small></button><button id="toilet" class="action" aria-label="Удерживать, чтобы сделать дело"><span>💩</span><small>ДЕРЖИ</small></button></div></div>
 <div class="control-help">WASD — идти · C — красться · Shift — бег · E — мяч · пробел — дело · мышь — повернуть камеру, колесо — зум · ⚙ — настройки</div>
 <div id="tune" hidden></div>
 <div id="toast" role="status"></div><div id="veil"><div class="card solo"><h1>SNEAKY DOG 3D</h1><p class="subtitle">Загружаю 3D…</p></div></div>
@@ -46,7 +49,7 @@ setTimeout(()=>{if(!window.SneakyDog3D){const v=document.getElementById('veil');
 <script type="module">
 import * as THREE from 'three';
 
-const VERSION='3D-0.12';
+const VERSION='3D-0.13';
 const $=id=>document.getElementById(id);
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),D2R=Math.PI/180;
 
@@ -74,6 +77,11 @@ const breedDots=b=>({speed:clamp(Math.round(1+(b.speed*b.runMult-160)/23),1,5),e
 let breedId='lab';try{const s=localStorage.getItem('sneaky-dog-3d-breed');if(BREEDS[s]&&!BREEDS[s].locked)breedId=s}catch{}
 let DOG=BREEDS[breedId];
 const LV={vision:190,speed:90,hold:4};
+// Stick deflection → speed multiplier, as plateaus (the edges are here to tune without touching the formula):
+//   0–stand: stand · stand–sneakEnd: sneak (sneakMult) · sneakEnd–walkStart: sneak → walk · walkStart–walkEnd: walk (1.0) ·
+//   walkEnd–1: walk → run (runMult only at the very edge).
+const STICK={stand:.12,sneakEnd:.32,walkStart:.45,walkEnd:.78};
+function stickMult(B,len){const S=STICK;if(len<S.stand)return 0;if(len<S.sneakEnd)return B.sneakMult;if(len<S.walkStart)return B.sneakMult+(1-B.sneakMult)*(len-S.sneakEnd)/(S.walkStart-S.sneakEnd);if(len<S.walkEnd)return 1;return 1+(B.runMult-1)*clamp((len-S.walkEnd)/(1-S.walkEnd),0,1)}
 const NOISE=165;
 // Noise level by speed: anchor points with linear interpolation between them (sneaking → walking → full run).
 // Below NOISE_MIN nothing is heard and no ring is drawn: sneaking and a calm walk are silent, noise starts at a trot.
@@ -267,7 +275,7 @@ let energyRing=makeEnergyRing();
 function setBreed(id){if(!BREEDS[id]||BREEDS[id].locked)return;breedId=id;DOG=BREEDS[id];scene.remove(dogRig.g);dogRig=makeDog();scene.add(dogRig.g);scene.remove(energyRing);energyRing.geometry.dispose();energyRing.userData.track.geometry.dispose();energyRing=makeEnergyRing();stamina=DOG.stamina;try{localStorage.setItem('sneaky-dog-3d-breed',id)}catch{}}
 
 // ---------- Game state ----------
-let speedMult=0,hideLatch=false,energyCapped=false,energyMoving=false,panicT=0,panicNow=false;
+let speedMult=0,hideLatch=false,energyCapped=false,energyMoving=false,panicT=0,panicNow=false,shownGait='stand';
 // One step of the breed's speed model (stamina ceiling, smoothing, drain / regen). The game and the ⚙ time measurements both
 // use it, so they cannot disagree. Returns the multiplier the stamina allows now.
 // panic — chase panic: no stamina ceiling, drain × PANIC_DRAIN, no regen (see update(): only while chased, at most PANIC_MAX s).
@@ -294,7 +302,7 @@ function menu(){state='menu';clearInput();setupRound();$('veil').classList.remov
  for(const b of $('veil').querySelectorAll('[data-breed]'))b.onclick=()=>{setBreed(b.dataset.breed);menu()};
  $('play').onclick=begin}
 function begin(){setupRound();state='playing';clearInput();$('veil').classList.add('hidden');toast('Садовник стережёт клумбу. Дождись, когда он уйдёт к крану!',4.5);beep(550,.08)}
-function clearInput(){keys.clear();drag=null;pinch=null;touches.clear();joy={x:0,y:0,id:null};toiletHeld=false;$('knob').style.transform='';$('toilet').classList.remove('active')}
+function clearInput(){keys.clear();drag=null;pinch=null;touches.clear();joy={x:0,y:0,id:null};toiletHeld=false;$('knob').style.transform='';$('toilet').classList.remove('active');shownGait='stand';$('stick').className='';$('gait').hidden=true}
 function pause(){if(state!=='playing')return;state='paused';clearInput();$('veil').classList.remove('hidden');
  $('veil').innerHTML=`<div class="card result"><div class="result-icon">🍃</div><h1>Передышка</h1><p class="fine">Экран ${screenW}×${screenH} · поле ${canvas.width}×${canvas.height} · ${fps} fps</p><div class="result-actions" style="margin-top:16px"><button class="primary" id="resume">Продолжить</button><button class="plain" id="camReset">Сбросить камеру</button><button class="plain" id="restart">Сначала</button><button class="plain" id="back">В меню</button></div></div>`;
  $('resume').onclick=()=>{state='playing';$('veil').classList.add('hidden')};$('camReset').onclick=()=>{resetCamera();$('resume').click();toast('Камера сброшена',1.5)};$('restart').onclick=begin;$('back').onclick=menu}
@@ -316,15 +324,16 @@ function ability(){if(state!=='playing'||abilityCD>0)return;abilityCD=DOG.cooldo
 function update(dt){if(state!=='playing')return;elapsed+=dt;abilityCD=Math.max(0,abilityCD-dt);if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)$('toast').style.display='none'}
  let x=joy.x,y=joy.y;const kx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),ky=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);const sneakKey=keys.has('c');if(kx||ky){const kl=Math.hypot(kx,ky),sn=sneakKey?.55:1;x=kx/kl*sn;y=ky/kl*sn}let len=Math.hypot(x,y);if(len>1){x/=len;y/=len;len=1}
  // Speed follows the stick continuously — no run switch, nothing to flicker at a threshold:
- //   len < .12 — stand; .12–.35 — sneak (sneakMult); .35–.75 — sneakMult → 1 linearly; .75–1 — 1 → runMult linearly.
+ //   plateaus, not points (STICK): stand → sneak plateau (exactly sneakMult) → short ramp → walk plateau (exactly 1.0, a third
+ //   of the travel) → ramp to runMult, reached only at the very edge. A finger can hold a gait without watching the stick.
  // Stamina never switches the run off, it lowers the ceiling: maxMult = 1 + (runMult − 1)·clamp(stamina / 25, 0, 1).
  // Drain is proportional to the excess over walking speed; regen works only at walking pace or slower (fading out over
  // the first 5% of excess), so a dog that ran dry slides smoothly down to a walk and stays there.
  // The multiplier is smoothed over the breed's accel (~0.12 s). Mode, hiding and noise all read this one number.
- const B=DOG;player.moving=len>=.12;
+ const B=DOG;player.moving=len>=STICK.stand;
  let wantMult=0;
  if(kx||ky)wantMult=sneakKey?B.sneakMult:keys.has('shift')?B.runMult:1;   // keyboard: tests only, three fixed levels
- else if(player.moving)wantMult=len<.35?B.sneakMult:len<.75?B.sneakMult+(1-B.sneakMult)*(len-.35)/.4:1+(B.runMult-1)*(len-.75)/.25;
+ else if(player.moving)wantMult=stickMult(B,len);
  // Chase panic: while any gardener chases, the dog can run the whole chase flat out — drain ×0.3, no regen, no ceiling —
  // for at most PANIC_MAX s in a row, then the normal economy. Stealth is untouched: until spotted nothing changes.
  const chased=guards.some(g=>g.state==='chase');panicT=chased?panicT+dt:0;panicNow=chased&&panicT<=PANIC_MAX;
@@ -339,6 +348,8 @@ function update(dt){if(state!=='playing')return;elapsed+=dt;abilityCD=Math.max(0
  const c=Math.cos(camYaw()),s=Math.sin(camYaw()),mx=x*c-y*s,my=x*s+y*c;
  // Animation mode from the same multiplier.
  player.mode=!player.moving?'stand':speedMult<=B.sneakMult*1.15?'sneak':speedMult<=1.05?'walk':'run';player.speed=player.moving?speed:0;
+ // Gait at the stick (actual speed, so a dry dog that cannot run shows «шаг»): knob colour + label; hidden while standing.
+ if(player.mode!==shownGait){shownGait=player.mode;const gl=$('gait');$('stick').className=player.mode;gl.className=player.mode;gl.hidden=player.mode==='stand';gl.textContent={sneak:'крадётся',walk:'шаг',run:'бег'}[player.mode]||''}
  if(player.moving){move={x:mx/len,y:my/len};player.angle=Math.atan2(my,mx);travel(player,move.x*speed*dt,move.y*speed*dt,13);progress=0}
  // Hiding in a bush works while the multiplier stays at sneaking level (≤ sneakMult·1.15). It is a visible on/off
  // state, so it has a small hysteresis: once hidden, it holds until the multiplier passes sneakMult·1.3.
@@ -532,7 +543,8 @@ function tuneInfo(){const c=liveCamera(),m=mapMetrics(),f=v=>v.toFixed(1),ok=(v,
 $('tuneBtn').onclick=()=>{const p=$('tune');p.hidden=!p.hidden;if(!p.hidden)renderTune()};
 
 // ---------- Input (same scheme as 2D) ----------
-function setJoy(e){const r=$('stick').getBoundingClientRect(),max=clamp(r.width*.26,36,40);let dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),l=Math.hypot(dx,dy);if(l>max){dx*=max/l;dy*=max/l}joy.x=dx/max;joy.y=dy/max;$('knob').style.transform=`translate(${dx}px,${dy}px)`}
+// Knob travel ~55 px on the 150 px stick (50 px on the 132 px landscape one): a longer travel doses speed more precisely.
+function setJoy(e){const r=$('stick').getBoundingClientRect(),max=clamp(r.width*.37,50,56);let dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),l=Math.hypot(dx,dy);if(l>max){dx*=max/l;dy*=max/l}joy.x=dx/max;joy.y=dy/max;$('knob').style.transform=`translate(${dx}px,${dy}px)`}
 $('stick').addEventListener('pointerdown',e=>{inputMode='touch';if(state!=='playing'||joy.id!==null)return;e.preventDefault();joy.id=e.pointerId;try{$('stick').setPointerCapture(e.pointerId)}catch{}setJoy(e)});$('stick').addEventListener('pointermove',e=>{if(e.pointerId===joy.id)setJoy(e)});
 function resetJoy(e){if(e.pointerId===joy.id){joy={x:0,y:0,id:null};$('knob').style.transform=''}}for(const t of ['pointerup','pointercancel','lostpointercapture'])$('stick').addEventListener(t,resetJoy);
 $('toilet').addEventListener('pointerdown',e=>{if(state!=='playing')return;e.preventDefault();$('toilet').setPointerCapture(e.pointerId);toiletHeld=true;$('toilet').classList.add('active');if(!done&&dist(player,zone)>=zone.r)toast('Сначала подойди к клумбе наверху справа')});
