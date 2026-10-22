@@ -28,12 +28,12 @@
 .breeds{grid-template-columns:repeat(4,1fr);gap:6px;margin:4px 0 14px}.breeds .dog-card{padding:8px 3px}.breeds .dog-card span{font-size:24px;margin-bottom:4px}.breeds .dog-card b{font-size:12px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dots{display:block;font-style:normal;font-size:10px;line-height:1.35;color:#d6e6d8;white-space:nowrap;margin-top:2px}
 .card.solo{display:block;max-width:440px;padding:28px;text-align:center}.card.solo .primary{margin-top:6px}.card.solo a{color:var(--green);display:inline-block;margin-top:14px;font-size:14px}
 @media(max-width:650px){.iconbtn{width:37px;height:37px;font-size:16px}.logo{font-size:15px}.hud-right{gap:5px}.pill{padding:8px 8px}}
-@media(max-height:550px){.card.solo{padding:18px}}
+@media(max-height:550px){.card.solo{padding:18px}.card.solo .fine{display:none}.card.solo .levels{margin:8px 0}}
 </style>
 </head>
 <body><div id="app">
 <canvas id="field" aria-label="Лужайка в 3D: управляйте собакой джойстиком или WASD"></canvas>
-<div id="tags"></div><div id="arrow">↑</div><div id="gptr"><i>➤</i><b>0 м</b></div>
+<div id="tags"></div><div id="safeProbe" style="position:absolute;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)"></div><div id="arrow">↑</div><div id="gptr"><i>➤</i><b>0 м</b></div>
 <div id="hud"><div><div class="logo">SNEAKY DOG 3D</div><div class="level" id="levelName">Парк 1 · Лужайка</div><div class="need" id="need" hidden title="Потребность"><span>😬</span><i><b id="needFill"></b></i></div></div><div class="hud-right"><div class="pill" id="clock">0:00</div><button class="iconbtn" id="pause" aria-label="Пауза">Ⅱ</button><button class="iconbtn" id="sound" aria-label="Включить звук">♪</button></div></div>
 <div class="objective" id="objective">Найди клумбу наверху справа</div>
 <div class="progress" id="progress"><span id="progressLabel">Тихо… почти готово!</span><div class="track"><div class="fill" id="toiletFill"></div></div></div>
@@ -50,7 +50,7 @@ setTimeout(()=>{if(!window.SneakyDog3D){const v=document.getElementById('veil');
 <script type="module">
 import * as THREE from 'three';
 
-const VERSION='3D-1.0';
+const VERSION='3D-1.1';
 // Test mode (index.html?test, used by tests.html): the simulation does not run on its own and does not pause on blur;
 // tests advance it frame by frame through SneakyDog3D.test, so results do not depend on the real clock.
 const TEST=new URLSearchParams(location.search).has('test');
@@ -108,11 +108,20 @@ const LEVEL_DEEDS=[{kind:'pile',x:zone.x,y:zone.y},{kind:'mark',x:HYDRANT.x,y:HY
 // Need (GDD 3.3): grows slowly from the start; full → the dog cannot hold it and makes a pile right where it stands. Not a loss:
 // the pile counts, but no third star, and the evidence stays for the gardener to find. Doing the pile properly stops it.
 const NEED_TIME=150;
-// Third star: not spotted, no accident and within PAR_TIME s.
-const PAR_TIME=150;
-const BED={x:870,y:224},TAP={x:230,y:146};
+// Levels of park 1 differ by the gardener's window at the tap — the time the bed is out of his sight. The GDD 3.2 rule is
+// about ONE deed (+ 4–6 s); doing everything in one trip is not meant to be possible. Targets: 16 s (learning, a pile fits
+// easily), 12 s (a pile just fits), 9 s (a pile is tight). Set by the pause at the tap (tapWait), checked by tests.html.
+// par — time for the third star = bot time × 1.8 rounded up to 5 s (a calm player is about twice as slow as the bot).
+const LEVELS=[{name:'Первый выгул',window:16,tapWait:7.7,par:150},{name:'Не на моей клумбе!',window:12,tapWait:3.7,par:140},{name:'Впритык',window:9,tapWait:.7,par:160}];
+let level=0;try{const l=+localStorage.getItem('sneaky-dog-3d-level');if(LEVELS[l])level=l}catch{}
+// Third star: not spotted, no accident and within the level's par time.
+
+// TAP — the tap pipe; the gardener stands at TAP_STAND facing it (west, away from the bed, 230 units ≈ 14.5 m from his spot
+// at the bed: close enough for short windows, far enough that the bed is out of his sight range while he is there).
+const BED={x:870,y:224},TAP={x:604,y:232},TAP_STAND={x:640,y:232};
 const BED_RECT={x:797,y:94,w:108,h:105};
-const bushes=[{x:240,y:550,r:49},{x:598,y:406,r:51},{x:778,y:181,r:48},{x:195,y:296,r:44},{x:431,y:133,r:41}];
+// The bush nearest to the bed sits 14 m from it (≈ 4 s at a walk, GDD: 3–5 s): before, it touched the bed and hiding cost nothing.
+const bushes=[{x:240,y:550,r:49},{x:598,y:406,r:51},{x:700,y:430,r:48},{x:195,y:296,r:44},{x:431,y:133,r:41}];
 const solids=[{x:315,y:431,w:155,h:30,type:'bench'},{x:325,y:190,w:36,h:101,type:'hedge'},{x:821,y:398,w:105,h:34,type:'bench'},{x:625,y:90,w:36,h:123,type:'hedge'},{x:408,y:607,w:176,h:32,type:'flower'}];
 const trees=[{x:86,y:122,r:34},{x:912,y:284,r:32},{x:91,y:435,r:31},{x:870,y:627,r:35}];
 
@@ -136,11 +145,11 @@ function freeSpot(t){if(!blocked(t.x,t.y,15))return t;let best=null;
 function partialPath(g,t){const c=[];for(let r=1;r<=6;r++)for(let i=-r;i<=r;i++)for(let j=-r;j<=r;j++)if(Math.max(Math.abs(i),Math.abs(j))===r){const p={x:t.x+i*25,y:t.y+j*25};if(!blocked(p.x,p.y,15))c.push(p)}
  c.sort((a,b)=>dist(a,t)-dist(b,t));for(const p of c.slice(0,8)){if(lineClear(g,p,16))return [p];const path=findPath(g,p);if(path.length)return [...path,p]}return []}
 // Gardener's day: water the bed → walk a round → water again → go to the tap (the dog's window) → back.
-function route(){
+function route(lv=level){
  const work=w=>({...BED,wait:w,look:'bed',amp:1.25,sp:1.15,icon:'💧',bed:true});
  const round=(x,y,w)=>({x,y,wait:w,look:'out',amp:.8,sp:1.6,icon:'👀',bed:true});
- const tap=w=>({x:230,y:182,wait:w,look:-Math.PI/2,amp:.35,sp:2,icon:'🚰'});
- return [work(6),round(760,245,1.4),round(925,250,1.4),work(4),tap(4)];
+ const tap=w=>({...TAP_STAND,wait:w,look:Math.PI,amp:.35,sp:2,icon:'🚰'});
+ return [work(6),round(760,245,1.4),round(925,250,1.4),work(4),tap(LEVELS[lv].tapWait)];
 }
 
 // ---------- Frozen numbers and the remembered camera view ----------
@@ -304,7 +313,7 @@ function makeDeeds(){deeds=LEVEL_DEEDS.map(s=>{const K=DEED_KIND[s.kind],h=onBed
 function completeDeed(d){d.done=true;d.p=d.hold;d.mark.visible=true;beep(800,.18);
  if(d.kind==='pile'){evidence.push({x:d.x,y:d.y});setLabel(bedLabel,'ГОТОВО ✓',true)}
  const left=deeds.filter(x=>!x.done);
- if(!left.length){done=true;for(const s of gateLabels)setLabel(s,'ВЫХОД',true);toast('Всё сделано! Выходов два: ближний — у крана, дальний — внизу слева.',4.5)}
+ if(!left.length){done=true;for(const s of gateLabels)setLabel(s,'ВЫХОД',true);toast('Всё сделано! Выходов два: ближний — вверху слева, дальний — внизу слева.',4.5)}
  else toast(`${d.K.label} готова. Осталось: ${left.map(x=>x.K.label.toLowerCase()).join(', ')}.`,2.5)}
 // Need overflow: the pile happens right here. It counts, but no third star and the evidence stays on the path.
 function accidentPile(pd){accident=true;pd.p=pd.hold;const m=pileMesh(player.x,player.y,onBedAt(player.x,player.y)?.17:0);scene.add(m);extraPiles.push(m);evidence.push({x:player.x,y:player.y});
@@ -318,17 +327,19 @@ function setupRound(){clearRound();player={...start,angle:-Math.PI/4,moving:fals
 function setLabel(s,text,on){const n=label(text,on?'#fff5d9':'#102f2a',on?'#102f2a':'#fff5d9');s.material.map.dispose();s.material.map=n.material.map;s.material.needsUpdate=true;n.material.dispose()}
 
 function menu(){state='menu';clearInput();setupRound();$('veil').classList.remove('hidden');
- $('veil').innerHTML=`<div class="card solo"><div class="eyebrow">Прототип ${VERSION} · примитивы</div><h1>SNEAKY DOG 3D</h1><p class="subtitle">Оставь две метки — у гидранта и на углу клумбы, — сделай кучу на большой клумбе и уйди через выход. Садовнику лучше об этом не знать.</p><div class="dogs breeds">${Object.entries(BREEDS).map(([id,b])=>{const d=breedDots(b),dots=n=>'●'.repeat(n)+'○'.repeat(5-n);return `<button class="dog-card ${id===breedId?'selected':''}" data-breed="${id}" ${b.locked?'disabled':''} title="Скорость ${d.speed}/5, энергия ${d.energy}/5"><span>${b.icon}</span><b>${b.name}</b>${b.abilities?b.abilities.map(a=>`<i class="dots">${a}</i>`).join(''):`<i class="dots">Скор. ${dots(d.speed)}</i><i class="dots">Энерг. ${dots(d.energy)}</i>`}${b.locked?'<i class="dots">скоро</i>':''}</button>`}).join('')}</div><button class="primary" id="play">На лужайку!</button><p class="fine">Один палец по экрану — повернуть и наклонить камеру, два пальца — приблизить. Настройки — ⚙.<br>Телефон: джойстик (слабо — красться, сильно — бег), 🎾 и 💩.</p><a href="2d/">Старая 2D-версия (заморожена, 0.1.9)</a></div>`;
+ $('veil').innerHTML=`<div class="card solo"><div class="eyebrow">Прототип ${VERSION} · примитивы</div><h1>SNEAKY DOG 3D</h1><p class="subtitle">Оставь две метки — у гидранта и на углу клумбы, — сделай кучу на большой клумбе и уйди через выход. Садовнику лучше об этом не знать.</p><div class="dogs breeds">${Object.entries(BREEDS).map(([id,b])=>{const d=breedDots(b),dots=n=>'●'.repeat(n)+'○'.repeat(5-n);return `<button class="dog-card ${id===breedId?'selected':''}" data-breed="${id}" ${b.locked?'disabled':''} title="Скорость ${d.speed}/5, энергия ${d.energy}/5"><span>${b.icon}</span><b>${b.name}</b>${b.abilities?b.abilities.map(a=>`<i class="dots">${a}</i>`).join(''):`<i class="dots">Скор. ${dots(d.speed)}</i><i class="dots">Энерг. ${dots(d.energy)}</i>`}${b.locked?'<i class="dots">скоро</i>':''}</button>`}).join('')}</div><div class="levels">${LEVELS.map((l,i)=>`<button class="levelbtn ${i===level?'selected':''}" data-level="${i}" title="${l.name}">Уровень ${i+1}</button>`).join('')}</div><button class="primary" id="play">На лужайку!</button><p class="fine">Один палец по экрану — повернуть и наклонить камеру, два пальца — приблизить. Настройки — ⚙.<br>Телефон: джойстик (слабо — красться, сильно — бег), 🎾 и 💩.</p><a href="2d/">Старая 2D-версия (заморожена, 0.1.9)</a></div>`;
  for(const b of $('veil').querySelectorAll('[data-breed]'))b.onclick=()=>{setBreed(b.dataset.breed);menu()};
+ for(const b of $('veil').querySelectorAll('[data-level]'))b.onclick=()=>{setLevel(+b.dataset.level);menu()};
  $('play').onclick=begin}
-function begin(){setupRound();state='playing';clearInput();$('veil').classList.add('hidden');toast('Садовник стережёт клумбу. Дождись, когда он уйдёт к крану!',4.5);beep(550,.08)}
+function setLevel(i){if(!LEVELS[i])return;level=i;try{localStorage.setItem('sneaky-dog-3d-level',i)}catch{}}
+function begin(){setupRound();state='playing';clearInput();$('veil').classList.add('hidden');$('levelName').textContent=`Парк 1 · ${level+1}. ${LEVELS[level].name}`;toast('Садовник стережёт клумбу. Дождись, когда он уйдёт к крану!',4.5);beep(550,.08)}
 function clearInput(){keys.clear();drag=null;pinch=null;touches.clear();joy={x:0,y:0,id:null};toiletHeld=false;$('knob').style.transform='';$('toilet').classList.remove('active');shownGait='stand';$('stick').className='';$('gait').hidden=true}
 function pause(){if(state!=='playing')return;state='paused';clearInput();$('veil').classList.remove('hidden');
  $('veil').innerHTML=`<div class="card result"><div class="result-icon">🍃</div><h1>Передышка</h1><p class="fine">Экран ${screenW}×${screenH} · поле ${canvas.width}×${canvas.height} · ${fps} fps</p><div class="result-actions" style="margin-top:16px"><button class="primary" id="resume">Продолжить</button><button class="plain" id="camReset">Сбросить камеру</button><button class="plain" id="restart">Сначала</button><button class="plain" id="back">В меню</button></div></div>`;
  $('resume').onclick=()=>{state='playing';$('veil').classList.add('hidden')};$('camReset').onclick=()=>{resetCamera();$('resume').click();toast('Камера сброшена',1.5)};$('restart').onclick=begin;$('back').onclick=menu}
-function finish(win){if(state!=='playing')return;state=win?'won':'lost';clearInput();beep(win?740:160,.2);const stars=win?1+(!spotted?1:0)+(!spotted&&!accident&&elapsed<PAR_TIME?1:0):0;
- $('veil').classList.remove('hidden');$('veil').innerHTML=`<div class="card result"><div class="result-icon">${win?'🐾':'🧺'}</div><h1>${win?'Получилось!':'Садовник поймал!'}</h1>${win?`<div class="stars">${'★'.repeat(stars)}${'☆'.repeat(3-stars)}</div>`:'<p class="subtitle">Он уносит собаку за шкирку к воротам. Попробуй ещё раз.</p>'}<div class="statline"><span>⏱ ${formatTime(elapsed)}</span><span>${spotted?'👀 заметили':'🍃 незаметно'}</span>${accident?'<span>😬 не утерпела</span>':''}</div><div class="result-actions"><button class="primary" id="again">Ещё раз</button><button class="plain" id="back">В меню</button></div></div>`;
- $('again').onclick=begin;$('back').onclick=menu}
+function finish(win){if(state!=='playing')return;state=win?'won':'lost';clearInput();beep(win?740:160,.2);const stars=win?1+(!spotted?1:0)+(!spotted&&!accident&&elapsed<LEVELS[level].par?1:0):0;
+ $('veil').classList.remove('hidden');$('veil').innerHTML=`<div class="card result"><div class="result-icon">${win?'🐾':'🧺'}</div><h1>${win?'Получилось!':'Садовник поймал!'}</h1>${win?`<div class="stars">${'★'.repeat(stars)}${'☆'.repeat(3-stars)}</div>`:'<p class="subtitle">Он уносит собаку за шкирку к воротам. Попробуй ещё раз.</p>'}<div class="statline"><span>⏱ ${formatTime(elapsed)}</span><span>${spotted?'👀 заметили':'🍃 незаметно'}</span>${accident?'<span>😬 не утерпела</span>':''}</div><div class="result-actions">${win&&level<LEVELS.length-1?'<button class="primary" id="next">Следующий уровень</button>':''}<button class="${win&&level<LEVELS.length-1?'plain':'primary'}" id="again">Ещё раз</button><button class="plain" id="back">В меню</button></div></div>`;
+ $('again').onclick=begin;$('back').onclick=menu;if($('next'))$('next').onclick=()=>{setLevel(level+1);begin()}}
 function toast(text,seconds=2.5){$('toast').textContent=text;$('toast').style.display='block';toastTimer=seconds}
 function beep(freq,duration=.1){if(muted)return;try{audioCtx??=new (window.AudioContext||window.webkitAudioContext)();audioCtx.resume();let o=audioCtx.createOscillator(),g=audioCtx.createGain();o.frequency.value=freq;o.type='sine';g.gain.setValueAtTime(.06,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+duration);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+duration)}catch{}}
 function formatTime(t){return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0')}
@@ -430,7 +441,7 @@ function update(dt){if(state!=='playing')return;elapsed+=dt;abilityCD=Math.max(0
  if(ball){ball.age+=dt;ball.life-=dt;if(ball.life<=0){scene.remove(ball.m);ball=null}}
  // HUD: what is left, the deed being held (or one with progress kept after a break), the action button and the need.
  const nMark=deeds.filter(d=>d.kind==='mark'),nPile=deeds.filter(d=>d.kind==='pile');
- $('clock').textContent=formatTime(elapsed);$('objective').textContent=done?'К выходу: ближний у крана или дальний внизу слева':`Метки ${nMark.filter(d=>d.done).length}/${nMark.length} · куча ${nPile.filter(d=>d.done).length}/${nPile.length}`;
+ $('clock').textContent=formatTime(elapsed);$('objective').textContent=done?'К выходу: ближний вверху слева или дальний внизу слева':`Метки ${nMark.filter(d=>d.done).length}/${nMark.length} · куча ${nPile.filter(d=>d.done).length}/${nPile.length}`;
  const pd=doing||(nearDeed&&nearDeed.p>0?nearDeed:null);$('progress').style.display=pd?'block':'none';
  if(pd){$('toiletFill').style.width=pd.p/pd.hold*100+'%';$('progressLabel').textContent=doing?`${pd.K.label}… ещё ${Math.max(0,pd.hold-pd.p).toFixed(1)} с`:`${pd.K.label}: прогресс держится ещё ${Math.max(0,DEED_GRACE-pd.idle).toFixed(1)} с`}
  // The action button shows what is nearby; dim when there is nothing to do here.
@@ -496,6 +507,16 @@ function resetCamera(){const V=view;V.k=ZOOM.start;V.yaw=null;V.pitch=VIEW.pitch
 // ---------- Draw: move meshes to the simulation state ----------
 const v3=new THREE.Vector3();
 function segSphere(ax,ay,az,bx,by,bz,cx,cy,cz){const dx=bx-ax,dy=by-ay,dz=bz-az,l2=dx*dx+dy*dy+dz*dz;let t=((cx-ax)*dx+(cy-ay)*dy+(cz-az)*dz)/l2;t=clamp(t,0,1);return Math.hypot(ax+dx*t-cx,ay+dy*t-cy,az+dz*t-cz)}
+// The gardener pointer is the only news about him off screen, so it is kept — but inside the safe area (12 px + the
+// notch / home-bar insets) and never over the stick or the action buttons (their rectangles + 8 px). If the clamped spot
+// falls into a control zone, it is pushed up above that zone with the same x; the arrow keeps its direction.
+let safeInsets={t:0,r:0,b:0,l:0};
+function readSafe(){const c=getComputedStyle($('safeProbe'));safeInsets={t:parseFloat(c.paddingTop)||0,r:parseFloat(c.paddingRight)||0,b:parseFloat(c.paddingBottom)||0,l:parseFloat(c.paddingLeft)||0}}
+function controlZones(){const a=$('app').getBoundingClientRect();return [$('stick'),document.querySelector('.actions')].map(e=>{const z=e.getBoundingClientRect();return {l:z.left-a.left-8,r:z.right-a.left+8,t:z.top-a.top-8,b:z.bottom-a.top+8}})}
+function placePointer(el,px,py){const w=el.offsetWidth,h=el.offsetHeight,M=12,L=M+safeInsets.l+w/2,R=screenW-M-safeInsets.r-w/2,T=M+safeInsets.t+h/2,B=screenH-M-safeInsets.b-h/2;
+ let x=clamp(px,L,R),y=clamp(py,T,B);
+ for(const z of controlZones())if(x+w/2>z.l&&x-w/2<z.r&&y+h/2>z.t&&y-h/2<z.b)y=Math.max(T,z.t-h/2-1);
+ el.style.transform=`translate(${x}px,${y}px) translate(-50%,-50%)`}
 function syncScene(dt){
  const onBed=player.x>BED_RECT.x&&player.x<BED_RECT.x+BED_RECT.w&&player.y>BED_RECT.y&&player.y<BED_RECT.y+BED_RECT.h;
  const d=dogRig;d.g.position.set(player.x*U,onBed?.18:0,player.y*U);d.g.rotation.y=-player.angle;
@@ -532,9 +553,9 @@ function syncScene(dt){
  if(state==='playing'&&(v3.z>1||Math.abs(gx)>.92||Math.abs(gy)>.86)){const m=Math.max(Math.abs(gx)/.8,Math.abs(gy)/.62,1e-3);const px=(gx/m*.5+.5)*screenW,py=(-gy/m*.5+.5)*screenH;ar.style.display='flex';ar.style.transform=`translate(${px-22}px,${py-22}px) rotate(${Math.atan2(-gy,gx)+Math.PI/2}rad)`}else ar.style.display='none';
  // Pointer to the gardener when he is out of frame (behind or to the side), with distance: no blind spot behind the camera.
  const gp=$('gptr'),g=guards[0];if(g&&state==='playing'){v3.set(g.x*U,1.6,g.y*U).project(camera);let qx=v3.x,qy=v3.y;const behind=v3.z>1;if(behind){qx=-qx;qy=-qy;if(Math.abs(qy)<.3)qy=-1}
-  if(behind||Math.abs(qx)>.96||Math.abs(qy)>.94){const m=Math.max(Math.abs(qx)/.84,Math.abs(qy)/.62,1e-3),px=(qx/m*.5+.5)*screenW,py=(-qy/m*.5+.5)*screenH;gp.style.display='flex';gp.className=g.state==='chase'?'x':g.sus>0||g.state==='inspect'||g.state==='search'?'q':'';gp.style.transform=`translate(${px}px,${py}px) translate(-50%,-50%)`;gp.firstChild.style.transform=`rotate(${Math.atan2(-qy,qx)}rad)`;gp.lastChild.textContent=Math.round(dist(g,player)*U)+' м'}else gp.style.display='none'}else gp.style.display='none'}
+  if(behind||Math.abs(qx)>.96||Math.abs(qy)>.94){const m=Math.max(Math.abs(qx)/.84,Math.abs(qy)/.62,1e-3),px=(qx/m*.5+.5)*screenW,py=(-qy/m*.5+.5)*screenH;gp.style.display='flex';gp.className=g.state==='chase'?'x':g.sus>0||g.state==='inspect'||g.state==='search'?'q':'';gp.firstChild.style.transform=`rotate(${Math.atan2(-qy,qx)}rad)`;gp.lastChild.textContent=Math.round(dist(g,player)*U)+' м';placePointer(gp,px,py)}else gp.style.display='none'}else gp.style.display='none'}
 
-function resize(){const app=$('app'),vh=Math.round(window.visualViewport?.height||innerHeight);app.style.height=vh+'px';screenW=Math.round(app.getBoundingClientRect().width)||innerWidth;screenH=vh;renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.setSize(screenW,screenH);applyFov();lastVW=innerWidth;lastVH=vh}
+function resize(){readSafe();const app=$('app'),vh=Math.round(window.visualViewport?.height||innerHeight);app.style.height=vh+'px';screenW=Math.round(app.getBoundingClientRect().width)||innerWidth;screenH=vh;renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.setSize(screenW,screenH);applyFov();lastVW=innerWidth;lastVH=vh}
 window.visualViewport?.addEventListener('resize',resize);window.addEventListener('resize',resize);window.addEventListener('orientationchange',()=>setTimeout(resize,300));
 function loop(t){requestAnimationFrame(loop);if(innerWidth!==lastVW||Math.round(window.visualViewport?.height||innerHeight)!==lastVH)resize();const dt=Math.min((t-lastTime)/1000,.033);lastTime=t;
  fpsN++;fpsT+=Math.min((t-(loop.prev??t))/1000,1);loop.prev=t;if(fpsT>=.5){fps=Math.round(fpsN/fpsT);fpsN=0;fpsT=0}
@@ -547,11 +568,11 @@ function travelTime(metres,want,panic=false){const st={mult:0,stamina:DOG.stamin
 function mapMetrics(){const B=DOG,u=.06*MAP_SCALE,walk=B.speed*TEMPO*.06,gv=LV.speed*TEMPO*.06;
  // Retreat: the walkable route (A*) from the bed to each exit; "panic" = run during a chase, "calm" = run with the normal stamina.
  const exits=EXITS.map(e=>{const m=pathLen(zone,e)*u;return {id:e.id,m,panic:travelTime(m,B.runMult,true),calm:travelTime(m,B.runMult)}}).sort((a,b)=>a.m-b.m);
- const tap={x:230,y:182},toTap=pathLen(BED,tap)*u,back=pathLen(tap,BED)*u;
+ const tap=TAP_STAND,toTap=pathLen(BED,tap)*u,back=pathLen(tap,BED)*u;
  // Nearest cover: from standing hidden in a bush to standing in the bed zone, edge to edge.
  const bushGap=Math.min(...bushes.map(b=>Math.max(0,dist(b,zone)-(b.r-8)-zone.r)))*u;
  // Gardener's window at the tap: walking away he faces away from the bed; on the way back he sees it again from vision range.
- const window=toTap/gv+4+Math.max(0,back-LV.vision*u)/gv;
+ const window=toTap/gv+LEVELS[level].tapWait+Math.max(0,back-LV.vision*u)/gv;
  return {dogLen:B.len,parkW:916*u,parkH:647*u,diagWalk:Math.hypot(916,647)*u/walk,exits,bushToBed:bushGap/walk,window,needWindow:[DEED_KIND.pile.hold+4,DEED_KIND.pile.hold+6],
   // All deeds in one window: holds plus walking bed → hydrant → flower-box corner (the mark spots of this level).
   allDeeds:LEVEL_DEEDS.reduce((s,d)=>s+DEED_KIND[d.kind].hold,0)+(pathLen(zone,LEVEL_DEEDS[1])+pathLen(LEVEL_DEEDS[1],LEVEL_DEEDS[2]))*u/walk}}
@@ -588,23 +609,27 @@ window.addEventListener('keyup',e=>keys.delete(keyOf(e)));window.addEventListene
 
 // Read-only hook for build verification and debugging; it never changes game state.
 // Park measurements depend only on the frozen numbers and the breed, so they are computed once per breed.
-const metricsCache={},metricsNow=()=>metricsCache[breedId]??=mapMetrics();
+const metricsCache={},metricsNow=()=>metricsCache[breedId+'/'+level]??=mapMetrics();
 window.SneakyDog3D={version:VERSION,metrics:metricsNow,snapshot:()=>({version:VERSION,state,player:player?{x:+player.x.toFixed(1),y:+player.y.toFixed(1),mode:player.mode,hidden:hiddenNow,mult:+speedMult.toFixed(3),panic:panicNow,panicT:+panicT.toFixed(2)}:null,breed:breedId,guards:guards.map(g=>({x:+g.x.toFixed(1),y:+g.y.toFixed(1),state:g.state,idx:g.idx,watch:+g.watch.toFixed(2),icon:g.step?.icon||null,angry:g.angry,sus:+g.sus.toFixed(2)})),done,discovered,deeds:deeds.map(d=>({kind:d.kind,x:d.x,y:d.y,p:+d.p.toFixed(2),done:d.done})),need:+need.toFixed(3),accident,evidence:evidence.length,elapsed:+elapsed.toFixed(2),stamina:Math.round(stamina),view:{...view},metrics:metricsNow(),camera:{x:+camera.position.x.toFixed(2),y:+camera.position.y.toFixed(2),z:+camera.position.z.toFixed(2),fov:+camera.fov.toFixed(1),yaw:+(camYaw()/D2R).toFixed(1),off:+(camState.off/D2R).toFixed(1),pitch:+(camState.pitch/D2R).toFixed(1),poff:+(camState.poff/D2R).toFixed(1),dist:+camState.dist.toFixed(2),eff:+camState.eff.toFixed(2),lift:+(camState.lift/D2R).toFixed(1),zoom:view.k,dragging:!!drag},screen:{w:screenW,h:screenH,canvas:[canvas.width,canvas.height]},fps})};
 
 // Test hooks (only with ?test): start a round, drive the stick in world directions, hold the action button, step the
 // simulation by fixed frames and read the live state. tests.html uses them; nothing here runs in normal play.
 if(TEST)window.SneakyDog3D.test={
- start(breed='lab'){setBreed(breed);begin()},
+ start(breed='lab',lv=0){setBreed(breed);setLevel(lv);begin()},
+ // Whether any gardener sees the bed right now (the same test as for evidence): the window is the time this stays false.
+ bedSeen:()=>guards.some(g=>{const vis=LV.vision*(g.angry?1.15:1),dz=dist(g,zone),az=Math.atan2(zone.y-g.y,zone.x-g.x)-g.angle;return dz<vis&&Math.abs(Math.atan2(Math.sin(az),Math.cos(az)))<.64&&lineClear(g,zone)}),
  // Advance the game by `sec` seconds in 1/60 s frames; onTick(t) runs before each frame (bots steer there).
  step(sec,onTick){const n=Math.round(sec*60);for(let i=0;i<n&&state==='playing';i++){onTick?.(i/60);update(1/60)}},
  // Stick towards a world direction (map units) with deflection len (0 releases it). The stick is camera-relative in the game,
  // so this turns the wanted direction back through the camera yaw.
  stick(wx,wy,len){if(!len||!(wx||wy)){joy={x:0,y:0,id:null};return}const l=Math.hypot(wx,wy),x=wx/l,y=wy/l,c=Math.cos(camYaw()),s=Math.sin(camYaw());joy={x:(x*c+y*s)*len,y:(-x*s+y*c)*len,id:'test'}},
  hold(on){toiletHeld=!!on},
+ // One presentation frame (camera, HUD pointers) without waiting for requestAnimationFrame, which a hidden window may not run.
+ render(){updateCamera(1/60);syncScene(1/60)},
  state:()=>({state,player,guards,deeds,rings,stamina,speedMult,done,need,accident,evidence,spotted,discovered,elapsed,panicNow}),
  place(x,y){player.x=x;player.y=y},
  findPath:(a,b)=>findPath(a,b),blocked:(x,y,r)=>blocked(x,y,r),lineClear:(a,b,m)=>lineClear(a,b,m),
- consts:{NOISE,EXITS,LEVEL_DEEDS,DEED_KIND,STICK,bushes,zone,BED,TAP:{x:230,y:182},NEED_TIME,PAR_TIME,DEED_GRACE,DEED_DRAIN}};
+ consts:{NOISE,EXITS,LEVEL_DEEDS,DEED_KIND,STICK,bushes,zone,BED,TAP:TAP_STAND,LEVELS,NEED_TIME,DEED_GRACE,DEED_DRAIN}};
 buildWorld();resize();menu();requestAnimationFrame(loop);
 </script>
 </body>

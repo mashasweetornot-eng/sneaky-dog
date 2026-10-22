@@ -47,31 +47,52 @@ function bot(T){let goal=null,path=[],repath=0;
    T.stick(next.x-p.x,next.y-p.y,len);return d2(p,goal)},
   stop(){T.stick(0,0,0)}}}
 
-// Bot plays a whole level: corner mark (far from the gardener) → hide in a bush → when the gardener leaves for the tap:
-// the pile on the bed → the hydrant mark on the way back → run to the far exit.
-function playLevel(T,breed){T.start(breed);const C=T.consts,B=bot(T),mon=stillMonitor(T);
- const deed=i=>T.state().deeds[i],[pileI,hydI,cornerI]=[0,1,2],bush={x:598,y:406},farExit=C.EXITS.find(e=>e.id==='far');
- let phase='toCorner',waited=0;const log=[];const set=p=>{phase=p;log.push(p+'@'+T.state().elapsed.toFixed(1))};
- T.step(400,()=>{mon.tick();const s=T.state(),g=s.guards[0],tapIdx=g.pts.findIndex(p=>p.icon==='🚰');
+// Bot plays a whole level. A trip to the tap is meant for ONE deed, so it spreads them:
+//  corner mark (far from the gardener) → hide in the bush (598,406) → 1st trip to the tap: the hydrant mark, back to the bush
+//  → when he walks from his first round point to the second (east edge, facing away, too far to see the hedge gap) it slips
+//  north through the gap by the hedge to the spot by the top fence (705,80), which nothing in his cycle ever sees (found by a
+//  search over a full cycle) → 2nd trip: the pile on the bed (2.8 s away) → if he is still at the tap, run to the far exit;
+//  if he is already coming back (level 3: the window only fits the pile), slip into the north-east corner, out of his cone
+//  and range, and leave when he walks to the east round point (or, if he found the pile, once he has run to the near exit).
+function playLevel(T,breed,lv){T.start(breed,lv);const C=T.consts,B=bot(T),mon=stillMonitor(T);
+ const deed=i=>T.state().deeds[i],[pileI,hydI,cornerI]=[0,1,2],bush={x:598,y:406},north=[{x:680,y:300},{x:684,y:226},{x:705,y:80}],ne={x:925,y:88},nearExit=C.EXITS.find(e=>e.id==='near'),farExit=C.EXITS.find(e=>e.id==='far');let out=[];const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+ let phase='toCorner',waited=0,trips=0,wasTap=false,wp=0;const log=[];const set=p=>{phase=p;log.push(p+'@'+T.state().elapsed.toFixed(1))};
+ T.step(600,()=>{mon.tick();const s=T.state(),g=s.guards[0],tapIdx=g.pts.findIndex(p=>p.icon==='🚰'),r2=g.pts.findIndex(p=>p.x>900);
+  const onTrip=g.state==='patrol'&&g.idx===tapIdx,newTrip=onTrip&&!wasTap;wasTap=onTrip;
   switch(phase){
    case 'toCorner':if(B.go(deed(cornerI),.6)<12){B.stop();set('markCorner')}break;
    case 'markCorner':T.hold(true);if(deed(cornerI).done){T.hold(false);set('toBush')}break;
-   case 'toBush':if(B.go(bush,.6)<10){B.stop();set('wait')}break;
-   case 'wait':waited+=1/60;if(g.state==='patrol'&&g.idx===tapIdx&&d2(g,C.zone)>250)set('toBed');break;
-   case 'toBed':if(B.go(deed(pileI),.7)<20){B.stop();set('pile')}break;
-   case 'pile':T.hold(true);if(deed(pileI).done){T.hold(false);set('toHydrant')}break;
+   case 'toBush':if(B.go(bush,.6)<10){B.stop();set(deed(hydI).done?'waitRound':'wait')}break;
+   case 'wait':waited+=1/60;if(newTrip){trips++;set('toHydrant')}break;
    case 'toHydrant':if(B.go(deed(hydI),.7)<12){B.stop();set('markHydrant')}break;
-   case 'markHydrant':T.hold(true);if(deed(hydI).done){T.hold(false);set('toExit')}break;
-   case 'toExit':B.go(farExit,1);break}});
- const s=T.state();return {state:s.state,elapsed:s.elapsed,spotted:s.spotted,accident:s.accident,discovered:s.discovered,phase,waited,log,still:mon.worst,stillWhere:mon.where}}
+   case 'markHydrant':T.hold(true);if(deed(hydI).done){T.hold(false);set('toBush')}break;
+   case 'waitRound':waited+=1/60;if(g.state==='patrol'&&g.idx===r2&&!(g.watch>0)){wp=0;set('toNorth')}break;
+   case 'toNorth':if(B.go(north[wp],.7)<10){if(++wp>=north.length){B.stop();set('waitNorth')}}break;
+   case 'waitNorth':waited+=1/60;if(newTrip){trips++;set('toBed')}break;
+   case 'toBed':if(B.go(deed(pileI),.7)<20){B.stop();set('pile')}break;
+   case 'pile':T.hold(true);if(deed(pileI).done){T.hold(false);if(onTrip){wp=0;out=[farExit];set('toExit')}else set('hide')}break;
+   case 'hide':if(B.go(ne,1)<10){B.stop();set('waitOut')}break;
+   case 'waitOut':waited+=1/60;if(s.discovered?dist(g,nearExit)<120:g.state==='patrol'&&g.idx===r2&&!(g.watch>0)){wp=0;out=s.discovered?[farExit]:[{x:705,y:80},{x:500,y:85},nearExit];set('toExit')}break;
+   case 'toExit':if(B.go(out[wp],1)<10&&wp<out.length-1)wp++;break}});
+ const s=T.state();return {state:s.state,elapsed:s.elapsed,spotted:s.spotted,accident:s.accident,discovered:s.discovered,phase,waited,trips,log,still:mon.worst,stillWhere:mon.where}}
+
+// The gardener's window at the tap, measured in the simulation: how long the bed stays out of his sight around his stop
+// at the tap. The dog is parked far away, out of everyone's way.
+function measureWindow(T,lv){T.start('lab',lv);let t=0,lastSeen=0,inGap=false,gapStart=0,atTap=false;const wins=[];
+ T.step(200,()=>{t+=1/60;T.place(150,640);const g=T.state().guards[0];const seen=T.bedSeen();
+  if(!seen&&!inGap){inGap=true;gapStart=t;atTap=false}
+  if(!seen&&g.state==='patrol'&&g.watch>0&&g.step?.icon==='🚰')atTap=true;
+  if(seen&&inGap){inGap=false;if(atTap&&gapStart>0)wins.push(t-gapStart)}});
+ return wins}
 
 async function run(){
- // ---- 1. Bot passes the level with every playable breed; no gardener sticks.
- {const {T,f}=await frame(844,390);
-  for(const breed of ['lab','jack','corgi']){const r=playLevel(T,breed);
-   check(`Бот проходит парк 1 (${breed})`,r.state==='won',`итог ${r.state}, ${r.elapsed.toFixed(1)} с, ждал окна ${r.waited.toFixed(1)} с, заметили: ${r.spotted?'да':'нет'}, улику нашли: ${r.discovered?'да':'нет'}, авария: ${r.accident?'да':'нет'}; фазы: ${r.log.join(' → ')}`);
-   check(`Садовник не стоит дольше 8 с вне расписания (бот, ${breed})`,r.still<8,`наибольший простой ${r.still.toFixed(1)} с${r.stillWhere?' в '+JSON.stringify(r.stillWhere):''}`)}
-  T.start('lab');f.remove()}
+ // ---- 1. Bot passes every level with every playable breed; no gardener sticks. Bot times feed the par check (lab).
+ const botTime={};
+ {const {T,f}=await frame(844,390);const L=T.consts.LEVELS;
+  for(let lv=0;lv<L.length;lv++)for(const breed of ['lab','jack','corgi']){const r=playLevel(T,breed,lv);if(breed==='lab')botTime[lv]=r.elapsed;
+   check(`Бот проходит уровень ${lv+1} (${breed})`,r.state==='won',`итог ${r.state}, ${r.elapsed.toFixed(1)} с, ждал ${r.waited.toFixed(1)} с, отлучек ${r.trips}, заметили: ${r.spotted?'да':'нет'}, улику нашли: ${r.discovered?'да':'нет'}, авария: ${r.accident?'да':'нет'}; фазы: ${r.log.join(' → ')}`);
+   check(`Садовник не стоит дольше 8 с вне расписания (уровень ${lv+1}, ${breed})`,r.still<8,`наибольший простой ${r.still.toFixed(1)} с${r.stillWhere?' в '+JSON.stringify(r.stillWhere):''}`)}
+  T.start('lab',0);f.remove()}
 
  // ---- 2. Gardener sticking scenarios from 3D-0.11.
  {const {T,f}=await frame(844,390);const C=T.consts;
@@ -118,11 +139,25 @@ async function run(){
   check('Потребность: переполнение — дело на месте, улика, без проигрыша',s3.accident&&s3.deeds[0].done&&s3.evidence.length===1&&s3.state==='playing',`через ${C.NEED_TIME} с: авария ${s3.accident?'да':'нет'}, куча засчитана ${s3.deeds[0].done?'да':'нет'}, улик ${s3.evidence.length}, состояние ${s3.state}`);
   f.remove()}
 
- // ---- 6. Level rule: the gardener's window ≥ deed time + 4–6 s (reported, not adjusted).
- {const {G,f}=await frame(844,390);const m=G.snapshot().metrics;const need=m.needWindow;
-  check('Правило окна садовника (куча + 4–6 с)',m.window>=need[1],`окно у крана ${m.window.toFixed(1)} с, нужно ≥ ${need[0]}–${need[1]} с`);
-  report(m.window>=m.allDeeds+4?'info':'fail','Все три дела за одно окно',`дела ${m.allDeeds.toFixed(1)} с (удержания 10 с + переходы клумба → гидрант → угол ящика) при окне ${m.window.toFixed(1)} с`);
+ // ---- 6. The gardener's window per level, measured in the simulation, within its target ±2 s (catches map edits that
+ // shift it); the GDD 3.2 rule (one pile + 4–6 s) is about one deed per trip.
+ {const {T,f}=await frame(844,390);const L=T.consts.LEVELS,pile=T.consts.DEED_KIND.pile.hold;
+  for(let lv=0;lv<L.length;lv++){const w=measureWindow(T,lv),avg=w.length?w.reduce((a,b)=>a+b,0)/w.length:NaN;
+   check(`Окно садовника, уровень ${lv+1}: ${L[lv].window} ± 2 с`,w.length>0&&w.every(x=>Math.abs(x-L[lv].window)<=2),`замерено ${w.map(x=>x.toFixed(1)).join(', ')||'—'} с (пауза у крана ${L[lv].tapWait} с); куча ${pile} с — ${avg>=pile+4?'влезает с запасом':avg>=pile?'влезает впритык':'в одно окно не влезает'}`)}
+  // ---- 6b. Par time = lab bot time × 1.8 rounded up to 5 s; must stay within 1.4–2.4 × bot time.
+  for(let lv=0;lv<L.length;lv++){const b=botTime[lv],par=L[lv].par,want=Math.ceil(b*1.8/5)*5;
+   check(`Время на третью звезду, уровень ${lv+1}`,b>0&&par>=1.4*b&&par<=2.4*b,`бот ${b?b.toFixed(1):'—'} с → par ${par} с (${b?(par/b).toFixed(2):'—'}× бота, допустимо 1.4–2.4×; по формуле ×1.8 вышло бы ${b?want:'—'} с)`)}
   f.remove()}
+
+ // ---- 6c. The gardener pointer stays inside the safe area and off the stick and action buttons (±8 px).
+ for(const [w,h] of [[844,390],[932,430]]){const {T,win,f}=await frame(w,h);T.start('lab',0);T.step(.2);const doc=win.document,gp=doc.getElementById('gptr'),s=T.state(),g=s.guards[0];
+  const zone=e=>{const z=e.getBoundingClientRect();return {l:z.left-8,r:z.right+8,t:z.top-8,b:z.bottom+8}},zs=[zone(doc.getElementById('stick')),zone(doc.querySelector('.actions'))];
+  let shown=0,lowLeft=0,lowRight=0;const bad=[];
+  for(let k=0;k<24;k++){const a=k*Math.PI/12;T.place(500,400);g.x=500+Math.cos(a)*330;g.y=400+Math.sin(a)*330;g.state='patrol';g.watch=99;g.step={icon:'💧',sp:0,amp:0};T.render();
+   if(gp.style.display!=='flex')continue;shown++;const r=gp.getBoundingClientRect();if(r.top>h*.5&&r.left<w*.3)lowLeft++;if(r.top>h*.4&&r.right>w*.7)lowRight++;
+   const inSafe=r.left>=11.5&&r.top>=11.5&&r.right<=w-11.5&&r.bottom<=h-11.5,hit=zs.some(z=>!(r.right<=z.l||z.r<=r.left||r.bottom<=z.t||z.b<=r.top));
+   if(!inSafe||hit)bad.push(`${k*15}°: ${!inSafe?'вне безопасной области':'на управлении'}`)}
+  check(`Указатель на садовника не на управлении, ${w}×${h}`,!bad.length&&shown>0,`садовник в 24 направлениях: указатель показан ${shown} раз, у левого нижнего края ${lowLeft}, у правого ${lowRight}; ${bad.length?'нарушения: '+bad.join(', '):'нарушений нет'}`);f.remove()}
 
  // ---- 7. Landscape layout: no overlaps on 844×390 and 932×430 (progress and gait label forced visible).
  for(const [w,h] of [[844,390],[932,430]]){const {T,win,f}=await frame(w,h);T.start('lab');T.step(.1);const doc=win.document;
