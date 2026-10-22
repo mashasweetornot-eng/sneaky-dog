@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Sneaky 3D"><link rel="apple-touch-icon" href="../apple-touch-icon.png"><link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23102f2a'/%3E%3Cg fill='%23f8d36c'%3E%3Cellipse cx='32' cy='42' rx='16' ry='13'/%3E%3Cellipse cx='12' cy='25' rx='6' ry='8'/%3E%3Cellipse cx='26' cy='16' rx='6' ry='8'/%3E%3Cellipse cx='41' cy='16' rx='6' ry='8'/%3E%3Cellipse cx='53' cy='25' rx='6' ry='8'/%3E%3C/g%3E%3C/svg%3E">
 <style>
-:root{color-scheme:dark;--ink:#102f2a;--cream:#fff5d9;--gold:#f8d36c;--green:#a8de8a}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}#app{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0c241f;color:var(--cream);font-family:ui-rounded,'Trebuchet MS',system-ui,sans-serif}button{font:inherit;cursor:pointer;border:0;touch-action:manipulation;color:inherit}button:focus-visible{outline:3px solid white;outline-offset:4px}button:disabled{cursor:default;opacity:.5}#app{position:relative;max-width:1600px;height:100dvh;margin:auto;overflow:hidden}#field{display:block;width:100%;height:100%;touch-action:none}#hud{position:absolute;top:0;left:0;right:0;padding:max(16px,env(safe-area-inset-top)) max(22px,env(safe-area-inset-right)) 16px max(22px,env(safe-area-inset-left));background:linear-gradient(#102f2af2,#102f2a00);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;pointer-events:none}.logo{font-size:20px;font-weight:950;letter-spacing:-1px;color:var(--gold)}.level{font-size:14px;margin-top:5px;color:#e0eedf}.hud-right{display:flex;align-items:center;gap:10px}.pill{background:#102f2ae6;border:1px solid #ffffff1a;border-radius:18px;padding:10px 14px;font-weight:700;font-size:14px}.iconbtn{pointer-events:auto;background:#102f2ae6;border:1px solid #ffffff33;border-radius:50%;width:43px;height:43px;font-size:19px}.objective{position:absolute;top:90px;left:50%;transform:translateX(-50%);max-width:calc(100% - 30px);white-space:nowrap;padding:10px 17px;background:#fff5d9;color:var(--ink);border-radius:30px;font-weight:800;font-size:14px;box-shadow:0 4px 0 #0002;pointer-events:none}.status{position:absolute;left:50%;bottom:46px;transform:translateX(-50%);background:#102f2ae6;padding:9px 16px;border-radius:18px;font-size:14px;pointer-events:none;max-width:calc(100% - 20px);text-align:center}.progress{position:absolute;top:138px;left:50%;transform:translateX(-50%);width:220px;padding:9px;background:#102f2ae6;border-radius:18px;display:none}.progress span{display:block;text-align:center;font-size:13px;margin-bottom:6px}.track{height:8px;background:#ffffff26;border-radius:8px;overflow:hidden}.fill{height:100%;width:0;background:var(--gold);border-radius:8px}.controls{position:absolute;bottom:max(22px,env(safe-area-inset-bottom));left:22px;right:22px;display:flex;align-items:flex-end;justify-content:space-between;pointer-events:none}#stick{width:116px;height:116px;border-radius:50%;background:#102f2a55;border:2px solid #fff5d955;position:relative;pointer-events:auto;touch-action:none;user-select:none}#knob{position:absolute;width:47px;height:47px;border-radius:50%;left:32.5px;top:32.5px;background:#fff5d9bb;border:3px solid #fff5d9;box-shadow:0 4px 10px #0003;pointer-events:none}.actions{display:flex;gap:12px;align-items:flex-end;pointer-events:auto}.action{height:76px;width:76px;border-radius:26px;background:var(--gold);color:var(--ink);border:3px solid #fff5d966;box-shadow:0 5px 0 #0004;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:24px;touch-action:none;user-select:none}.action small{font-size:12px;font-weight:900}.action.secondary{background:#fff5d9}.action.active{transform:translateY(3px);box-shadow:0 2px 0 #0004}.energy{height:5px;background:#fff5d94d;border-radius:10px;margin:9px 7px 0;width:62px}.energy>i{display:block;background:#a8de8a;width:100%;height:100%;border-radius:10px}.control-help{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:13px;color:#fff5d9b3;pointer-events:none}#veil{position:absolute;inset:0;background:#08221bc2;backdrop-filter:blur(9px);display:flex;align-items:center;justify-content:center;padding:22px;overflow:auto}.card{width:920px;max-width:100%;border-radius:30px;background:var(--ink);border:1px solid #ffffff1f;box-shadow:0 24px 100px #0006;overflow:hidden;display:grid;grid-template-columns:42% 58%}.art{position:relative;background:#245342;overflow:hidden;min-height:440px}.art img{width:100%;height:100%;object-fit:cover;position:absolute}.art:after{content:'';position:absolute;inset:0;background:linear-gradient(transparent 55%,#102f2aef)}.art-label{position:absolute;left:25px;bottom:25px;z-index:1;font-size:15px;line-height:1.6;color:#fff5d9d9}.content{padding:32px}.eyebrow{font-size:12px;font-weight:900;letter-spacing:2px;color:#a8de8a;text-transform:uppercase}h1{font-size:clamp(32px,5vw,50px);line-height:1;margin:12px 0 8px;letter-spacing:-2px;color:var(--gold)}.subtitle{margin:0 0 21px;color:#d1e2d3;font-size:15px;line-height:1.5}.dogs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}.dog-card{padding:12px 5px;background:#ffffff09;border:2px solid transparent;border-radius:18px;min-width:0}.dog-card.selected{background:#f8d36c17;border-color:var(--gold)}.dog-card span{font-size:30px;display:block;margin-bottom:7px}.dog-card b{font-size:13px}.dog-info{background:#ffffff08;border-radius:15px;padding:12px;font-size:14px;line-height:1.5;min-height:78px;color:#d6e6d8}.dog-info strong{color:var(--gold)}.levels{display:flex;gap:7px;margin:15px 0}.levelbtn{border-radius:12px;background:#ffffff0d;flex:1;padding:10px 3px;font-size:14px;border:1px solid transparent}.levelbtn.selected{border-color:#a8de8a;color:#a8de8a}.primary{background:var(--gold);color:var(--ink);padding:15px 25px;width:100%;border-radius:16px;font-weight:950;font-size:17px;box-shadow:0 4px 0 #c69639}.fine{color:#b7d0bf;font-size:12px;line-height:1.5;margin:14px 0 0}.result{max-width:430px;display:block;text-align:center;padding:32px}.result h1{font-size:38px;line-height:1.12}.result .subtitle{margin:18px 0}.result-icon{font-size:58px}.result-actions{display:flex;flex-direction:column;gap:14px}.plain{background:#ffffff0b;border:1px solid #ffffff20;padding:13px;border-radius:14px;font-weight:800}.stars{font-size:35px;color:var(--gold);margin:15px 0}.statline{display:flex;justify-content:center;gap:22px;margin:20px 0;color:#d6e6d8;font-size:14px}#toast{position:absolute;left:50%;top:190px;transform:translateX(-50%);background:#102f2af2;padding:12px 18px;border-radius:18px;max-width:calc(100% - 24px);text-align:center;font-size:14px;pointer-events:none;display:none}.hidden,[hidden]{display:none!important}#app:fullscreen{max-width:none;height:100%}
+:root{color-scheme:dark;--ink:#102f2a;--cream:#fff5d9;--gold:#f8d36c;--green:#a8de8a}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}#app{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0c241f;color:var(--cream);font-family:ui-rounded,'Trebuchet MS',system-ui,sans-serif}button{font:inherit;cursor:pointer;border:0;touch-action:manipulation;color:inherit}button:focus-visible{outline:3px solid white;outline-offset:4px}button:disabled{cursor:default;opacity:.5}#app{position:relative;max-width:1600px;height:100dvh;margin:auto;overflow:hidden}#field{display:block;width:100%;height:100%;touch-action:none}#hud{position:absolute;top:0;left:0;right:0;padding:max(16px,env(safe-area-inset-top)) max(22px,env(safe-area-inset-right)) 16px max(22px,env(safe-area-inset-left));background:linear-gradient(#102f2af2,#102f2a00);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;pointer-events:none}.logo{font-size:20px;font-weight:950;letter-spacing:-1px;color:var(--gold)}.level{font-size:14px;margin-top:5px;color:#e0eedf}.hud-right{display:flex;align-items:center;gap:10px}.pill{background:#102f2ae6;border:1px solid #ffffff1a;border-radius:18px;padding:10px 14px;font-weight:700;font-size:14px}.iconbtn{pointer-events:auto;background:#102f2ae6;border:1px solid #ffffff33;border-radius:50%;width:43px;height:43px;font-size:19px}.objective{position:absolute;top:90px;left:50%;transform:translateX(-50%);max-width:calc(100% - 30px);white-space:nowrap;padding:10px 17px;background:#fff5d9;color:var(--ink);border-radius:30px;font-weight:800;font-size:14px;box-shadow:0 4px 0 #0002;pointer-events:none}.status{position:absolute;left:50%;bottom:46px;transform:translateX(-50%);background:#102f2ae6;padding:9px 16px;border-radius:18px;font-size:14px;pointer-events:none;max-width:calc(100% - 20px);text-align:center}.progress{position:absolute;top:138px;left:50%;transform:translateX(-50%);width:220px;padding:9px;background:#102f2ae6;border-radius:18px;display:none}.progress span{display:block;text-align:center;font-size:13px;margin-bottom:6px}.track{height:8px;background:#ffffff26;border-radius:8px;overflow:hidden}.fill{height:100%;width:0;background:var(--gold);border-radius:8px}.controls{position:absolute;bottom:max(22px,env(safe-area-inset-bottom));left:22px;right:22px;display:flex;align-items:flex-end;justify-content:space-between;pointer-events:none}#stick{width:116px;height:116px;border-radius:50%;background:#102f2a55;border:2px solid #fff5d955;position:relative;pointer-events:auto;touch-action:none;user-select:none}#knob{position:absolute;width:47px;height:47px;border-radius:50%;left:32.5px;top:32.5px;background:#fff5d9bb;border:3px solid #fff5d9;box-shadow:0 4px 10px #0003;pointer-events:none}.actions{display:flex;gap:12px;align-items:flex-end;pointer-events:auto}.action{height:76px;width:76px;border-radius:26px;background:var(--gold);color:var(--ink);border:3px solid #fff5d966;box-shadow:0 5px 0 #0004;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:24px;touch-action:none;user-select:none}.action small{font-size:12px;font-weight:900}.action.secondary{background:#fff5d9}.action.active{transform:translateY(3px);box-shadow:0 2px 0 #0004}.control-help{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:13px;color:#fff5d9b3;pointer-events:none}#veil{position:absolute;inset:0;background:#08221bc2;backdrop-filter:blur(9px);display:flex;align-items:center;justify-content:center;padding:22px;overflow:auto}.card{width:920px;max-width:100%;border-radius:30px;background:var(--ink);border:1px solid #ffffff1f;box-shadow:0 24px 100px #0006;overflow:hidden;display:grid;grid-template-columns:42% 58%}.art{position:relative;background:#245342;overflow:hidden;min-height:440px}.art img{width:100%;height:100%;object-fit:cover;position:absolute}.art:after{content:'';position:absolute;inset:0;background:linear-gradient(transparent 55%,#102f2aef)}.art-label{position:absolute;left:25px;bottom:25px;z-index:1;font-size:15px;line-height:1.6;color:#fff5d9d9}.content{padding:32px}.eyebrow{font-size:12px;font-weight:900;letter-spacing:2px;color:#a8de8a;text-transform:uppercase}h1{font-size:clamp(32px,5vw,50px);line-height:1;margin:12px 0 8px;letter-spacing:-2px;color:var(--gold)}.subtitle{margin:0 0 21px;color:#d1e2d3;font-size:15px;line-height:1.5}.dogs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}.dog-card{padding:12px 5px;background:#ffffff09;border:2px solid transparent;border-radius:18px;min-width:0}.dog-card.selected{background:#f8d36c17;border-color:var(--gold)}.dog-card span{font-size:30px;display:block;margin-bottom:7px}.dog-card b{font-size:13px}.dog-info{background:#ffffff08;border-radius:15px;padding:12px;font-size:14px;line-height:1.5;min-height:78px;color:#d6e6d8}.dog-info strong{color:var(--gold)}.levels{display:flex;gap:7px;margin:15px 0}.levelbtn{border-radius:12px;background:#ffffff0d;flex:1;padding:10px 3px;font-size:14px;border:1px solid transparent}.levelbtn.selected{border-color:#a8de8a;color:#a8de8a}.primary{background:var(--gold);color:var(--ink);padding:15px 25px;width:100%;border-radius:16px;font-weight:950;font-size:17px;box-shadow:0 4px 0 #c69639}.fine{color:#b7d0bf;font-size:12px;line-height:1.5;margin:14px 0 0}.result{max-width:430px;display:block;text-align:center;padding:32px}.result h1{font-size:38px;line-height:1.12}.result .subtitle{margin:18px 0}.result-icon{font-size:58px}.result-actions{display:flex;flex-direction:column;gap:14px}.plain{background:#ffffff0b;border:1px solid #ffffff20;padding:13px;border-radius:14px;font-weight:800}.stars{font-size:35px;color:var(--gold);margin:15px 0}.statline{display:flex;justify-content:center;gap:22px;margin:20px 0;color:#d6e6d8;font-size:14px}#toast{position:absolute;left:50%;top:190px;transform:translateX(-50%);background:#102f2af2;padding:12px 18px;border-radius:18px;max-width:calc(100% - 24px);text-align:center;font-size:14px;pointer-events:none;display:none}.hidden,[hidden]{display:none!important}#app:fullscreen{max-width:none;height:100%}
 @media(pointer:coarse){.control-help{display:none}}
 @media(max-width:650px){#hud{padding: max(12px,env(safe-area-inset-top)) 13px 12px}.logo{font-size:18px}.pill{padding:9px 10px;font-size:13px}.objective{top:77px;font-size:13px;white-space:normal;text-align:center;width:max-content;max-width:92%}.progress{top:122px}.card{display:block;max-width:410px}.art{min-height:0;height:145px}.art img{object-position:center 43%}.art-label{display:none}.content{padding:20px}h1{font-size:36px;margin-top:8px}.subtitle{font-size:14px;margin-bottom:13px}.dogs{margin:10px 0}.dog-info{font-size:13px;min-height:66px}.fine{font-size:12px;margin-top:10px}.levels{margin:12px 0}.controls{left:17px;right:17px;bottom:max(24px,env(safe-area-inset-bottom))}.status{bottom:157px;font-size:13px}.action{height:72px;width:72px;border-radius:25px}.control-help{display:none}.result{padding:26px}.hud-right{gap:7px}}
 @media(max-height:550px){#veil{padding:12px}.card{max-width:820px;grid-template-columns:35% 65%;display:grid}.art{height:auto;min-height:0}.content{padding:17px 25px}h1{font-size:32px;margin:6px 0}.subtitle{margin-bottom:8px;font-size:13px}.dogs{margin:7px 0}.dog-card{padding:6px}.dog-card span{font-size:24px;margin-bottom:3px}.dog-info{min-height:0;padding:8px;font-size:12px}.levels{margin:9px 0}.primary{padding:11px}.fine{margin-top:9px}.objective{top:68px}.status{bottom:115px}.controls{bottom:max(17px,env(safe-area-inset-bottom));left:max(22px,env(safe-area-inset-left));right:max(22px,env(safe-area-inset-right))}#hud{padding-left:max(13px,env(safe-area-inset-left));padding-right:max(13px,env(safe-area-inset-right))}#stick{height:92px;width:92px}#knob{left:20.5px;top:20.5px}.action{height:62px;width:62px;border-radius:22px}.progress{top:104px}.result{display:block;padding:20px;max-width:430px}.result-icon{font-size:36px}.result h1{font-size:28px}.result .subtitle,.statline,.stars{margin:10px 0}.control-help{display:none}.objective{top:14px;font-size:12px;padding:7px 13px;max-width:40vw;white-space:normal;text-align:center}.status{bottom:auto;top:74px;left:max(14px,env(safe-area-inset-left));transform:none;font-size:12px;padding:7px 11px;max-width:23vw;text-align:left}#toast{top:74px;left:auto;right:max(14px,env(safe-area-inset-right));transform:none;font-size:12px;padding:7px 11px;max-width:23vw;text-align:left}}
@@ -33,7 +33,7 @@
 <div class="objective" id="objective">Найди клумбу наверху справа</div>
 <div class="progress" id="progress"><span>Тихо… почти готово!</span><div class="track"><div class="fill" id="toiletFill"></div></div></div>
 <div class="status" id="status"></div>
-<div class="controls"><div><div id="stick" aria-label="Джойстик"><div id="knob"></div></div><div class="energy"><i id="energyFill"></i></div></div><div class="actions"><button id="ability" class="action secondary" aria-label="Мяч"><span>🎾</span><small id="abilityText">МЯЧ</small></button><button id="toilet" class="action" aria-label="Удерживать, чтобы сделать дело"><span>💩</span><small>ДЕРЖИ</small></button></div></div>
+<div class="controls"><div><div id="stick" aria-label="Джойстик"><div id="knob"></div></div></div><div class="actions"><button id="ability" class="action secondary" aria-label="Мяч"><span>🎾</span><small id="abilityText">МЯЧ</small></button><button id="toilet" class="action" aria-label="Удерживать, чтобы сделать дело"><span>💩</span><small>ДЕРЖИ</small></button></div></div>
 <div class="control-help">WASD — идти · C — красться · Shift — бег · E — мяч · пробел — дело · мышь — повернуть камеру, колесо — зум · ⚙ — настройки</div>
 <div id="tune" hidden></div>
 <div id="toast" role="status"></div><div id="veil"><div class="card solo"><h1>SNEAKY DOG 3D</h1><p class="subtitle">Загружаю 3D…</p></div></div>
@@ -46,7 +46,7 @@ setTimeout(()=>{if(!window.SneakyDog3D){const v=document.getElementById('veil');
 <script type="module">
 import * as THREE from 'three';
 
-const VERSION='3D-0.8';
+const VERSION='3D-0.9';
 const $=id=>document.getElementById(id);
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),D2R=Math.PI/180;
 
@@ -55,16 +55,17 @@ const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),clamp=(v,a,b)=>Math.max(a,Math.min
 // Breeds (GDD §4). The menu dots are computed from these same numbers, so they cannot drift apart.
 // speed — base walking speed (2D units/s, × cfg.tempo); runMult / sneakMult — top / sneaking multipliers of it;
 // stamina — pool; drain — per second at full run (less for a partial run); regen — per second at walking pace or slower;
-// accel — speed smoothing in s (smaller = nimbler); aim — camera aim height, m; size — model scale.
+// accel — speed smoothing in s (smaller = nimbler); len — nose to tail tip, m; hgt — height at the withers, m.
+// The placeholder model, the camera distance (in body lengths) and the aim height (hgt × 0.8) are all derived from len / hgt.
 // vip («Твой щенок») — a paid attraction, not a balance unit: best at every field, no weak spots (the counterweight is level
 // design). Locked: not playable yet. Its menu card lists abilities instead of dots, since the dots cap at 5 for everyone.
 const BREEDS={
- lab:{name:'Лабрадор',icon:'🐕',color:'#e8b960',speed:153,runMult:1.35,sneakMult:.5,stamina:100,drain:28,regen:18,accel:.12,aim:.45,size:1,cooldown:12},
- jack:{name:'Джек-рассел',icon:'🐶',color:'#f3efe2',patch:'#975326',speed:174,runMult:1.45,sneakMult:.5,stamina:55,drain:32,regen:20,accel:.08,aim:.38,size:.85,cooldown:12},
- corgi:{name:'Корги',icon:'🦊',color:'#d9893d',speed:140,runMult:1.3,sneakMult:.55,stamina:85,drain:24,regen:18,accel:.14,aim:.36,size:.82,cooldown:12},
- vip:{name:'Твой щенок',icon:'⭐',color:'#c98f5a',speed:175,runMult:1.6,sneakMult:.55,stamina:120,drain:22,regen:24,accel:.08,aim:.42,size:.9,cooldown:9,locked:true,abilities:['Рывок','Вой','Копает быстро']}};
+ lab:{name:'Лабрадор',icon:'🐕',color:'#e8b960',speed:153,runMult:1.35,sneakMult:.5,stamina:100,drain:28,regen:18,accel:.12,len:1.10,hgt:.58,cooldown:12},
+ jack:{name:'Джек-рассел',icon:'🐶',color:'#f3efe2',patch:'#975326',speed:174,runMult:1.45,sneakMult:.5,stamina:55,drain:32,regen:20,accel:.08,len:.72,hgt:.36,cooldown:12},
+ corgi:{name:'Корги',icon:'🦊',color:'#d9893d',speed:140,runMult:1.3,sneakMult:.55,stamina:85,drain:24,regen:18,accel:.14,len:.75,hgt:.28,cooldown:12},
+ vip:{name:'Твой щенок',icon:'⭐',color:'#c98f5a',speed:175,runMult:1.6,sneakMult:.55,stamina:120,drain:22,regen:24,accel:.08,len:1.00,hgt:.50,cooldown:9,locked:true,abilities:['Рывок','Вой','Копает быстро']}};
 // Guard against balance regressions: VIP must not lose to any other breed on any gameplay field.
-// +1 — bigger is better, −1 — smaller is better. Cosmetic fields (aim, size, colours) are not compared.
+// +1 — bigger is better, −1 — smaller is better. Body size and colours (len, hgt, color) are not compared.
 {const BETTER={speed:1,runMult:1,sneakMult:1,stamina:1,drain:-1,regen:1,accel:-1,cooldown:-1},v=BREEDS.vip;
  for(const [id,b] of Object.entries(BREEDS))if(id!=='vip')for(const [k,dir] of Object.entries(BETTER))if((v[k]-b[k])*dir<0)console.warn(`VIP хуже породы «${b.name}» по полю ${k}: ${v[k]} против ${b[k]}`);
  if(v.speed*v.runMult<Math.max(...Object.values(BREEDS).filter(b=>b!==v).map(b=>b.speed*b.runMult)))console.warn('VIP не самый быстрый по максимальной скорости')}
@@ -111,13 +112,13 @@ const CAM_TUNE=[
  ['lag','Запаздывание',0,1,.01,' с',2],
  ['turn','Доворот за движением',.1,3,.05,' с',2]];
 const ZOOM_TUNE=[
- ['dist','Расстояние (зум)',1,15,.1,' м',1],
- ['start','Зум: старт',1,15,.1,' м',1],
- ['min','Зум: минимум',1,15,.1,' м',1],
- ['max','Зум: максимум',1,20,.1,' м',1],
+ ['k','Расстояние (зум)',1,12,.1,' дл.',1],   // in body lengths of the breed: metres = k × DOG.len
+ ['start','Зум: старт',1,12,.1,' дл.',1],
+ ['min','Зум: минимум',1,12,.1,' дл.',1],
+ ['max','Зум: максимум',1,12,.1,' дл.',1],
  ['pinch','Чувствительность щипка',.3,3,.05,'×',2],
  ['smooth','Сглаживание зума',0,1,.01,' с',2]];
-// The aim height itself is per breed (DOG.aim); ⚙ only adds a correction.
+// The aim height itself is per breed (DOG.hgt × 0.8); ⚙ only adds a correction.
 const AIM_TUNE=[['aimOff','Прицел: поправка',-.3,.3,.01,' м',2]];
 const RAY_TUNE=[
  ['spread','Лучи: разнос',0,.6,.01,' м',2],
@@ -136,19 +137,22 @@ const GAME_TUNE=[
  ['tempo','Темп (все скорости)',.2,1,.02,'×',2],
  ['mapScale','Размер лужайки',.6,1.6,.05,'×',2]];
 const CAM_DEF={high:{pitch:40,fov:48,bias:.12,lag:.2,turn:.8},low:{dist:3.6,pitch:20,fov:50,bias:.1,lag:.12,turn:.5},iso:{dist:24.8,pitch:40,fov:35,bias:0,lag:.25,turn:1.2}};
-const CFG_REV=4;
-const freshCfg=()=>({rev:CFG_REV,mode:'high',tempo:.38,mapScale:1,aimOff:0,cam:JSON.parse(JSON.stringify(CAM_DEF)),
- zoom:{dist:5.5,start:5.5,min:2.2,max:9,pinch:1,smooth:.2},rays:{spread:.25,pad:.25,back:.6},chase:{k:.9,pitch:30},swipe:{sens:180,sensY:90,hold:1.2,ret:.8,auto:false}});
+const CFG_REV=5;
+const freshCfg=()=>({rev:CFG_REV,mode:'high',tempo:.38,mapScale:1.05,aimOff:0,cam:JSON.parse(JSON.stringify(CAM_DEF)),
+ zoom:{k:5,start:5,min:2,max:8,pinch:1,smooth:.2},rays:{spread:.25,pad:.25,back:.6},chase:{k:.9,pitch:30},swipe:{sens:180,sensY:90,hold:1.2,ret:.8,auto:false}});
 const CFG_KEY='sneaky-dog-3d-cam3';
 let cfg=freshCfg();
 const loadGroup=(src,dst,tune)=>{if(src)for(const [k,,min,max] of tune)if(Number.isFinite(src[k]))dst[k]=clamp(src[k],min,max)};
 try{const s=JSON.parse(localStorage.getItem(CFG_KEY));if(s){loadGroup(s,cfg,GAME_TUNE);loadGroup(s.swipe,cfg.swipe,SWIPE_TUNE);if(typeof s.swipe?.auto==='boolean')cfg.swipe.auto=s.swipe.auto;
  // Before 3D-0.5 the camera was set by back/up and the chase by back/up too: those settings no longer apply, start from the new defaults.
- if((s.rev||0)>=4){for(const m in MODES)loadGroup(s.cam?.[m],cfg.cam[m],CAM_TUNE);loadGroup(s.zoom,cfg.zoom,ZOOM_TUNE);loadGroup(s,cfg,AIM_TUNE);loadGroup(s.rays,cfg.rays,RAY_TUNE);loadGroup(s.chase,cfg.chase,CHASE_TUNE)}
+ // Before 3D-0.9 the zoom was in metres (now in body lengths), so an older saved zoom is not loaded.
+ if((s.rev||0)>=4){for(const m in MODES)loadGroup(s.cam?.[m],cfg.cam[m],CAM_TUNE);if((s.rev||0)>=5)loadGroup(s.zoom,cfg.zoom,ZOOM_TUNE);loadGroup(s,cfg,AIM_TUNE);loadGroup(s.rays,cfg.rays,RAY_TUNE);loadGroup(s.chase,cfg.chase,CHASE_TUNE)}
  // Settings saved before 3D-0.3 kept tempo 0.6, which proved far too fast: pull it down once.
- if((s.rev||0)<3&&cfg.tempo>.5)cfg.tempo=.38}}catch{}
+ if((s.rev||0)<3&&cfg.tempo>.5)cfg.tempo=.38;
+ // 3D-0.9 chose the lawn size by time (diagonal at a walk 20–25 s): an untouched old 1.0 becomes 1.05.
+ if((s.rev||0)<5&&cfg.mapScale===1)cfg.mapScale=1.05}}catch{}
 // The chosen view is the start view; other modes are only for comparison in ⚙.
-cfg.mode='high';cfg.zoom.dist=clamp(cfg.zoom.dist,cfg.zoom.min,cfg.zoom.max);
+cfg.mode='high';cfg.zoom.k=clamp(cfg.zoom.k,cfg.zoom.min,cfg.zoom.max);
 const CAM=()=>cfg.cam[cfg.mode];
 const saveCfg=()=>{try{localStorage.setItem(CFG_KEY,JSON.stringify(cfg))}catch{}};
 let U=.06*cfg.mapScale; // metres per 2D unit: 1000×760 → 60×45.6 m
@@ -239,7 +243,9 @@ function makeDog(){const g=new THREE.Group(),body=new THREE.Group(),c=DOG.color;
  const tail=new THREE.Group();tail.position.set(-.33,.4,0);const tm=mesh(new THREE.CylinderGeometry(.025,.035,.26,6),c,0,.12,0,tail);tail.rotation.z=.75;body.add(tail);
  const legs=[];for(const [lx,lz] of [[.2,.09],[.2,-.09],[-.18,.09],[-.18,-.09]]){const pv=new THREE.Group();pv.position.set(lx,.24,lz);mesh(new THREE.BoxGeometry(.075,.24,.075),c,0,-.12,0,pv);body.add(pv);legs.push(pv)}
  if(DOG.patch)mesh(new THREE.SphereGeometry(.11,10,8),DOG.patch,-.1,.43,.04,body);
- g.scale.setScalar(DOG.size);
+ // Fit the placeholder to the breed: nose-to-tail length → x, withers height → y (base torso top is 0.49 m),
+ // width follows their mean, so a corgi comes out long and low and a lab tall.
+ const box=new THREE.Box3().setFromObject(body),sx=DOG.len/(box.max.x-box.min.x),sy=DOG.hgt/.49;g.scale.set(sx,sy,(sx+sy)/2);
  const shadow=blob(0,0,.42,.26,g,.02);return {g,body,legs,tail,shadow}}
 function makeGardener(){const g=new THREE.Group();
  const legs=[],arms=[];for(const s of [-1,1]){const pv=new THREE.Group();pv.position.set(0,.86,s*.11);mesh(new THREE.BoxGeometry(.16,.86,.15),'#183b37',0,-.43,0,pv);mesh(new THREE.BoxGeometry(.26,.08,.16),'#2b2a26',.05,-.84,0,pv);g.add(pv);legs.push(pv)}
@@ -250,10 +256,22 @@ function makeGardener(){const g=new THREE.Group();
  const can=mesh(new THREE.BoxGeometry(.22,.18,.14),'#4f8fb8',0,-.66,0,arms[1]);
  blob(0,0,.5,.4,g,.02);return {g,legs,arms,can}}
 let dogRig=makeDog();scene.add(dogRig.g);
-function setBreed(id){if(!BREEDS[id]||BREEDS[id].locked)return;breedId=id;DOG=BREEDS[id];scene.remove(dogRig.g);dogRig=makeDog();scene.add(dogRig.g);stamina=DOG.stamina;try{localStorage.setItem('sneaky-dog-3d-breed',id)}catch{}}
+// Energy ring at the paws (replaces the bar under the stick, which the thumb covered): a flat coloured ring that empties
+// around the circle. Radius from the breed length, constant thickness in metres. Not to be confused with the white,
+// expanding noise rings. Hidden at full energy while nothing is being spent or regained.
+const RING_SEG=64,RING_W=.09;
+// A dark full-circle track under the coloured fill gives contrast on grass and shows how much is already spent.
+function makeEnergyRing(){const r=DOG.len*.62,m=new THREE.Mesh(new THREE.RingGeometry(r-RING_W/2,r+RING_W/2,RING_SEG,1,Math.PI/2,Math.PI*2).rotateX(-Math.PI/2),unlit('#a8de8a',0));m.renderOrder=3;m.visible=false;
+ const track=new THREE.Mesh(new THREE.RingGeometry(r-RING_W/2-.02,r+RING_W/2+.02,RING_SEG,1).rotateX(-Math.PI/2),unlit('#102f2a',0));track.position.y=-.005;track.renderOrder=2;m.add(track);m.userData.track=track;scene.add(m);return m}
+let energyRing=makeEnergyRing();
+function setBreed(id){if(!BREEDS[id]||BREEDS[id].locked)return;breedId=id;DOG=BREEDS[id];scene.remove(dogRig.g);dogRig=makeDog();scene.add(dogRig.g);scene.remove(energyRing);energyRing.geometry.dispose();energyRing.userData.track.geometry.dispose();energyRing=makeEnergyRing();stamina=DOG.stamina;try{localStorage.setItem('sneaky-dog-3d-breed',id)}catch{}}
 
 // ---------- Game state ----------
-let speedMult=0,hideLatch=false;
+let speedMult=0,hideLatch=false,energyCapped=false,energyMoving=false;
+// One step of the breed's speed model (stamina ceiling, smoothing, drain / regen). The game and the ⚙ time measurements both
+// use it, so they cannot disagree. Returns the multiplier the stamina allows now.
+function speedStep(B,st,want,dt){const allowed=Math.min(want,1+(B.runMult-1)*clamp(st.stamina/25,0,1));st.mult+=(allowed-st.mult)*(1-Math.exp(-dt/B.accel));
+ const over=clamp((st.mult-1)/(B.runMult-1),0,1);st.stamina=clamp(st.stamina+(B.regen*clamp(1-over/.05,0,1)-B.drain*over)*dt,0,B.stamina);return allowed}
 let state='menu',player=null,guards=[],elapsed=0,done=false,progress=0,spotted=false,discovered=false,abilityCD=0,ball=null,rings=[],stamina=DOG.stamina,noiseTimer=0,move={x:1,y:0},hiddenNow=false;
 let keys=new Set(),joy={x:0,y:0,id:null},toiletHeld=false,toastTimer=0,muted=true,audioCtx=null,inputMode=matchMedia('(pointer:coarse)').matches?'touch':'keys';
 let screenW=0,screenH=0,lastVW=0,lastVH=0,lastTime=0,fps=60,fpsN=0,fpsT=0,needRebuild=false;
@@ -304,11 +322,13 @@ function update(dt){if(state!=='playing')return;elapsed+=dt;abilityCD=Math.max(0
  let wantMult=0;
  if(kx||ky)wantMult=sneakKey?B.sneakMult:keys.has('shift')?B.runMult:1;   // keyboard: tests only, three fixed levels
  else if(player.moving)wantMult=len<.35?B.sneakMult:len<.75?B.sneakMult+(1-B.sneakMult)*(len-.35)/.4:1+(B.runMult-1)*(len-.75)/.25;
- wantMult=Math.min(wantMult,1+(B.runMult-1)*clamp(stamina/25,0,1));
- speedMult+=(wantMult-speedMult)*(1-Math.exp(-dt/B.accel));
- const over=clamp((speedMult-1)/(B.runMult-1),0,1);
- stamina=clamp(stamina+(B.regen*clamp(1-over/.05,0,1)-B.drain*over)*dt,0,B.stamina);
- const speed=B.speed*cfg.tempo*speedMult;
+ const ms={mult:speedMult,stamina},allowed=speedStep(B,ms,wantMult,dt);speedMult=ms.mult;
+ const staminaDelta=ms.stamina-stamina;stamina=ms.stamina;
+ // The energy ring turns red while the stamina ceiling is what stops the run (the player asks for more than it allows).
+ energyCapped=wantMult>allowed+.02;energyMoving=Math.abs(staminaDelta)>1e-4;
+ // Speeds are physical: m/s = speed × tempo × 0.06; on a bigger lawn (mapScale) the same metres take more map units,
+ // so crossing the park takes longer. Vision and noise radii stay in map units and scale with the lawn.
+ const speed=B.speed*cfg.tempo*speedMult/cfg.mapScale;
  // Stick "up" means "away from the camera", whatever the camera yaw is.
  const c=Math.cos(camYaw()),s=Math.sin(camYaw()),mx=x*c-y*s,my=x*s+y*c;
  // Animation mode from the same multiplier.
@@ -331,7 +351,7 @@ function update(dt){if(state!=='playing')return;elapsed+=dt;abilityCD=Math.max(0
   if(g.state==='chase'&&!sees&&g.seen>2.1){g.state='search';g.wait=3;g.repath=0}
   let frozen=false;if(g.state!=='chase'&&g.alertLook>0){frozen=true;g.alertLook-=dt;const want=Math.atan2(g.lookAt.y-g.y,g.lookAt.x-g.x),d=Math.atan2(Math.sin(want-g.angle),Math.cos(want-g.angle));g.angle+=clamp(d,-5*dt,5*dt);
    if(g.alertLook<=0){frozen=false;if(g.sus>.12){g.state='inspect';g.target={...g.lookAt};g.wait=0;g.repath=0;g.path=[];toast('Садовник что-то заметил и идёт проверить',1.8)}}}
-  let target=frozen?null:g.state==='patrol'?g.pts[g.idx]:g.target;const speedG=LV.speed*cfg.tempo*(g.state==='chase'?1.58:1)*(g.angry?1.2:1);g.moved=0;
+  let target=frozen?null:g.state==='patrol'?g.pts[g.idx]:g.target;const speedG=LV.speed*cfg.tempo/cfg.mapScale*(g.state==='chase'?1.58:1)*(g.angry?1.2:1);g.moved=0;
   if(!frozen&&g.state==='patrol'&&g.watch>0){g.watch-=dt;g.watchT+=dt;g.angle=g.lookBase+Math.sin(g.watchT*g.step.sp)*g.step.amp;target=null;if(g.watch<=0){g.idx=(g.idx+1)%g.pts.length;g.repath=0}}
   else if(!frozen&&g.state==='patrol'&&dist(g,target)<19){const st=target;if(st.wait){g.watch=st.wait;g.watchT=0;g.step=st;g.lookBase=st.look==='bed'?Math.atan2(zone.y-g.y,zone.x-g.x):st.look==='out'?Math.atan2(g.y-zone.y,g.x-zone.x):st.look;target=null}else{g.idx=(g.idx+1)%g.pts.length;target=g.pts[g.idx];g.repath=0}}
   if(target&&dist(g,target)<21&&g.state!=='patrol'&&g.state!=='chase'){g.wait+=dt;g.angle+=dt*.85;if((g.state==='inspect'&&g.wait>2.6)||(g.state==='search'&&g.wait>5.5)){g.state='patrol';g.target=null;g.path=[];g.repath=0;g.wait=0;g.idx=Math.max(0,g.pts.findIndex(p=>p.bed))}}
@@ -341,7 +361,7 @@ function update(dt){if(state!=='playing')return;elapsed+=dt;abilityCD=Math.max(0
  if(state==='playing'&&done&&dist(player,exit)<exit.r)finish(true);
  for(const r of rings)r.age+=dt;rings=rings.filter(r=>{if(r.age<.7)return true;scene.remove(r.m);r.m.geometry.dispose();return false});
  if(ball){ball.age+=dt;ball.life-=dt;if(ball.life<=0){scene.remove(ball.m);ball=null}}
- $('clock').textContent=formatTime(elapsed);$('objective').textContent=done?'Вернись к воротам внизу слева':'Найди клумбу наверху справа';$('progress').style.display=doing&&!done?'block':'none';$('toiletFill').style.width=progress/LV.hold*100+'%';$('abilityText').textContent=abilityCD>0?Math.ceil(abilityCD)+'с':'МЯЧ';$('ability').disabled=abilityCD>0;$('energyFill').style.width=stamina/DOG.stamina*100+'%';
+ $('clock').textContent=formatTime(elapsed);$('objective').textContent=done?'Вернись к воротам внизу слева':'Найди клумбу наверху справа';$('progress').style.display=doing&&!done?'block':'none';$('toiletFill').style.width=progress/LV.hold*100+'%';$('abilityText').textContent=abilityCD>0?Math.ceil(abilityCD)+'с':'МЯЧ';$('ability').disabled=abilityCD>0;
  const sneakHint=inputMode==='keys'?'держи C, чтобы красться':'отклони джойстик меньше';$('status').textContent=hidden?'🍃 Ты в укрытии':guards.some(g=>g.state==='chase')?'❗ Погоня — разорви линию зрения':bush?'👀 Слишком быстро — '+sneakHint:near&&!done?(inputMode==='keys'?'💩 Остановись и держи пробел':'💩 Остановись и удерживай кнопку'):done?'🐾 Дело сделано. Беги к воротам!':'Кусты прячут тебя, если '+(inputMode==='keys'?'красться (C)':'идти медленно');
 }
 
@@ -362,8 +382,9 @@ function obstacleDistance(ax,ay,az,dx,dy,dz,fx,fz,pitch,far){const s=cfg.rays.sp
 function updateCamera(dt){const M=CAM(),Z=cfg.zoom,C=cfg.chase,S=cfg.swipe,R=cfg.rays,chasing=state==='playing'&&guards.some(g=>g.state==='chase');
  const k=M.lag>0?1-Math.exp(-dt/M.lag):1,kc=1-Math.exp(-dt/.5),want=player.angle+Math.PI/2,rest=restYaw();
  // Aim at the body centre; raised on the flowerbed. Steps and body bob are not followed (player.x/y and aim height only).
- const onBed=player.x>BED_RECT.x&&player.x<BED_RECT.x+BED_RECT.w&&player.y>BED_RECT.y&&player.y<BED_RECT.y+BED_RECT.h,aimH=DOG.aim+cfg.aimOff+(onBed?.18:0);
- const zoomDist=cfg.mode==='high'?clamp(Z.dist,Z.min,Z.max):(M.dist||8)*Z.dist/Z.start;
+ const onBed=player.x>BED_RECT.x&&player.x<BED_RECT.x+BED_RECT.w&&player.y>BED_RECT.y&&player.y<BED_RECT.y+BED_RECT.h,aimH=DOG.hgt*.8+cfg.aimOff+(onBed?.18:0);
+ // Distance in body lengths: every breed fills the same share of the frame. low / iso keep their own (comparison) distance.
+ const zoomDist=cfg.mode==='high'?clamp(Z.k,Z.min,Z.max)*DOG.len:(M.dist||8)*(Z.k/Z.start)*(DOG.len/1.1);
  if(!camState.init){camState.x=player.x*U;camState.z=player.y*U;camState.aimY=aimH;camState.yaw=want;camState.chase=0;camState.off=rest;camState.poff=0;camState.retFrom=null;camState.dist=zoomDist;camState.pull=0;camState.lift=0;camState.yawVel=0;camState.init=true}
  // The camera never turns by itself: yaw changes only by the finger (or Q/R in tests) and by «Сбросить камеру».
  // Optional auto-return (cfg.swipe.auto, off by default): after `hold` s both offsets ease back to rest over `ret` s.
@@ -381,7 +402,7 @@ function updateCamera(dt){const M=CAM(),Z=cfg.zoom,C=cfg.chase,S=cfg.swipe,R=cfg
  // Obstacles. Something solid right behind the dog would pull the camera into the dog, so first the camera lifts
  // (up to +35°) to look over it; whatever is still in the way pulls it closer, but not nearer than CAM_NEAR.
  // Both react fast and ease back after the obstacle is gone. Camera-only: nothing here changes what the gardener sees.
- const ax=camState.x,ay=camState.aimY,az=camState.z,SAFE=1.4,CAM_NEAR=1.2,wantFree=Math.min(camState.dist,SAFE);
+ const ax=camState.x,ay=camState.aimY,az=camState.z,SAFE=1.3*DOG.len,CAM_NEAR=1.1*DOG.len,wantFree=Math.min(camState.dist,SAFE);
  const freeAt=p=>obstacleDistance(ax,ay,az,-fx*Math.cos(p),Math.sin(p),-fz*Math.cos(p),fx,fz,p,camState.dist+R.pad)-R.pad;
  let lift=0;if(freeAt(camState.pitch)<wantFree){lift=Math.min(35*D2R,PITCH_MAX-camState.pitch);for(let a=5*D2R;a<=lift+1e-6;a+=5*D2R)if(freeAt(camState.pitch+a)>=wantFree){lift=a;break}}
  const ease=(cur,target)=>(target-cur)*(target>cur?1-Math.exp(-dt/.08):1-Math.exp(-dt/R.back));
@@ -399,9 +420,9 @@ function applyFov(){const a=screenW/Math.max(1,screenH),f=CAM().fov;camera.aspec
 // «Запомнить камеру»: what the fingers set now becomes the start / rest position.
 function rememberCamera(){const M=CAM(),C=cfg.chase,base=(M.pitch+(C.pitch-M.pitch)*camState.chase);M.pitch=Math.round(clamp(base+camState.poff/D2R,8,75));camState.poff=0;
  M.yaw=Math.round(wrapAngle(camState.off)/D2R);camState.off=M.yaw*D2R;camState.retFrom=null;
- if(cfg.mode==='high')cfg.zoom.start=+cfg.zoom.dist.toFixed(1);saveCfg();toast('Камера запомнена: '+cfg.zoom.dist.toFixed(1)+' м, наклон '+M.pitch+'°, поворот '+M.yaw+'°',2.5)}
+ if(cfg.mode==='high')cfg.zoom.start=+cfg.zoom.k.toFixed(1);saveCfg();toast('Камера запомнена: '+cfg.zoom.k.toFixed(1)+' дл., наклон '+M.pitch+'°, поворот '+M.yaw+'°',2.5)}
 // Pause → «Сбросить камеру»: back to the start distance, yaw and pitch.
-function resetCamera(){cfg.zoom.dist=cfg.zoom.start;camState.off=restYaw();camState.poff=0;camState.retFrom=null;if(player)camState.yaw=player.angle+Math.PI/2;saveCfg()}
+function resetCamera(){cfg.zoom.k=cfg.zoom.start;camState.off=restYaw();camState.poff=0;camState.retFrom=null;if(player)camState.yaw=player.angle+Math.PI/2;saveCfg()}
 function setMode(m){cfg.mode=m;saveCfg();applyFov();if(!$('tune').hidden)renderTune();toast('Камера: '+MODES[m],1.5)}
 
 // ---------- Draw: move meshes to the simulation state ----------
@@ -410,6 +431,10 @@ function segSphere(ax,ay,az,bx,by,bz,cx,cy,cz){const dx=bx-ax,dy=by-ay,dz=bz-az,
 function syncScene(dt){
  const onBed=player.x>BED_RECT.x&&player.x<BED_RECT.x+BED_RECT.w&&player.y>BED_RECT.y&&player.y<BED_RECT.y+BED_RECT.h;
  const d=dogRig;d.g.position.set(player.x*U,onBed?.18:0,player.y*U);d.g.rotation.y=-player.angle;
+ // Energy ring: green, yellow below a third, red while the stamina ceiling is what stops the run.
+ {const er=energyRing,frac=stamina/DOG.stamina,show=state==='playing'&&(frac<.995||energyMoving),em=er.material;
+  em.opacity+=((show?.95:0)-em.opacity)*Math.min(1,dt*10);er.visible=em.opacity>.02;er.userData.track.material.opacity=em.opacity*.5;
+  if(er.visible){er.position.set(player.x*U,(onBed?.18:0)+.03,player.y*U);er.geometry.setDrawRange(0,Math.ceil(clamp(frac,0,1)*RING_SEG)*6);em.color.set(energyCapped?'#ed6455':frac<1/3?'#f8d36c':'#a8de8a')}}
  const low=player.mode==='sneak'||hiddenNow&&player.mode==='stand'?.8:1;d.body.scale.y+=(low-d.body.scale.y)*Math.min(1,dt*10);
  player.phase+=dt*player.speed*U*(player.mode==='run'?2.6:3.4);const sw=player.moving?Math.sin(player.phase):0,amp=player.mode==='run'?.9:.55;
  d.legs.forEach((l,i)=>l.rotation.z=sw*amp*(i%2?1:-1)*(i<2?1:-1));d.body.position.y=player.mode==='run'?Math.abs(Math.sin(player.phase))*.06:0;d.tail.rotation.x=Math.sin(elapsed*(done?16:9))*.5;
@@ -448,7 +473,7 @@ function loop(t){requestAnimationFrame(loop);if(innerWidth!==lastVW||Math.round(
 const row=(list,k)=>list.find(t=>t[0]===k);
 function panelRows(){return [[row(CAM_TUNE,'lag'),CAM(),'c'],[row(AIM_TUNE,'aimOff'),cfg,'a'],[row(CAM_TUNE,'bias'),CAM(),'c'],[row(ZOOM_TUNE,'pinch'),cfg.zoom,'z'],[row(SWIPE_TUNE,'sens'),cfg.swipe,'s'],[row(SWIPE_TUNE,'sensY'),cfg.swipe,'s'],
  ...RAY_TUNE.map(t=>[t,cfg.rays,'r']),...GAME_TUNE.map(t=>[t,cfg,'g'])]}
-function liveCamera(){return {dist:+cfg.zoom.dist.toFixed(2),yaw:Math.round(wrapAngle(camState.off)/D2R),pitch:Math.round(camState.pitch/D2R)}}
+function liveCamera(){return {k:+cfg.zoom.k.toFixed(2),dist:+(cfg.zoom.k*DOG.len).toFixed(2),yaw:Math.round(wrapAngle(camState.off)/D2R),pitch:Math.round(camState.pitch/D2R)}}
 function renderTune(){const rows=panelRows(),fmt=([k,,,,,unit,dp],o)=>o[k].toFixed(dp)+unit;
  $('tune').innerHTML=`<div class="head"><span>Камера и темп</span><span><span id="fpsVal">${fps}</span> fps</span></div><div class="btns" style="margin:0 0 10px">${Object.entries(MODES).map(([m,n])=>`<button data-mode="${m}" style="${m===cfg.mode?'background:#f8d36c;color:#102f2a':''}">${n}</button>`).join('')}</div>`+rows.map(([t,o,g])=>{const [k,name,min,max,step]=t;return `<div class="row"><label for="t-${g}${k}"><span>${name}</span><b id="v-${g}${k}">${fmt(t,o)}</b></label><input id="t-${g}${k}" type="range" min="${min}" max="${max}" step="${step}" value="${o[k]}"></div>`}).join('')+`<div class="btns" style="margin:0 0 8px"><button id="tAuto">Автовозврат камеры: ${cfg.swipe.auto?'вкл':'выкл'}</button></div><div class="fine" id="mapSize"></div><div class="btns"><button id="tRemember">Запомнить камеру</button><button id="tCopy">Скопировать</button></div><div class="btns"><button id="tReset">Сброс</button><button id="tClose">Закрыть</button></div><code id="tJson"></code>`;
  for(const b of $('tune').querySelectorAll('[data-mode]'))b.onclick=()=>setMode(b.dataset.mode);
@@ -456,10 +481,29 @@ function renderTune(){const rows=panelRows(),fmt=([k,,,,,unit,dp],o)=>o[k].toFix
  $('tRemember').onclick=()=>{rememberCamera();tuneInfo()};
  $('tAuto').onclick=()=>{cfg.swipe.auto=!cfg.swipe.auto;camState.idle=0;camState.retFrom=null;saveCfg();renderTune()};
  // Factory values: everything, including the remembered camera.
- $('tReset').onclick=()=>{const rb=cfg.mapScale!==1;cfg=freshCfg();if(rb)needRebuild=true;camState.off=0;camState.poff=0;camState.retFrom=null;saveCfg();applyFov();renderTune();toast('Заводские настройки',1.5)};
+ $('tReset').onclick=()=>{const rb=cfg.mapScale!==freshCfg().mapScale;cfg=freshCfg();if(rb)needRebuild=true;camState.off=0;camState.poff=0;camState.retFrom=null;saveCfg();applyFov();renderTune();toast('Заводские настройки',1.5)};
  $('tCopy').onclick=()=>{const s=JSON.stringify({version:VERSION,live:liveCamera(),cfg});navigator.clipboard?.writeText(s).then(()=>toast('Настройки скопированы'),()=>toast('Не удалось скопировать — сделай скриншот'))};
  $('tClose').onclick=()=>{$('tune').hidden=true};tuneInfo()}
-function tuneInfo(){const c=liveCamera();$('mapSize').textContent=`Камера сейчас: ${c.dist} м, наклон ${c.pitch}°, поворот ${c.yaw}° · старт ${cfg.zoom.start} м · лужайка ${Math.round(916*.06*cfg.mapScale)}×${Math.round(647*.06*cfg.mapScale)} м · собака ${(DOG.speed*cfg.tempo*.06*cfg.mapScale).toFixed(1)} м/с, бег ${(DOG.speed*1.35*cfg.tempo*.06*cfg.mapScale).toFixed(1)} · садовник ${(LV.speed*cfg.tempo*.06*cfg.mapScale).toFixed(1)}, погоня ${(LV.speed*1.58*cfg.tempo*.06*cfg.mapScale).toFixed(1)} м/с`;$('tJson').textContent=JSON.stringify({live:c,cfg})}
+// The park measured in time, from the current cfg and breed (the map scale is chosen by these numbers, not by eye).
+// Paths are real walking routes (the same A* the gardener uses); runs go through speedStep, so stamina is included.
+function pathLen(a,b){let L=0,prev=a;for(const q of [...findPath(a,b),b]){L+=dist(prev,q);prev=q}return L}
+function travelTime(metres,want){const st={mult:0,stamina:DOG.stamina},dt=.05;let x=0,t=0;while(x<metres&&t<300){speedStep(DOG,st,want,dt);x+=DOG.speed*cfg.tempo*.06*st.mult*dt;t+=dt}return t}
+function mapMetrics(){const B=DOG,u=.06*cfg.mapScale,walk=B.speed*cfg.tempo*.06,gv=LV.speed*cfg.tempo*.06;
+ const bedGate=pathLen(zone,exit)*u,tap={x:230,y:182},toTap=pathLen(BED,tap)*u,back=pathLen(tap,BED)*u;
+ // Nearest cover: from standing hidden in a bush to standing in the bed zone, edge to edge.
+ const bushGap=Math.min(...bushes.map(b=>Math.max(0,dist(b,zone)-(b.r-8)-zone.r)))*u;
+ // Gardener's window at the tap: walking away he faces away from the bed; on the way back he sees it again from vision range.
+ const window=toTap/gv+4+Math.max(0,back-LV.vision*u)/gv;
+ return {dogLen:B.len,parkW:916*u,parkH:647*u,diagWalk:Math.hypot(916,647)*u/walk,bedGateM:bedGate,bedGateRun:travelTime(bedGate,B.runMult),bedGateRunNoStamina:bedGate/(walk*B.runMult),bushToBed:bushGap/walk,window,needWindow:[LV.hold+4,LV.hold+6]}}
+function tuneInfo(){const c=liveCamera(),m=mapMetrics(),f=v=>v.toFixed(1),ok=(v,a,b)=>v>=a&&v<=b?'✓':'✗';
+ $('mapSize').innerHTML=`Камера: ${c.k} дл. = ${c.dist} м, наклон ${c.pitch}°, поворот ${c.yaw}° · старт ${cfg.zoom.start} дл.<br>`+
+ `Собака: ${m.dogLen.toFixed(2)} м · парк ${Math.round(m.parkW)}×${Math.round(m.parkH)} м<br>`+
+ `Диагональ шагом: ${f(m.diagWalk)} с ${ok(m.diagWalk,20,25)} (20–25)<br>`+
+ `Клумба → ворота бегом: ${f(m.bedGateRun)} с ${ok(m.bedGateRun,8,12)} (8–12), путь ${Math.round(m.bedGateM)} м; без учёта выносливости ${f(m.bedGateRunNoStamina)} с<br>`+
+ `Ближайший куст → клумба шагом: ${f(m.bushToBed)} с ${ok(m.bushToBed,3,5)} (3–5)<br>`+
+ `Окно садовника у крана: ${f(m.window)} с ${m.window>=m.needWindow[1]?'✓':m.window>=m.needWindow[0]?'≈':'✗'} (нужно ≥ дело ${LV.hold} с + 4–6 = ${m.needWindow[0]}–${m.needWindow[1]} с)<br>`+
+ `Скорости: шаг ${f(DOG.speed*cfg.tempo*.06)} м/с, бег ${f(DOG.speed*DOG.runMult*cfg.tempo*.06)} · садовник ${f(LV.speed*cfg.tempo*.06)}, погоня ${f(LV.speed*1.58*cfg.tempo*.06)} м/с`;
+ $('tJson').textContent=JSON.stringify({live:c,cfg})}
 $('tuneBtn').onclick=()=>{const p=$('tune');p.hidden=!p.hidden;if(!p.hidden)renderTune()};
 
 // ---------- Input (same scheme as 2D) ----------
@@ -473,26 +517,26 @@ $('ability').addEventListener('pointerdown',e=>{e.preventDefault();ability()});$
 // one finger — orbit (horizontal: yaw, swipe right looks right; vertical: pitch, swipe up looks up), scaled by half the screen width;
 // two fingers — pinch zoom of the distance, continuous. When a second finger lands the orbit stops on the spot;
 // when one is lifted the zoom stops (no inertia) and the remaining finger orbits again from where it is now.
-const zoomTo=d=>{cfg.zoom.dist=clamp(d,cfg.zoom.min,cfg.zoom.max)};
+const zoomTo=k=>{cfg.zoom.k=clamp(k,cfg.zoom.min,cfg.zoom.max)};
 const pinchSpan=()=>{const [a,b]=[...touches.values()];return Math.max(1,Math.hypot(a.x-b.x,a.y-b.y))};
 canvas.addEventListener('pointerdown',e=>{if(state!=='playing')return;e.preventDefault();touches.set(e.pointerId,{x:e.clientX,y:e.clientY});try{canvas.setPointerCapture(e.pointerId)}catch{}
  if(touches.size===1)drag={id:e.pointerId,x:e.clientX,y:e.clientY};
- else if(touches.size===2){drag=null;pinch={span:pinchSpan(),dist:cfg.zoom.dist}}});
+ else if(touches.size===2){drag=null;pinch={span:pinchSpan(),k:cfg.zoom.k}}});
 canvas.addEventListener('pointermove',e=>{const p=touches.get(e.pointerId);if(!p)return;p.x=e.clientX;p.y=e.clientY;
- if(pinch&&touches.size>=2){zoomTo(pinch.dist*Math.pow(pinch.span/pinchSpan(),cfg.zoom.pinch));return}
+ if(pinch&&touches.size>=2){zoomTo(pinch.k*Math.pow(pinch.span/pinchSpan(),cfg.zoom.pinch));return}
  if(!drag||e.pointerId!==drag.id)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y,half=Math.max(200,screenW)/2;drag.x=e.clientX;drag.y=e.clientY;camState.off+=dx/half*cfg.swipe.sens*D2R;camState.poff+=dy/half*cfg.swipe.sensY*D2R});
 for(const t of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(t,e=>{if(!touches.delete(e.pointerId))return;
  if(drag&&e.pointerId===drag.id)drag=null;
  if(pinch&&touches.size<2){pinch=null;saveCfg();if(touches.size===1){const [[id,p]]=[...touches];drag={id,x:p.x,y:p.y}}}});
 // Mouse wheel zooms too (handy for tuning) and never scrolls the page.
-let wheelSave=0;canvas.addEventListener('wheel',e=>{e.preventDefault();zoomTo(cfg.zoom.dist*Math.exp(e.deltaY*.0015*cfg.zoom.pinch));clearTimeout(wheelSave);wheelSave=setTimeout(saveCfg,300)},{passive:false});
+let wheelSave=0;canvas.addEventListener('wheel',e=>{e.preventDefault();zoomTo(cfg.zoom.k*Math.exp(e.deltaY*.0015*cfg.zoom.pinch));clearTimeout(wheelSave);wheelSave=setTimeout(saveCfg,300)},{passive:false});
 $('pause').onclick=pause;$('sound').onclick=()=>{muted=!muted;$('sound').textContent=muted?'♪':'♫';$('sound').setAttribute('aria-label',muted?'Включить звук':'Выключить звук');beep(660,.1)};
 const CODES={KeyW:'w',KeyA:'a',KeyS:'s',KeyD:'d',KeyE:'e',KeyC:'c',KeyQ:'q',KeyR:'r',Space:' ',ShiftLeft:'shift',ShiftRight:'shift',ArrowUp:'arrowup',ArrowDown:'arrowdown',ArrowLeft:'arrowleft',ArrowRight:'arrowright',Escape:'escape'};const keyOf=e=>CODES[e.code]||(e.key||'').toLowerCase();
 window.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const k=keyOf(e);if(CODES[e.code])inputMode='keys';if([' ','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(k))e.preventDefault();if(k==='escape'){if(state==='playing')pause();else if(state==='paused')$('resume').click();return}if(state!=='playing')return;keys.add(k);if(k==='e'&&!e.repeat)ability()});
 window.addEventListener('keyup',e=>keys.delete(keyOf(e)));window.addEventListener('blur',()=>{if(state==='playing')pause();clearInput()});document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='playing')pause()});canvas.addEventListener('contextmenu',e=>e.preventDefault());
 
 // Read-only hook for build verification and debugging; it never changes game state.
-window.SneakyDog3D={version:VERSION,snapshot:()=>({version:VERSION,state,player:player?{x:+player.x.toFixed(1),y:+player.y.toFixed(1),mode:player.mode,hidden:hiddenNow,mult:+speedMult.toFixed(3)}:null,breed:breedId,guards:guards.map(g=>({x:+g.x.toFixed(1),y:+g.y.toFixed(1),state:g.state,idx:g.idx,watch:+g.watch.toFixed(2),icon:g.step?.icon||null,angry:g.angry,sus:+g.sus.toFixed(2)})),done,discovered,progress:+progress.toFixed(2),elapsed:+elapsed.toFixed(2),stamina:Math.round(stamina),cfg:{...cfg},camera:{x:+camera.position.x.toFixed(2),y:+camera.position.y.toFixed(2),z:+camera.position.z.toFixed(2),fov:+camera.fov.toFixed(1),yaw:+(camYaw()/D2R).toFixed(1),off:+(camState.off/D2R).toFixed(1),pitch:+(camState.pitch/D2R).toFixed(1),poff:+(camState.poff/D2R).toFixed(1),dist:+camState.dist.toFixed(2),eff:+camState.eff.toFixed(2),lift:+(camState.lift/D2R).toFixed(1),zoom:cfg.zoom.dist,dragging:!!drag},screen:{w:screenW,h:screenH,canvas:[canvas.width,canvas.height]},fps})};
+window.SneakyDog3D={version:VERSION,metrics:()=>mapMetrics(),snapshot:()=>({version:VERSION,state,player:player?{x:+player.x.toFixed(1),y:+player.y.toFixed(1),mode:player.mode,hidden:hiddenNow,mult:+speedMult.toFixed(3)}:null,breed:breedId,guards:guards.map(g=>({x:+g.x.toFixed(1),y:+g.y.toFixed(1),state:g.state,idx:g.idx,watch:+g.watch.toFixed(2),icon:g.step?.icon||null,angry:g.angry,sus:+g.sus.toFixed(2)})),done,discovered,progress:+progress.toFixed(2),elapsed:+elapsed.toFixed(2),stamina:Math.round(stamina),cfg:{...cfg},camera:{x:+camera.position.x.toFixed(2),y:+camera.position.y.toFixed(2),z:+camera.position.z.toFixed(2),fov:+camera.fov.toFixed(1),yaw:+(camYaw()/D2R).toFixed(1),off:+(camState.off/D2R).toFixed(1),pitch:+(camState.pitch/D2R).toFixed(1),poff:+(camState.poff/D2R).toFixed(1),dist:+camState.dist.toFixed(2),eff:+camState.eff.toFixed(2),lift:+(camState.lift/D2R).toFixed(1),zoom:cfg.zoom.k,dragging:!!drag},screen:{w:screenW,h:screenH,canvas:[canvas.width,canvas.height]},fps})};
 
 buildWorld();resize();menu();requestAnimationFrame(loop);
 </script>
