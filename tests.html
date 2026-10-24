@@ -56,7 +56,8 @@ function bot(T){let goal=null,path=[],repath=0;
 //  if he is already coming back, slip into the north-east corner, out of his cone
 //  and range, and leave when he walks to the east round point (or, if he found the pile, once he has run to the near exit).
 // Level 3 (a wheelbarrow trip before the tap): from the near cover bush, the pile in two goes — or plan 'one': in one go.
-function playLevel(T,breed,lv,plan='two'){T.start(breed,lv);const C=T.consts,B=bot(T),mon=stillMonitor(T);
+// Leaving: 'safe' — duck into the bush, he finds the pile, then the far exit; 'risk' — run for the near exit at once.
+function playLevel(T,breed,lv,plan='two',leave='safe'){T.start(breed,lv);const C=T.consts,B=bot(T),mon=stillMonitor(T);
  const deed=i=>T.state().deeds[i],[pileI,hydI,cornerI]=[0,1,2],bush={x:598,y:406},north=[{x:680,y:300},{x:684,y:226},{x:705,y:80}],ne={x:925,y:88},nearExit=C.EXITS.find(e=>e.id==='near'),farExit=C.EXITS.find(e=>e.id==='far');let out=[];const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
  const two=!!C.LEVELS[lv].barrow,cover=C.bushes.reduce((m,b)=>dist(b,C.zone)<dist(m,C.zone)?b:m),z=C.zone,dcz=dist(cover,z),holdSpot={x:z.x+(cover.x-z.x)*46/dcz,y:z.y+(cover.y-z.y)*46/dcz},coverIn={x:cover.x+(z.x-cover.x)*(cover.r-14)/dcz,y:cover.y+(z.y-cover.y)*(cover.r-14)/dcz};let p1=0,kept=null;
  let phase='toCorner',waited=0,trips=0,wasTap=false,wp=0;const log=[];const set=p=>{phase=p;log.push(p+'@'+T.state().elapsed.toFixed(1))};
@@ -80,12 +81,12 @@ function playLevel(T,breed,lv,plan='two'){T.start(breed,lv);const C=T.consts,B=b
    case 'duck':if(B.go(coverIn,.7)<6){B.stop();set('waitTap')}break;
    case 'waitTap':waited+=1/60;if(g.state==='patrol'&&g.idx===tapIdx){trips++;set('toBed2')}break;
    case 'toBed2':if(B.go(holdSpot,.7)<5){B.stop();kept=deed(pileI).p;set('pile2')}break;
-   case 'pile2':T.hold(true);if(deed(pileI).done){T.hold(false);set('hide')}break;
+   case 'pile2':T.hold(true);if(deed(pileI).done){T.hold(false);if(leave==='risk'){wp=0;out=[nearExit];set('toExit')}else set('hide')}break;
    case 'waitNorth':waited+=1/60;if(newTrip){trips++;set('toBed')}break;
    case 'toBed':if(B.go(deed(pileI),.7)<20){B.stop();set('pile')}break;
    case 'pile':T.hold(true);if(deed(pileI).done){T.hold(false);if(onTrip){wp=0;out=[farExit];set('toExit')}else set('hide')}break;
    case 'hide':if(B.go(two?coverIn:ne,two?.7:1)<6){B.stop();set('waitOut')}break;
-   case 'waitOut':waited+=1/60;if(s.discovered?dist(g,nearExit)<120:g.state==='patrol'&&g.idx===r2&&!(g.watch>0)){wp=0;out=s.discovered?[farExit]:[{x:705,y:80},{x:500,y:85},nearExit];set('toExit')}break;
+   case 'waitOut':waited+=1/60;if(s.discovered?dist(g,nearExit)<120:g.state==='patrol'&&g.idx===r2&&!(g.watch>0)){wp=0;out=[farExit];set('toExit')}break;
    case 'toExit':if(B.go(out[wp],1)<10&&wp<out.length-1)wp++;break}});
  const s=T.state();return {state:s.state,elapsed:s.elapsed,spotted:s.spotted,accident:s.accident,discovered:s.discovered,phase,waited,trips,log,still:mon.worst,stillWhere:mon.where,chaseStill:mon.chaseWorst,two,p1,kept}}
 
@@ -115,6 +116,12 @@ async function run(){
    check(`Садовник не стоит дольше 8 с вне расписания (уровень ${lv+1}, ${breed})`,r.still<8,`наибольший простой ${r.still.toFixed(1)} с${r.stillWhere?' в '+JSON.stringify(r.stillWhere):''}`);
    if(r.two)check(`Куча в два захода, уровень ${lv+1} (${breed})`,r.state==='won'&&r.p1>0&&r.p1<6&&r.kept>0,`первый заход ${r.p1.toFixed(1)} с, ко второму осталось ${r.kept===null?'—':r.kept.toFixed(1)+' с'}, итог ${r.state}`);
    check(`Садовник в погоне не стоит дольше 2 с (уровень ${lv+1}, ${breed})`,r.chaseStill<=2,`наибольший простой в погоне ${r.chaseStill.toFixed(1)} с`)}
+  // Level 3: leaving before he finds the pile must be possible (run for the near exit at once) and must not be the default
+  // (duck into the bush, take the safe far exit → he finds it and rages): a choice, not a fixed outcome. All breeds.
+  for(let lv=0;lv<L.length;lv++)if(L[lv].barrow)for(const breed of ['lab','jack','corgi']){
+   const risk=playLevel(T,breed,lv,'two','risk'),safe=playLevel(T,breed,lv,'two','safe');
+   check(`Уровень ${lv+1}: можно уйти до того, как садовник найдёт кучу (${breed})`,risk.state==='won'&&!risk.discovered,`сразу к ближнему выходу: итог ${risk.state}, ${risk.elapsed.toFixed(1)} с, улику нашли: ${risk.discovered?'да':'нет'}, заметили: ${risk.spotted?'да':'нет'}`);
+   check(`Уровень ${lv+1}: при неспешном уходе садовник находит кучу (${breed})`,safe.state==='won'&&safe.discovered,`нырок в куст, потом дальний выход: итог ${safe.state}, ${safe.elapsed.toFixed(1)} с, улику нашли: ${safe.discovered?'да':'нет'}`)}
   // Not a requirement: whether the pile also fits in one go in the long window (a bypass we keep, not plug) — for the notes.
   for(let lv=0;lv<L.length;lv++)if(L[lv].barrow){const r=playLevel(T,'lab',lv,'one');report('info',`Уровень ${lv+1} одним заходом в длинном окне (lab)`,`${r.state==='won'?'проходится':'не проходится'}: ${r.elapsed.toFixed(1)} с, заметили: ${r.spotted?'да':'нет'}, улику нашли: ${r.discovered?'да':'нет'}`)}
   T.start('lab',0);f.remove()}

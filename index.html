@@ -50,7 +50,7 @@ setTimeout(()=>{if(!window.SneakyDog3D){const v=document.getElementById('veil');
 <script type="module">
 import * as THREE from 'three';
 
-const VERSION='3D-1.2';
+const VERSION='3D-1.3';
 // Test mode (index.html?test, used by tests.html): the simulation does not run on its own and does not pause on blur;
 // tests advance it frame by frame through SneakyDog3D.test, so results do not depend on the real clock.
 const TEST=new URLSearchParams(location.search).has('test');
@@ -94,9 +94,11 @@ const NOISE_AT={sneak:0,walk:.15,run:1},NOISE_MIN=.2;
 const RING_GEO=new THREE.RingGeometry(.9,1,48).rotateX(-Math.PI/2);
 function noiseLevel(B,mult){if(mult<=B.sneakMult)return NOISE_AT.sneak;if(mult<=1)return NOISE_AT.sneak+(NOISE_AT.walk-NOISE_AT.sneak)*(mult-B.sneakMult)/(1-B.sneakMult);return NOISE_AT.walk+(NOISE_AT.run-NOISE_AT.walk)*clamp((mult-1)/(B.runMult-1),0,1)}
 const zone={x:850,y:147,r:51},start={x:120,y:625};
-// Exits: the retreat length is a level parameter, chosen after the deed. near — top fence by the tap, ~45 m from the bed
-// along a walkable route, but on the gardener's way to his chore; far — bottom left, ~61 m, away from his routes.
-const EXITS=[{id:'far',x:118,y:674,r:45,side:'bottom'},{id:'near',x:250,y:88,r:45,side:'top'}];
+// Exits: the retreat length is a level parameter, chosen after the deed. near — east fence below the bench, ~28 m from the
+// bed's edge (31.6 m from its centre: the bench, kept as is, makes you go round it), away from the gardener's tap trip
+// and out of earshot of it: you make it before he spots the pile only if you leave at once; far — bottom left, ~60 m, safe.
+const EVIDENCE_NOTICE=2.5;
+const EXITS=[{id:'far',x:118,y:674,r:45,side:'bottom'},{id:'near',x:925,y:455,r:45,side:'right'}];
 const nearestExit=p=>EXITS.reduce((a,e)=>dist(p,e)<dist(p,a)?e:a);
 // Deeds of the level (GDD 3.2), «2 метки + 1 куча». mark — hold 2 s at a post, hydrant or flowerbed corner; pile — hold 6 s,
 // only on a big flowerbed. A break does not reset progress: it holds DEED_GRACE s, then drains DEED_DRAIN× faster than it
@@ -220,17 +222,17 @@ function buildWorld(){
  // Paths, same polylines as in 2D.
  const main=[[117,711],[117,529],[497,529],[763,529],[763,324],[762,145],[867,145]],side=[[496,529],[496,251],[235,251]];
  stroke(main,69,'#cdbd89',.01,world);stroke(main,58,'#ddcc9b',.013,world);stroke(side,48,'#ddcc9b',.015,world);
- // Fence with a gap for each exit gate.
+ // Fence with a gap for each exit gate (top / bottom: along x; right: along y).
  let m0=mark();
- const fenceY={top:59,bottom:715},inGap=(side,x)=>EXITS.some(e=>e.side===side&&x>e.x-48&&x<e.x+50);
- const posts=[];for(let x=42;x<970;x+=28){if(!inGap('bottom',x+5))posts.push([x+5,715]);if(!inGap('top',x+5))posts.push([x+5,59])}for(let y=70;y<700;y+=28){posts.push([39,y+10]);posts.push([962,y+10])}
+ const fenceY={top:59,bottom:715},along=e=>e.side==='right'?e.y:e.x,gatePos=(e,a)=>e.side==='right'?[962,a]:[a,fenceY[e.side]],inGap=(side,a)=>EXITS.some(e=>e.side===side&&a>along(e)-48&&a<along(e)+50);
+ const posts=[];for(let x=42;x<970;x+=28){if(!inGap('bottom',x+5))posts.push([x+5,715]);if(!inGap('top',x+5))posts.push([x+5,59])}for(let y=70;y<700;y+=28){posts.push([39,y+10]);if(!inGap('right',y+10))posts.push([962,y+10])}
  const postMesh=new THREE.InstancedMesh(new THREE.BoxGeometry(.14,.95,.14),mat('#d2bd86'),posts.length);posts.forEach(([x,y],i)=>{p.set(x*U,.475,y*U);sc.set(1,1,1);m4.compose(p,q,sc);postMesh.setMatrixAt(i,m4)});world.add(postMesh);
  const rail=(x0,y0,x1,y1)=>{const o=mesh(new THREE.BoxGeometry(Math.max(.08,(x1-x0)*U),.08,Math.max(.08,(y1-y0)*U)),'#ae9464',(x0+x1)/2*U,.62,(y0+y1)/2*U,world)};
- rail(39,59,39,715);rail(962,59,962,715);
+ rail(39,59,39,715);{let y0=59;for(const e of EXITS.filter(e=>e.side==='right').sort((a,b)=>a.y-b.y)){rail(962,y0,962,e.y-48);y0=e.y+52}rail(962,y0,962,715)}
  for(const side of ['top','bottom']){const y=fenceY[side];let x0=42;for(const e of EXITS.filter(e=>e.side===side).sort((a,b)=>a.x-b.x)){rail(x0,y,e.x-48,y);x0=e.x+52}rail(x0,y,962,y)}
- for(const e of EXITS)for(const gx of [e.x-48,e.x+50])mesh(new THREE.BoxGeometry(.22,1.6,.22),'#a77547',gx*U,.8,fenceY[e.side]*U,world);
+ for(const e of EXITS)for(const a of [along(e)-48,along(e)+50]){const [gx,gy]=gatePos(e,a);mesh(new THREE.BoxGeometry(.22,1.6,.22),'#a77547',gx*U,.8,gy*U,world)}
  take(m0);
- gateLabels=EXITS.map(e=>{const s=label('ВОРОТА','#102f2a','#fff5d9');s.position.set((e.x+1)*U,1.9,fenceY[e.side]*U);world.add(s);return s});
+ gateLabels=EXITS.map(e=>{const s=label('ВОРОТА','#102f2a','#fff5d9'),[gx,gy]=gatePos(e,along(e)+1);s.position.set(gx*U,1.9,gy*U);world.add(s);return s});
  exitRings=EXITS.map(e=>{const o=mesh(new THREE.RingGeometry(.93,1,48).rotateX(-Math.PI/2),unlit('#fff5d9',.35),e.x*U,.03,e.y*U,world);o.scale.setScalar(e.r*U);return o});
  // The flowerbed the dog is after.
  const B=BED_RECT;mesh(new THREE.BoxGeometry(B.w*U,.16,B.h*U),'#65553d',(B.x+B.w/2)*U,.08,(B.y+B.h/2)*U,world);mesh(new THREE.BoxGeometry((B.w-14)*U,.18,(B.h-12)*U),'#795d40',(B.x+B.w/2)*U,.09,(B.y+B.h/2)*U,world);
@@ -320,7 +322,7 @@ function makeDeeds(){deeds=LEVEL_DEEDS.map(s=>{const K=DEED_KIND[s.kind],h=onBed
 function completeDeed(d){d.done=true;d.p=d.hold;d.mark.visible=true;beep(800,.18);
  if(d.kind==='pile'){evidence.push({x:d.x,y:d.y});setLabel(bedLabel,'ГОТОВО ✓',true)}
  const left=deeds.filter(x=>!x.done);
- if(!left.length){done=true;for(const s of gateLabels)setLabel(s,'ВЫХОД',true);toast('Всё сделано! Выходов два: ближний — вверху слева, дальний — внизу слева.',4.5)}
+ if(!left.length){done=true;for(const s of gateLabels)setLabel(s,'ВЫХОД',true);toast('Всё сделано! Выходов два: ближний — справа, дальний — внизу слева.',4.5)}
  else toast(`${d.K.label} готова. Осталось: ${left.map(x=>x.K.label.toLowerCase()).join(', ')}.`,2.5)}
 // Need overflow: the pile happens right here. It counts, but no third star and the evidence stays on the path.
 function accidentPile(pd){accident=true;pd.p=pd.hold;const m=pileMesh(player.x,player.y,onBedAt(player.x,player.y)?.17:0);scene.add(m);extraPiles.push(m);evidence.push({x:player.x,y:player.y});
@@ -412,8 +414,11 @@ function update(dt){if(state!=='playing')return;elapsed+=dt;abilityCD=Math.max(0
  for(const g of guards){if(g.state!=='patrol')g.watch=0;const distance=dist(g,player);const to=Math.atan2(player.y-g.y,player.x-g.x),diff=Math.atan2(Math.sin(to-g.angle),Math.cos(to-g.angle));const vis=LV.vision*(g.angry?1.15:1);let sees=distance<vis&&Math.abs(diff)<.64&&lineClear(g,player)&&(!hidden||distance<43);
   if(distance<36&&lineClear(g,player))sees=true;
   if(sees){g.sus=clamp(g.sus+dt*(g.state==='chase'?3:.8+1.3*clamp(1-distance/vis,0,1)),0,1);if(g.state!=='chase'){g.alertLook=.7;g.lookAt={x:player.x,y:player.y}}g.seen=0;g.target={x:player.x,y:player.y};if(g.sus>=1&&g.state!=='chase'&&!(g.noChase>0)){g.state='chase';spotted=true;g.repath=0;beep(200,.18);toast('Он тебя заметил! Спрячься за препятствием.')}}else{g.sus=Math.max(0,g.sus-dt*.55);g.seen+=dt}
-  // Evidence (a pile on the bed or an accident on the way): seeing any of it makes all gardeners angry.
-  if(evidence.length&&!discovered&&g.state!=='chase'&&evidence.some(e=>{const dz=dist(g,e),az=Math.atan2(e.y-g.y,e.x-g.x)-g.angle;return dz<vis&&Math.abs(Math.atan2(Math.sin(az),Math.cos(az)))<.64&&lineClear(g,e)})){{discovered=true;for(const o of guards)o.angry=true;g.state='search';{const ex=nearestExit(player);g.target={x:ex.x,y:ex.y}}g.wait=0;g.repath=0;g.path=[];beep(220,.25);toast('Садовник нашёл сюрприз и бежит к ближнему к тебе выходу!',3)}}
+  // Evidence (a pile on the bed or an accident on the way): a pile among the flowers is not spotted at a glance — he has to
+  // have it in sight for EVIDENCE_NOTICE s in total (glances add up). Then all gardeners get angry.
+  const evSeen=evidence.length&&!discovered&&g.state!=='chase'&&evidence.some(e=>{const dz=dist(g,e),az=Math.atan2(e.y-g.y,e.x-g.x)-g.angle;return dz<vis&&Math.abs(Math.atan2(Math.sin(az),Math.cos(az)))<.64&&lineClear(g,e)});
+  if(evSeen)g.evT=(g.evT||0)+dt;
+  if(evSeen&&g.evT>=EVIDENCE_NOTICE){{discovered=true;for(const o of guards)o.angry=true;g.state='search';{const ex=nearestExit(player);g.target={x:ex.x,y:ex.y}}g.wait=0;g.repath=0;g.path=[];beep(220,.25);toast('Садовник нашёл сюрприз и бежит к ближнему к тебе выходу!',3)}}
   if(g.state==='chase'&&!sees&&g.seen>2.1){g.state='search';g.wait=3;g.repath=0}
   let frozen=false;if(g.state!=='chase'&&g.alertLook>0){frozen=true;g.alertLook-=dt;const want=Math.atan2(g.lookAt.y-g.y,g.lookAt.x-g.x),d=Math.atan2(Math.sin(want-g.angle),Math.cos(want-g.angle));g.angle+=clamp(d,-5*dt,5*dt);
    if(g.alertLook<=0){frozen=false;if(g.sus>.12){g.state='inspect';g.target={...g.lookAt};g.wait=0;g.repath=0;g.path=[];toast('Садовник что-то заметил и идёт проверить',1.8)}}}
@@ -455,7 +460,7 @@ function update(dt){if(state!=='playing')return;elapsed+=dt;abilityCD=Math.max(0
  if(ball){ball.age+=dt;ball.life-=dt;if(ball.life<=0){scene.remove(ball.m);ball=null}}
  // HUD: what is left, the deed being held (or one with progress kept after a break), the action button and the need.
  const nMark=deeds.filter(d=>d.kind==='mark'),nPile=deeds.filter(d=>d.kind==='pile');
- $('clock').textContent=formatTime(elapsed);$('objective').textContent=done?'К выходу: ближний вверху слева или дальний внизу слева':`Метки ${nMark.filter(d=>d.done).length}/${nMark.length} · куча ${nPile.filter(d=>d.done).length}/${nPile.length}`;
+ $('clock').textContent=formatTime(elapsed);$('objective').textContent=done?'К выходу: ближний справа или дальний внизу слева':`Метки ${nMark.filter(d=>d.done).length}/${nMark.length} · куча ${nPile.filter(d=>d.done).length}/${nPile.length}`;
  const pd=doing||(nearDeed&&nearDeed.p>0?nearDeed:null);$('progress').style.display=pd?'block':'none';
  if(pd){$('toiletFill').style.width=pd.p/pd.hold*100+'%';$('progressLabel').textContent=doing?`${pd.K.label}… ещё ${Math.max(0,pd.hold-pd.p).toFixed(1)} с`:`${pd.K.label}: прогресс держится ещё ${Math.max(0,DEED_GRACE-pd.idle).toFixed(1)} с`}
  // The action button shows what is nearby; dim when there is nothing to do here.
